@@ -11,6 +11,7 @@ import { matchCommand } from './commands/match.js';
 import { mixerCommand } from './commands/mixer.js';
 import { dyeCommand } from './commands/dye.js';
 import { matchImageCommand } from './commands/match-image.js';
+import { comparisonCommand } from './commands/comparison.js';
 import type { BotClient, BotCommand } from './types/index.js';
 
 // Create Discord client
@@ -29,6 +30,7 @@ client.commands.set(matchCommand.data.name, matchCommand);
 client.commands.set(mixerCommand.data.name, mixerCommand);
 client.commands.set(dyeCommand.data.name, dyeCommand);
 client.commands.set(matchImageCommand.data.name, matchImageCommand);
+client.commands.set(comparisonCommand.data.name, comparisonCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {
