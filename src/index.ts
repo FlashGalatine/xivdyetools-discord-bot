@@ -4,20 +4,10 @@
  */
 
 import { Client, GatewayIntentBits, Events, Collection } from 'discord.js';
-import { config } from 'dotenv';
+import { config } from './config.js';
+import { logger } from './utils/logger.js';
+import { harmonyCommand } from './commands/harmony.js';
 import type { BotClient, BotCommand } from './types/index.js';
-
-// Load environment variables
-config();
-
-// Validate required environment variables
-const requiredEnvVars = ['DISCORD_TOKEN', 'DISCORD_CLIENT_ID'];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    console.error(`❌ Missing required environment variable: ${envVar}`);
-    process.exit(1);
-  }
-}
 
 // Create Discord client
 const client = new Client({
@@ -29,34 +19,49 @@ const client = new Client({
 // Initialize commands collection
 client.commands = new Collection<string, BotCommand>();
 
-// TODO: Load command modules dynamically
-// const commandFiles = await readdir('./commands');
-// for (const file of commandFiles) {
-//   const command = await import(`./commands/${file}`);
-//   client.commands.set(command.data.name, command);
-// }
+// Register commands
+client.commands.set(harmonyCommand.data.name, harmonyCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {
-  console.log(`✅ Discord bot ready! Logged in as ${readyClient.user.tag}`);
-  console.log(`📊 Serving ${readyClient.guilds.cache.size} guild(s)`);
+  logger.info(`Discord bot ready! Logged in as ${readyClient.user.tag}`);
+  logger.info(`Serving ${readyClient.guilds.cache.size} guild(s)`);
+  logger.info(`Loaded ${client.commands.size} command(s)`);
 });
 
 // Interaction handler
 client.on(Events.InteractionCreate, async (interaction) => {
+  // Handle autocomplete
+  if (interaction.isAutocomplete()) {
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command || !command.autocomplete) {
+      return;
+    }
+
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      logger.error(`Error in autocomplete for ${interaction.commandName}:`, error);
+    }
+    return;
+  }
+
+  // Handle slash commands
   if (!interaction.isChatInputCommand()) return;
 
   const command = client.commands.get(interaction.commandName);
 
   if (!command) {
-    console.error(`❌ No command matching ${interaction.commandName} was found.`);
+    logger.error(`No command matching ${interaction.commandName} was found.`);
     return;
   }
 
   try {
+    logger.debug(`Executing command: ${interaction.commandName}`);
     await command.execute(interaction);
   } catch (error) {
-    console.error(`❌ Error executing ${interaction.commandName}:`, error);
+    logger.error(`Error executing ${interaction.commandName}:`, error);
 
     const errorMessage = {
       content: '❌ There was an error executing this command!',
@@ -73,26 +78,27 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 // Error handlers
 process.on('unhandledRejection', (error) => {
-  console.error('❌ Unhandled promise rejection:', error);
+  logger.error('Unhandled promise rejection:', error);
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught exception:', error);
+  logger.error('Uncaught exception:', error);
   process.exit(1);
 });
 
 // Login to Discord
-client.login(process.env.DISCORD_TOKEN);
+logger.info('Starting bot...');
+client.login(config.token);
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n👋 Shutting down gracefully...');
+  logger.info('Shutting down gracefully...');
   client.destroy();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\n👋 Shutting down gracefully...');
+  logger.info('Shutting down gracefully...');
   client.destroy();
   process.exit(0);
 });

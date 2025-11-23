@@ -2,14 +2,15 @@
  * XIV Dye Tools Discord Bot - Type Definitions
  */
 
-import type { Client, CommandInteraction, SlashCommandBuilder } from 'discord.js';
+import type { Client, ChatInputCommandInteraction, AutocompleteInteraction, SlashCommandBuilder, SlashCommandOptionsOnlyBuilder } from 'discord.js';
 
 /**
  * Discord command structure
  */
 export interface BotCommand {
-  data: SlashCommandBuilder;
-  execute: (interaction: CommandInteraction) => Promise<void>;
+  data: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }
 
 /**

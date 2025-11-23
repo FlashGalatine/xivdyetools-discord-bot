@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
-    "deploy:commands": "tsx src/deploy-commands.ts"
+    "deploy:commands": "tsx deploy-commands.ts"
   },
   "keywords": [
     "discord",
