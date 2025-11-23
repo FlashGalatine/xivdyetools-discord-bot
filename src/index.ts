@@ -7,6 +7,8 @@ import { Client, GatewayIntentBits, Events, Collection } from 'discord.js';
 import { config } from './config.js';
 import { logger } from './utils/logger.js';
 import { harmonyCommand } from './commands/harmony.js';
+import { matchCommand } from './commands/match.js';
+import { mixerCommand } from './commands/mixer.js';
 import type { BotClient, BotCommand } from './types/index.js';
 
 // Create Discord client
@@ -21,6 +23,8 @@ client.commands = new Collection<string, BotCommand>();
 
 // Register commands
 client.commands.set(harmonyCommand.data.name, harmonyCommand);
+client.commands.set(matchCommand.data.name, matchCommand);
+client.commands.set(mixerCommand.data.name, mixerCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {

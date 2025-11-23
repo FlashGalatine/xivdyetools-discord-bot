@@ -7,10 +7,14 @@ import { REST, Routes } from 'discord.js';
 import { config } from './src/config.js';
 import { logger } from './src/utils/logger.js';
 import { harmonyCommand } from './src/commands/harmony.js';
+import { matchCommand } from './src/commands/match.js';
+import { mixerCommand } from './src/commands/mixer.js';
 
 // Collect all commands
 const commands = [
     harmonyCommand.data.toJSON(),
+    matchCommand.data.toJSON(),
+    mixerCommand.data.toJSON(),
 ];
 
 const rest = new REST().setToken(config.token);
