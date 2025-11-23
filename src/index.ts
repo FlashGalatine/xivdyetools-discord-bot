@@ -9,6 +9,8 @@ import { logger } from './utils/logger.js';
 import { harmonyCommand } from './commands/harmony.js';
 import { matchCommand } from './commands/match.js';
 import { mixerCommand } from './commands/mixer.js';
+import { dyeCommand } from './commands/dye.js';
+import { matchImageCommand } from './commands/match-image.js';
 import type { BotClient, BotCommand } from './types/index.js';
 
 // Create Discord client
@@ -25,6 +27,8 @@ client.commands = new Collection<string, BotCommand>();
 client.commands.set(harmonyCommand.data.name, harmonyCommand);
 client.commands.set(matchCommand.data.name, matchCommand);
 client.commands.set(mixerCommand.data.name, mixerCommand);
+client.commands.set(dyeCommand.data.name, dyeCommand);
+client.commands.set(matchImageCommand.data.name, matchImageCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {
