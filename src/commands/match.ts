@@ -16,7 +16,7 @@ import {
     type Dye,
 } from 'xivdyetools-core';
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
-import { createErrorEmbed, formatColorSwatch, formatRGB, formatHSV } from '../utils/embed-builder.js';
+import { createErrorEmbed, formatColorSwatch, formatRGB, formatHSV, createDyeEmojiAttachment } from '../utils/embed-builder.js';
 import { logger } from '../utils/logger.js';
 import type { BotCommand } from '../types/index.js';
 
@@ -149,8 +149,17 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             });
         }
 
+        // Attach emoji if available
+        const emojiAttachment = createDyeEmojiAttachment(closestDye);
+        const files = emojiAttachment ? [emojiAttachment] : [];
+
+        // Add thumbnail to embed if emoji available
+        if (emojiAttachment) {
+            embed.setThumbnail(`attachment://${emojiAttachment.name}`);
+        }
+
         // Send response
-        await interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed], files });
 
         logger.info(`Match command completed: ${closestDye.name} (distance: ${distance.toFixed(2)})`);
     } catch (error) {

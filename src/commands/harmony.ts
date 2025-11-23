@@ -15,7 +15,7 @@ import {
     type Dye,
 } from 'xivdyetools-core';
 import { validateHexColor, validateHarmonyType, findDyeByName } from '../utils/validators.js';
-import { createErrorEmbed, createHarmonyEmbed } from '../utils/embed-builder.js';
+import { createErrorEmbed, createHarmonyEmbed, createDyeEmojiAttachment } from '../utils/embed-builder.js';
 import { renderColorWheel } from '../renderers/color-wheel.js';
 import { logger } from '../utils/logger.js';
 import type { BotCommand } from '../types/index.js';
@@ -199,10 +199,17 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         // Create embed
         const embed = createHarmonyEmbed(baseColor, baseDye, harmonyType, companions);
 
+        // Collect attachments (color wheel + base dye emoji if available)
+        const files = [attachment];
+        const baseDyeEmoji = createDyeEmojiAttachment(baseDye);
+        if (baseDyeEmoji) {
+            files.push(baseDyeEmoji);
+        }
+
         // Send response
         await interaction.editReply({
             embeds: [embed],
-            files: [attachment],
+            files,
         });
 
         logger.info(`Harmony command completed successfully`);

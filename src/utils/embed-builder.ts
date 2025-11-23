@@ -4,8 +4,9 @@
 ord embed builder utilities
  */
 
-import { EmbedBuilder, ColorResolvable } from 'discord.js';
+import { EmbedBuilder, ColorResolvable, AttachmentBuilder } from 'discord.js';
 import { ColorService, type Dye } from 'xivdyetools-core';
+import { getDyeEmojiFilename, hasDyeEmoji, getDyeEmojiBuffer } from './emoji.js';
 
 /**
  * Brand colors for embeds
@@ -83,8 +84,11 @@ export function createInfoEmbed(title: string, description: string): EmbedBuilde
 
 /**
  * Create dye information embed
+ * @param dye - The dye to create an embed for
+ * @param showExtended - Whether to show acquisition info
+ * @param useEmoji - Whether to add emoji thumbnail (default: true)
  */
-export function createDyeEmbed(dye: Dye, showExtended: boolean = false): EmbedBuilder {
+export function createDyeEmbed(dye: Dye, showExtended: boolean = false, useEmoji: boolean = true): EmbedBuilder {
     const embed = new EmbedBuilder()
         .setColor(parseInt(dye.hex.replace('#', ''), 16) as ColorResolvable)
         .setTitle(`🎨 ${dye.name}`)
@@ -100,6 +104,11 @@ export function createDyeEmbed(dye: Dye, showExtended: boolean = false): EmbedBu
             inline: false,
         })
         .setTimestamp();
+
+    // Add emoji thumbnail if available
+    if (useEmoji && hasDyeEmoji(dye)) {
+        embed.setThumbnail(`attachment://${getDyeEmojiFilename(dye)}`);
+    }
 
     if (showExtended && dye.acquisition) {
         embed.addFields({
@@ -187,4 +196,20 @@ function formatHarmonyType(type: string): string {
     };
 
     return typeMap[type] || type;
+}
+
+/**
+ * Create dye emoji attachment if available
+ * Returns null if emoji doesn't exist for this dye
+ */
+export function createDyeEmojiAttachment(dye: Dye): AttachmentBuilder | null {
+    const emojiBuffer = getDyeEmojiBuffer(dye);
+
+    if (!emojiBuffer) {
+        return null;
+    }
+
+    return new AttachmentBuilder(emojiBuffer, {
+        name: getDyeEmojiFilename(dye),
+    });
 }

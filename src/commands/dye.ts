@@ -16,7 +16,7 @@ import {
     type Dye,
 } from 'xivdyetools-core';
 import { findDyeByName, validateIntRange } from '../utils/validators.js';
-import { createErrorEmbed, createDyeEmbed, formatColorSwatch } from '../utils/embed-builder.js';
+import { createErrorEmbed, createDyeEmbed, formatColorSwatch, createDyeEmojiAttachment } from '../utils/embed-builder.js';
 import { logger } from '../utils/logger.js';
 import type { BotCommand } from '../types/index.js';
 
@@ -149,7 +149,11 @@ async function handleInfo(interaction: ChatInputCommandInteraction): Promise<voi
     const dye = dyeResult.dye!;
     const embed = createDyeEmbed(dye, true); // Show extended info
 
-    await interaction.editReply({ embeds: [embed] });
+    // Attach emoji if available
+    const emojiAttachment = createDyeEmojiAttachment(dye);
+    const files = emojiAttachment ? [emojiAttachment] : [];
+
+    await interaction.editReply({ embeds: [embed], files });
     logger.info(`Dye info completed: ${dye.name}`);
 }
 
@@ -268,9 +272,15 @@ async function handleRandom(interaction: ChatInputCommandInteraction): Promise<v
 
     if (count === 1) {
         // Single dye - use full embed
-        const embed = createDyeEmbed(randomDyes[0], true);
+        const dye = randomDyes[0];
+        const embed = createDyeEmbed(dye, true);
         embed.setTitle(`🎲 ${embed.data.title}`); // Add dice emoji
-        await interaction.editReply({ embeds: [embed] });
+
+        // Attach emoji if available
+        const emojiAttachment = createDyeEmojiAttachment(dye);
+        const files = emojiAttachment ? [emojiAttachment] : [];
+
+        await interaction.editReply({ embeds: [embed], files });
     } else {
         // Multiple dyes - use compact list
         const dyeList = randomDyes

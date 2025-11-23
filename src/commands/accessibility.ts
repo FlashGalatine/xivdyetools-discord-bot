@@ -17,7 +17,7 @@ import {
     type Dye,
 } from 'xivdyetools-core';
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
-import { createErrorEmbed, formatColorSwatch } from '../utils/embed-builder.js';
+import { createErrorEmbed, formatColorSwatch, createDyeEmojiAttachment } from '../utils/embed-builder.js';
 import {
     renderAccessibilityComparison,
     type VisionType,
@@ -182,10 +182,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             inline: false,
         });
 
+        // Attach emoji if available
+        const files = [attachment];
+        const dyeEmoji = createDyeEmojiAttachment(dye);
+        if (dyeEmoji) {
+            files.push(dyeEmoji);
+            embed.setThumbnail(`attachment://${dyeEmoji.name}`);
+        }
+
         // Send response
         await interaction.editReply({
             embeds: [embed],
-            files: [attachment],
+            files,
         });
 
         logger.info(`Accessibility command completed: ${dye.name} (${visionTypeInput})`);
