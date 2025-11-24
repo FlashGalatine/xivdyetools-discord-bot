@@ -196,15 +196,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } catch (error) {
     logger.error(`Error executing ${interaction.commandName}:`, error);
 
-    const errorMessage = {
-      content: '❌ There was an error executing this command!',
-      ephemeral: true,
-    };
+    try {
+      const errorMessage = {
+        content: '❌ There was an error executing this command!',
+        ephemeral: true,
+      };
 
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp(errorMessage);
-    } else {
-      await interaction.reply(errorMessage);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(errorMessage);
+      } else {
+        await interaction.reply(errorMessage);
+      }
+    } catch (replyError) {
+      // If we can't even report the error (e.g. interaction is dead), just log it
+      logger.error('Error sending error message to user:', replyError);
     }
 
     // Track failed execution
