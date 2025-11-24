@@ -10,8 +10,13 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit",
-    "deploy:commands": "tsx deploy-commands.ts"
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit",
+    "deploy:commands": "tsx deploy-commands.ts",
+    "prepare": "husky install || true"
   },
   "keywords": [
     "discord",
@@ -29,6 +34,12 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "@napi-rs/canvas": "0.1.52",
     "discord.js": "^14.14.1",
@@ -41,6 +52,12 @@
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.55.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.2",
     "vitest": "^1.0.4"
