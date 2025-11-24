@@ -161,7 +161,11 @@ See [docs/DEPLOYMENT.md](../../XIVDyeTools/docs/discord-bot/DEPLOYMENT.md) for d
 
 ## License
 
-MIT © XIV Dye Tools Team
+MIT © 2024 Flash Galatine
+
+## Legal Notice
+
+**This is a fan-made tool and is not affiliated with or endorsed by Square Enix Co., Ltd. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.**
 
 ## Support
 

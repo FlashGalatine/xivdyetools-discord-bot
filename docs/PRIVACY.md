@@ -2,7 +2,7 @@
 
 **Last Updated:** December 2024  
 **Bot Name:** XIV Dye Tools Discord Bot  
-**Developer:** [Your Name/Organization]
+**Developer:** Flash Galatine
 
 ## Overview
 
@@ -157,9 +157,14 @@ We may update this privacy policy from time to time. Changes will be reflected i
 
 If you have questions or concerns about this privacy policy or your data:
 
-- **Discord Support Server:** [Link if available]
-- **GitHub Issues:** [Repository link]
-- **Email:** [Contact email if available]
+- **Discord Support Server:** [https://discord.gg/5VUSKTZCe5](https://discord.gg/5VUSKTZCe5)
+- **GitHub Issues:** [https://github.com/FlashGalatine/xivdyetools-discord-bot/issues](https://github.com/FlashGalatine/xivdyetools-discord-bot/issues)
+- **Blog:** [https://blog.projectgalatine.com/](https://blog.projectgalatine.com/)
+- **X / Twitter:** [@AsheJunius](https://x.com/AsheJunius)
+- **BlueSky:** [@projectgalatine.com](https://bsky.app/profile/projectgalatine.com)
+
+**Developer:** Flash Galatine (Balmung)  
+**Lodestone:** [https://na.finalfantasyxiv.com/lodestone/character/7677106/](https://na.finalfantasyxiv.com/lodestone/character/7677106/)
 
 ## Compliance
 
@@ -234,5 +239,13 @@ If you have any questions about this privacy policy or how we handle your data, 
 
 ---
 
+## Legal Notice
+
+**This is a fan-made tool and is not affiliated with or endorsed by Square Enix Co., Ltd. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.**
+
+---
+
 **By using the XIV Dye Tools Discord Bot, you agree to this privacy policy.**
+
+**Copyright © 2024 Flash Galatine. All rights reserved.**
 

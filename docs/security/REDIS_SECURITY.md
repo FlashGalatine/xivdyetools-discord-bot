@@ -278,3 +278,7 @@ npm run dev
 **Last Updated:** December 2024  
 **Related:** S-9: Redis Security
 
+## Legal Notice
+
+**This is a fan-made tool and is not affiliated with or endorsed by Square Enix Co., Ltd. FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.**
+
