@@ -7,6 +7,7 @@ ord embed builder utilities
 import { EmbedBuilder, ColorResolvable, AttachmentBuilder } from 'discord.js';
 import { ColorService, type Dye } from 'xivdyetools-core';
 import { getDyeEmojiFilename, hasDyeEmoji, getDyeEmojiBuffer } from './emoji.js';
+import { emojiService } from '../services/emoji-service.js';
 
 /**
  * Brand colors for embeds
@@ -92,7 +93,7 @@ export function createDyeEmbed(dye: Dye, showExtended: boolean = false, useEmoji
     const embed = new EmbedBuilder()
         .setColor(parseInt(dye.hex.replace('#', ''), 16) as ColorResolvable)
         .setTitle(`🎨 ${dye.name}`)
-        .setDescription(formatColorSwatch(dye.hex, 8))
+        .setDescription(`${emojiService.getDyeEmojiOrSwatch(dye, 8)}`)
         .addFields({
             name: 'Color Information',
             value: [
@@ -136,7 +137,7 @@ export function createHarmonyEmbed(
         .setDescription(
             [
                 `**Base Color:** ${formatColorSwatch(baseColor, 4)}`,
-                `**Closest Match:** ${baseDye.name} (${baseDye.hex.toUpperCase()})`,
+                `**Closest Match:** ${emojiService.getDyeEmojiOrSwatch(baseDye)} ${baseDye.name} (${baseDye.hex.toUpperCase()})`,
                 '',
                 `**🎯 Harmony Suggestions:**`,
             ].join('\n')
@@ -147,7 +148,7 @@ export function createHarmonyEmbed(
     embed.addFields({
         name: `1️⃣ ${baseDye.name} [Base]`,
         value: [
-            formatColorSwatch(baseDye.hex, 4),
+            emojiService.getDyeEmojiOrSwatch(baseDye, 4),
             formatHSV(baseDye.hex),
             `**Acquisition:** ${baseDye.acquisition || 'Unknown'}`,
         ].join('\n'),
@@ -167,7 +168,7 @@ export function createHarmonyEmbed(
         embed.addFields({
             name: `${number} ${comp.dye.name}`,
             value: [
-                formatColorSwatch(comp.dye.hex, 4),
+                emojiService.getDyeEmojiOrSwatch(comp.dye, 4),
                 `Angle: ${Math.round(comp.angle)}° from base`,
                 `Deviation: ${comp.deviation.toFixed(1)}° (${deviationText})`,
                 `**Acquisition:** ${comp.dye.acquisition || 'Unknown'}`,

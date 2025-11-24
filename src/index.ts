@@ -18,6 +18,7 @@ import { statsCommand } from './commands/stats.js';
 import { getRateLimiter } from './services/rate-limiter.js';
 import { getAnalytics } from './services/analytics.js';
 import { closeRedis } from './services/redis.js';
+import { emojiService } from './services/emoji-service.js';
 import { initErrorWebhook, notifyError, closeErrorWebhook } from './utils/error-webhook.js';
 import type { BotClient, BotCommand } from './types/index.js';
 
@@ -66,9 +67,13 @@ client.commands.set(accessibilityCommand.data.name, accessibilityCommand);
 client.commands.set(statsCommand.data.name, statsCommand);
 
 // Bot ready event
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   logger.info(`Discord bot ready! Logged in as ${readyClient.user.tag}`);
   logger.info(`Serving ${readyClient.guilds.cache.size} guild(s)`);
+
+  // Initialize EmojiService
+  await emojiService.initialize(client);
+
   logger.info(`Loaded ${client.commands.size} command(s)`);
 });
 

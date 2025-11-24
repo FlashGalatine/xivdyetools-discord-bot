@@ -17,6 +17,7 @@ import {
 } from 'xivdyetools-core';
 import { findDyeByName, validateIntRange } from '../utils/validators.js';
 import { createErrorEmbed, createDyeEmbed, formatColorSwatch, createDyeEmojiAttachment } from '../utils/embed-builder.js';
+import { emojiService } from '../services/emoji-service.js';
 import { logger } from '../utils/logger.js';
 import type { BotCommand } from '../types/index.js';
 
@@ -189,7 +190,7 @@ async function handleSearch(interaction: ChatInputCommandInteraction): Promise<v
         .setDescription(
             `Found **${matches.length}** ${matches.length === 1 ? 'dye' : 'dyes'}${hasMore ? ` (showing first 15)` : ''}:\n\n` +
             displayMatches
-                .map((dye) => `${formatColorSwatch(dye.hex, 3)} **${dye.name}** (${dye.category})`)
+                .map((dye) => `${emojiService.getDyeEmojiOrSwatch(dye, 3)} **${dye.name}** (${dye.category})`)
                 .join('\n')
         )
         .setFooter({
@@ -225,7 +226,7 @@ async function handleList(interaction: ChatInputCommandInteraction): Promise<voi
 
     // Show all dyes in category (most categories have 10-20 dyes)
     const dyeList = categoryDyes
-        .map((dye, index) => `${index + 1}. ${formatColorSwatch(dye.hex, 3)} **${dye.name}** (${dye.hex.toUpperCase()})`)
+        .map((dye, index) => `${index + 1}. ${emojiService.getDyeEmojiOrSwatch(dye, 3)} **${dye.name}** (${dye.hex.toUpperCase()})`)
         .join('\n');
 
     const embed = new EmbedBuilder()
@@ -287,7 +288,7 @@ async function handleRandom(interaction: ChatInputCommandInteraction): Promise<v
             .map((dye, index) =>
                 [
                     `**${index + 1}. ${dye.name}**`,
-                    `${formatColorSwatch(dye.hex, 6)} ${dye.hex.toUpperCase()}`,
+                    `${emojiService.getDyeEmojiOrSwatch(dye, 6)} ${dye.hex.toUpperCase()}`,
                     `Category: ${dye.category}`,
                     dye.acquisition ? `Acquisition: ${dye.acquisition}` : '',
                 ].filter(Boolean).join('\n')
