@@ -161,7 +161,7 @@ See [docs/DEPLOYMENT.md](../../XIVDyeTools/docs/discord-bot/DEPLOYMENT.md) for d
 
 ## License
 
-MIT © 2024 Flash Galatine
+MIT © 2025 Flash Galatine
 
 ## Legal Notice
 
