@@ -30,6 +30,13 @@ export interface BotConfig {
   rateLimit: {
     commandsPerMinute: number;
     commandsPerHour: number;
+    // Per S-6: Command-specific rate limits
+    commandLimits: {
+      [commandName: string]: {
+        perMinute: number;
+        perHour: number;
+      };
+    };
   };
 
   // Image Processing
@@ -54,9 +61,7 @@ function validateEnv(): void {
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}`
-    );
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
   // Validate secrets are not placeholders
@@ -69,19 +74,24 @@ function validateEnv(): void {
  */
 function validateSecrets(): void {
   const token = process.env.DISCORD_TOKEN;
-  
+
   // Check for placeholder values
-  if (token && (token.includes('your_') || token.includes('example') || token.includes('placeholder'))) {
+  if (
+    token &&
+    (token.includes('your_') || token.includes('example') || token.includes('placeholder'))
+  ) {
     throw new Error('DISCORD_TOKEN appears to be a placeholder. Please set a real token.');
   }
-  
+
   // Check for suspicious token lengths (Discord tokens are typically 59+ characters)
   if (token && token.length < 50) {
-    console.warn('⚠️  WARNING: DISCORD_TOKEN appears unusually short. Please verify it is correct.');
+    console.warn(
+      '⚠️  WARNING: DISCORD_TOKEN appears unusually short. Please verify it is correct.'
+    );
   }
-  
+
   // Check for common test tokens
-  if (token && token === 'test' || token === 'TEST' || token === '123') {
+  if ((token && token === 'test') || token === 'TEST' || token === '123') {
     throw new Error('DISCORD_TOKEN appears to be a test value. Please set a real token.');
   }
 }
@@ -125,6 +135,32 @@ export const config: BotConfig = {
   rateLimit: {
     commandsPerMinute: parseInt(process.env.RATE_LIMIT_PER_MINUTE || '10', 10),
     commandsPerHour: parseInt(process.env.RATE_LIMIT_PER_HOUR || '100', 10),
+    // Per S-6: Command-specific rate limits
+    // Image processing commands have lower limits (more resource-intensive)
+    // Simple lookups have higher limits
+    commandLimits: {
+      match_image: {
+        perMinute: 3, // Lower limit for image processing
+        perHour: 20,
+      },
+      harmony: {
+        perMinute: 8, // Slightly lower for complex calculations
+        perHour: 80,
+      },
+      mixer: {
+        perMinute: 8,
+        perHour: 80,
+      },
+      comparison: {
+        perMinute: 5, // Lower for image rendering
+        perHour: 50,
+      },
+      accessibility: {
+        perMinute: 5, // Lower for image rendering
+        perHour: 50,
+      },
+      // match, dye, stats use default limits
+    },
   },
 
   // Image Processing
@@ -139,4 +175,3 @@ export const config: BotConfig = {
     timeout: parseInt(process.env.API_TIMEOUT_MS || '5000', 10), // 5 seconds
   },
 };
-
