@@ -102,8 +102,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         let startDye: Dye | null = null;
 
         const startHexValidation = validateHexColor(startColorInput);
-        if (startHexValidation.valid) {
-            startColor = startColorInput;
+        if (startHexValidation.success) {
+            startColor = startHexValidation.value;
         } else {
             const startDyeResult = findDyeByName(startColorInput);
             if (startDyeResult.error) {
@@ -126,8 +126,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         let endDye: Dye | null = null;
 
         const endHexValidation = validateHexColor(endColorInput);
-        if (endHexValidation.valid) {
-            endColor = endColorInput;
+        if (endHexValidation.success) {
+            endColor = endHexValidation.value;
         } else {
             const endDyeResult = findDyeByName(endColorInput);
             if (endDyeResult.error) {

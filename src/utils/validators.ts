@@ -1,41 +1,120 @@
 /**
  * Input validation utilities
+ * Enhanced with strict validation per S-1 security requirements
  */
 
+import { ChatInputCommandInteraction } from 'discord.js';
 import { DyeService, dyeDatabase, type Dye } from 'xivdyetools-core';
 
 // Initialize DyeService
 const dyeService = new DyeService(dyeDatabase);
 
 /**
- * Validate hex color format
+ * Result type for validation operations
  */
-export function validateHexColor(color: string): { valid: boolean; error?: string } {
-    const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+export type ValidationResult<T> = 
+    | { success: true; value: T }
+    | { success: false; error: string };
 
-    if (!hexRegex.test(color)) {
+/**
+ * Validate hex color format with strict normalization
+ * Per S-1: Strict regex, normalization, prevents edge cases
+ */
+export function validateHexColor(hex: string): ValidationResult<string> {
+    // Normalize: trim and uppercase
+    const normalized = hex.trim().toUpperCase();
+    
+    // Strict regex: must be exactly #RRGGBB
+    if (!/^#[0-9A-F]{6}$/.test(normalized)) {
         return {
-            valid: false,
-            error: `Invalid hex color format: "${color}". Please use the format #RRGGBB (e.g., #FF0000 for red).`,
+            success: false,
+            error: `Invalid hex color format: "${hex}". Expected #RRGGBB format (e.g., #FF0000).`,
         };
     }
+    
+    return { success: true, value: normalized };
+}
 
-    return { valid: true };
+/**
+ * Validate dye ID with bounds checking
+ * Per S-1: Bounds checking, prevents out-of-range IDs
+ */
+export function validateDyeId(id: number): ValidationResult<number> {
+    if (!Number.isInteger(id)) {
+        return {
+            success: false,
+            error: 'Dye ID must be an integer.',
+        };
+    }
+    
+    if (id < 1) {
+        return {
+            success: false,
+            error: 'Dye ID must be a positive integer.',
+        };
+    }
+    
+    // Check against known dye range (1-125 currently, allow headroom for future dyes)
+    if (id > 200) {
+        return {
+            success: false,
+            error: 'Dye ID out of known range (1-200).',
+        };
+    }
+    
+    return { success: true, value: id };
+}
+
+/**
+ * Sanitize search query
+ * Per S-1: Remove control characters, limit length, prevent ReDoS
+ */
+export function sanitizeSearchQuery(query: string): string {
+    // Remove control characters (0x00-0x1F, 0x7F-0x9F)
+    const sanitized = query.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+    
+    // Limit length to 50 characters (prevent ReDoS via complex patterns)
+    const limited = sanitized.substring(0, 50);
+    
+    // Trim whitespace
+    return limited.trim();
+}
+
+/**
+ * Legacy validateHexColor for backward compatibility
+ * @deprecated Use validateHexColor which returns ValidationResult
+ */
+export function validateHexColorLegacy(color: string): { valid: boolean; error?: string } {
+    const result = validateHexColor(color);
+    if (result.success) {
+        return { valid: true };
+    }
+    return { valid: false, error: result.error };
 }
 
 /**
  * Find dye by name (case-insensitive, fuzzy matching)
+ * Enhanced with input sanitization per S-1
  */
 export function findDyeByName(name: string): { dye?: Dye; error?: string } {
+    // Sanitize input to prevent injection attacks
+    const sanitized = sanitizeSearchQuery(name);
+    
+    if (sanitized.length === 0) {
+        return {
+            error: 'Dye name cannot be empty.',
+        };
+    }
+    
     // Try search by name
-    const searchResults = dyeService.searchByName(name);
+    const searchResults = dyeService.searchByName(sanitized);
     if (searchResults.length > 0) {
         // Return the best match
         return { dye: searchResults[0] };
     }
 
     return {
-        error: `Dye not found: "${name}". Use autocomplete or search to find available dyes.`,
+        error: `Dye not found: "${sanitized}". Use autocomplete or search to find available dyes.`,
     };
 }
 
@@ -118,4 +197,90 @@ export function validateIntRange(
     }
 
     return { valid: true };
+}
+
+/**
+ * Validate all command inputs before execution
+ * Per S-1: Pre-execution validation layer
+ */
+export function validateCommandInputs(interaction: ChatInputCommandInteraction): ValidationResult<void> {
+    const commandName = interaction.commandName;
+    
+    try {
+        // Validate based on command type
+        switch (commandName) {
+            case 'match':
+            case 'harmony':
+            case 'comparison':
+            case 'mixer':
+            case 'accessibility': {
+                // These commands accept color inputs (hex or dye name)
+                const colorOption = interaction.options.getString('color') || 
+                                   interaction.options.getString('base_color') ||
+                                   interaction.options.getString('dye1') ||
+                                   interaction.options.getString('dye2') ||
+                                   interaction.options.getString('start_color') ||
+                                   interaction.options.getString('end_color');
+                
+                if (colorOption) {
+                    // If it looks like a hex color, validate it strictly
+                    if (colorOption.trim().startsWith('#')) {
+                        const hexResult = validateHexColor(colorOption);
+                        if (!hexResult.success) {
+                            return hexResult;
+                        }
+                    }
+                    // Otherwise, it's a dye name - sanitize it
+                    const sanitized = sanitizeSearchQuery(colorOption);
+                    if (sanitized.length === 0) {
+                        return {
+                            success: false,
+                            error: 'Color input cannot be empty.',
+                        };
+                    }
+                }
+                break;
+            }
+            
+            case 'dye': {
+                // Dye command has subcommands
+                const subcommand = interaction.options.getSubcommand();
+                if (subcommand === 'info' || subcommand === 'search') {
+                    const query = interaction.options.getString('name') || 
+                                 interaction.options.getString('query');
+                    if (query) {
+                        const sanitized = sanitizeSearchQuery(query);
+                        if (sanitized.length === 0) {
+                            return {
+                                success: false,
+                                error: 'Search query cannot be empty.',
+                            };
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        
+        // Validate integer options (dye IDs, counts, etc.)
+        const integerOptions = interaction.options.data.filter(opt => opt.type === 4); // INTEGER type
+        for (const opt of integerOptions) {
+            if (opt.value !== null && typeof opt.value === 'number') {
+                // Check if it's a dye ID
+                if (opt.name.includes('dye') || opt.name.includes('id')) {
+                    const dyeIdResult = validateDyeId(opt.value);
+                    if (!dyeIdResult.success) {
+                        return dyeIdResult;
+                    }
+                }
+            }
+        }
+        
+        return { success: true, value: undefined };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Validation error occurred.',
+        };
+    }
 }

@@ -82,16 +82,17 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
         for (const input of dyeInputs) {
             const hexValidation = validateHexColor(input);
-            if (hexValidation.valid) {
-                // Input is a hex color - find closest dye
-                const closestDye = dyeService.findClosestDye(input);
+            if (hexValidation.success) {
+                // Input is a hex color - use normalized value and find closest dye
+                const normalizedHex = hexValidation.value;
+                const closestDye = dyeService.findClosestDye(normalizedHex);
                 if (!closestDye) {
-                    const errorEmbed = createErrorEmbed('Error', `Could not find matching dye for ${input}.`);
+                    const errorEmbed = createErrorEmbed('Error', `Could not find matching dye for ${normalizedHex}.`);
                     await interaction.editReply({ embeds: [errorEmbed] });
                     return;
                 }
                 dyes.push(closestDye);
-                dyeColors.push(input); // Store original hex
+                dyeColors.push(normalizedHex); // Store normalized hex
             } else {
                 // Input is a dye name
                 const dyeResult = findDyeByName(input);

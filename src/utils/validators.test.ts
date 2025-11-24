@@ -5,6 +5,8 @@
 import { describe, it, expect } from 'vitest';
 import {
     validateHexColor,
+    validateDyeId,
+    sanitizeSearchQuery,
     validateHarmonyType,
     validateDataCenter,
     validateIntRange,
@@ -13,45 +15,50 @@ import {
 
 describe('validateHexColor', () => {
     it('should accept valid hex colors with #', () => {
-        expect(validateHexColor('#FF0000')).toEqual({ valid: true });
-        expect(validateHexColor('#00FF00')).toEqual({ valid: true });
-        expect(validateHexColor('#0000FF')).toEqual({ valid: true });
-        expect(validateHexColor('#ABCDEF')).toEqual({ valid: true });
-        expect(validateHexColor('#123456')).toEqual({ valid: true });
+        expect(validateHexColor('#FF0000')).toEqual({ success: true, value: '#FF0000' });
+        expect(validateHexColor('#00FF00')).toEqual({ success: true, value: '#00FF00' });
+        expect(validateHexColor('#0000FF')).toEqual({ success: true, value: '#0000FF' });
+        expect(validateHexColor('#ABCDEF')).toEqual({ success: true, value: '#ABCDEF' });
+        expect(validateHexColor('#123456')).toEqual({ success: true, value: '#123456' });
     });
 
     it('should require # prefix', () => {
-        expect(validateHexColor('FF0000').valid).toBe(false);
-        expect(validateHexColor('00FF00').valid).toBe(false);
-        expect(validateHexColor('ABCDEF').valid).toBe(false);
+        expect(validateHexColor('FF0000').success).toBe(false);
+        expect(validateHexColor('00FF00').success).toBe(false);
+        expect(validateHexColor('ABCDEF').success).toBe(false);
     });
 
-    it('should accept lowercase hex colors with #', () => {
-        expect(validateHexColor('#ff0000')).toEqual({ valid: true });
-        expect(validateHexColor('#abcdef')).toEqual({ valid: true });
-        expect(validateHexColor('#FfAa00')).toEqual({ valid: true });
+    it('should normalize lowercase hex colors to uppercase', () => {
+        expect(validateHexColor('#ff0000')).toEqual({ success: true, value: '#FF0000' });
+        expect(validateHexColor('#abcdef')).toEqual({ success: true, value: '#ABCDEF' });
+        expect(validateHexColor('#FfAa00')).toEqual({ success: true, value: '#FFAA00' });
+    });
+
+    it('should trim whitespace and normalize', () => {
+        expect(validateHexColor('  #ff0000  ')).toEqual({ success: true, value: '#FF0000' });
+        expect(validateHexColor('  #ABCDEF  ')).toEqual({ success: true, value: '#ABCDEF' });
     });
 
     it('should reject invalid hex colors', () => {
         const invalid = validateHexColor('#GG0000');
-        expect(invalid.valid).toBe(false);
+        expect(invalid.success).toBe(false);
         expect(invalid.error).toContain('Invalid hex color format');
     });
 
     it('should reject hex colors with wrong length', () => {
-        expect(validateHexColor('#FFF').valid).toBe(false);
-        expect(validateHexColor('#FFFFFFF').valid).toBe(false);
-        expect(validateHexColor('FF').valid).toBe(false);
+        expect(validateHexColor('#FFF').success).toBe(false);
+        expect(validateHexColor('#FFFFFFF').success).toBe(false);
+        expect(validateHexColor('FF').success).toBe(false);
     });
 
     it('should reject empty strings', () => {
-        expect(validateHexColor('').valid).toBe(false);
+        expect(validateHexColor('').success).toBe(false);
     });
 
     it('should reject non-hex characters', () => {
-        expect(validateHexColor('#GGGGGG').valid).toBe(false);
-        expect(validateHexColor('#ZZZZZZ').valid).toBe(false);
-        expect(validateHexColor('HELLO!').valid).toBe(false);
+        expect(validateHexColor('#GGGGGG').success).toBe(false);
+        expect(validateHexColor('#ZZZZZZ').success).toBe(false);
+        expect(validateHexColor('HELLO!').success).toBe(false);
     });
 });
 
@@ -226,5 +233,54 @@ describe('findDyeByName', () => {
         const result = findDyeByName('  Dalamud Red  ');
         expect(result.error).toBeUndefined();
         expect(result.dye?.name).toBe('Dalamud Red');
+    });
+});
+
+describe('validateDyeId', () => {
+    it('should accept valid dye IDs in range', () => {
+        expect(validateDyeId(1)).toEqual({ success: true, value: 1 });
+        expect(validateDyeId(50)).toEqual({ success: true, value: 50 });
+        expect(validateDyeId(125)).toEqual({ success: true, value: 125 });
+        expect(validateDyeId(200)).toEqual({ success: true, value: 200 });
+    });
+
+    it('should reject non-integer values', () => {
+        expect(validateDyeId(1.5).success).toBe(false);
+        expect(validateDyeId(50.9).success).toBe(false);
+    });
+
+    it('should reject negative IDs', () => {
+        expect(validateDyeId(-1).success).toBe(false);
+        expect(validateDyeId(0).success).toBe(false);
+    });
+
+    it('should reject IDs out of range', () => {
+        expect(validateDyeId(201).success).toBe(false);
+        expect(validateDyeId(999).success).toBe(false);
+    });
+});
+
+describe('sanitizeSearchQuery', () => {
+    it('should remove control characters', () => {
+        const malicious = '\x00\x1F<script>alert(1)</script>';
+        const sanitized = sanitizeSearchQuery(malicious);
+        expect(sanitized).not.toContain('\x00');
+        expect(sanitized).not.toContain('\x1F');
+    });
+
+    it('should limit length to 50 characters', () => {
+        const longQuery = 'a'.repeat(100);
+        const sanitized = sanitizeSearchQuery(longQuery);
+        expect(sanitized.length).toBeLessThanOrEqual(50);
+    });
+
+    it('should trim whitespace', () => {
+        expect(sanitizeSearchQuery('  test  ')).toBe('test');
+        expect(sanitizeSearchQuery('\t\ntest\n\t')).toBe('test');
+    });
+
+    it('should preserve valid characters', () => {
+        expect(sanitizeSearchQuery('Dalamud Red')).toBe('Dalamud Red');
+        expect(sanitizeSearchQuery('Snow White-123')).toBe('Snow White-123');
     });
 });

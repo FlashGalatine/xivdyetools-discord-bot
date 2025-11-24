@@ -79,9 +79,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         let baseDye: Dye;
 
         const hexValidation = validateHexColor(baseColorInput);
-        if (hexValidation.valid) {
-            // Input is a hex color
-            baseColor = baseColorInput;
+        if (hexValidation.success) {
+            // Input is a hex color - use normalized value
+            baseColor = hexValidation.value;
             const foundDye = dyeService.findClosestDye(baseColor);
             if (!foundDye) {
                 const errorEmbed = createErrorEmbed('Error', 'Could not find matching dye.');

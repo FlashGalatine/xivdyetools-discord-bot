@@ -47,9 +47,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         let inputDye: Dye | null = null;
 
         const hexValidation = validateHexColor(colorInput);
-        if (hexValidation.valid) {
-            // Input is a hex color
-            targetColor = colorInput;
+        if (hexValidation.success) {
+            // Input is a hex color - use normalized value
+            targetColor = hexValidation.value;
         } else {
             // Input might be a dye name
             const dyeResult = findDyeByName(colorInput);

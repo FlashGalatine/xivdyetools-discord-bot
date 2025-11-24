@@ -20,6 +20,7 @@ import { getAnalytics } from './services/analytics.js';
 import { closeRedis } from './services/redis.js';
 import { emojiService } from './services/emoji-service.js';
 import { initErrorWebhook, notifyError, closeErrorWebhook } from './utils/error-webhook.js';
+import { validateCommandInputs } from './utils/validators.js';
 import type { BotClient, BotCommand } from './types/index.js';
 
 // Initialize error webhook
@@ -100,18 +101,38 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   const command = client.commands.get(interaction.commandName);
 
-  if (!command) {
-    logger.error(`No command matching ${interaction.commandName} was found.`);
-    return;
-  }
+    if (!command) {
+        logger.error(`No command matching ${interaction.commandName} was found.`);
+        return;
+    }
 
-  const rateLimiter = getRateLimiter();
-  const analytics = getAnalytics();
-  const userId = interaction.user.id;
-  const guildId = interaction.guildId || undefined;
+    const rateLimiter = getRateLimiter();
+    const analytics = getAnalytics();
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || undefined;
 
-  try {
-    // Check rate limits
+    try {
+        // Validate all inputs before command execution (S-1: Input Validation)
+        const validationResult = validateCommandInputs(interaction);
+        if (!validationResult.success) {
+            logger.warn(`Input validation failed for user ${userId}: ${validationResult.error}`);
+            await interaction.reply({
+                content: `❌ Invalid input: ${validationResult.error}`,
+                ephemeral: true,
+            });
+            
+            await analytics.trackCommand({
+                commandName: interaction.commandName,
+                userId,
+                guildId,
+                timestamp: Date.now(),
+                success: false,
+                errorType: 'validation_error',
+            });
+            return;
+        }
+
+        // Check rate limits
     const [userLimit, userHourlyLimit, globalLimit] = await Promise.all([
       rateLimiter.checkUserLimit(userId),
       rateLimiter.checkUserHourlyLimit(userId),
