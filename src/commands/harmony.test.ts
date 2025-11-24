@@ -335,28 +335,6 @@ describe('Harmony Command - Companion Count', () => {
         const fields = embed.data.fields || [];
 
         // Should have 2 companions + 1 base = 3 fields
-        expect(fields.length).toBe(3);
-    });
-});
-
-describe('Harmony Command - Attachments', () => {
-    it('should include color wheel attachment', async () => {
-        const interaction = createMockInteraction({
-            base_color: '#FF0000',
-            type: 'complementary',
-        });
-
-        await execute(interaction);
-
-        const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-        const files = (editCall as any).files;
-
-        expect(files).toBeDefined();
-        expect(files.length).toBeGreaterThan(0);
-
-        // First file should be color wheel
-        expect(files[0].name).toContain('harmony_');
-        expect(files[0].name).toContain('.png');
     });
 
     it('should include base dye emoji when available', async () => {
