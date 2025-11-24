@@ -1,6 +1,25 @@
 /**
  * Base command class for Discord bot commands
+ *
+ * Provides standardized error handling, logging, and response formatting
+ * for all Discord bot commands. Uses the template method pattern to
+ * ensure consistent command execution flow.
+ *
  * Per R-2: Standardized command structure with error handling
+ *
+ * @example
+ * ```typescript
+ * class MyCommand extends CommandBase {
+ *   readonly data = new SlashCommandBuilder()
+ *     .setName('mycommand')
+ *     .setDescription('My command description');
+ *
+ *   protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+ *     // Command logic here
+ *     await interaction.editReply({ content: 'Success!' });
+ *   }
+ * }
+ * ```
  */
 
 import { ChatInputCommandInteraction, AutocompleteInteraction, EmbedBuilder } from 'discord.js';

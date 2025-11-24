@@ -1,0 +1,23 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs/api",
+  "theme": "default",
+  "includeVersion": true,
+  "readme": "README.md",
+  "name": "XIV Dye Tools Discord Bot API",
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Commands",
+    "Services",
+    "Utilities",
+    "Types",
+    "*"
+  ],
+  "searchInComments": true,
+  "sort": ["source-order"]
+}
+
