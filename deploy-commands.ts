@@ -13,6 +13,7 @@ import { dyeCommand } from './src/commands/dye.js';
 import { matchImageCommand } from './src/commands/match-image.js';
 import { comparisonCommand } from './src/commands/comparison.js';
 import { accessibilityCommand } from './src/commands/accessibility.js';
+import { statsCommand } from './src/commands/stats.js';
 
 // Collect all commands
 const commands = [
@@ -23,6 +24,7 @@ const commands = [
     matchImageCommand.data.toJSON(),
     comparisonCommand.data.toJSON(),
     accessibilityCommand.data.toJSON(),
+    statsCommand.data.toJSON(),
 ];
 
 const rest = new REST().setToken(config.token);

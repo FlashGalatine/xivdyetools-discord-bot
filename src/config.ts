@@ -20,6 +20,12 @@ export interface BotConfig {
   // Logging
   logLevel: 'debug' | 'info' | 'warn' | 'error';
 
+  // Health Check
+  port: number;
+
+  // Error Notifications
+  errorWebhookUrl?: string;
+
   // Rate Limiting
   rateLimit: {
     commandsPerMinute: number;
@@ -82,6 +88,12 @@ export const config: BotConfig = {
   // Logging
   logLevel: getLogLevel(),
 
+  // Health Check
+  port: parseInt(process.env.PORT || '3000', 10),
+
+  // Error Notifications
+  errorWebhookUrl: process.env.ERROR_WEBHOOK_URL,
+
   // Rate Limiting
   rateLimit: {
     commandsPerMinute: parseInt(process.env.RATE_LIMIT_PER_MINUTE || '10', 10),
@@ -100,3 +112,4 @@ export const config: BotConfig = {
     timeout: parseInt(process.env.API_TIMEOUT_MS || '5000', 10), // 5 seconds
   },
 };
+
