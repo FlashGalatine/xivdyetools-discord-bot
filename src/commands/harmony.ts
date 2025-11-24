@@ -193,11 +193,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         });
 
         const attachment = new AttachmentBuilder(wheelBuffer, {
-            name: `harmony_${harmonyType}_${baseHsv.h.toFixed(0)}.png`,
+            name: 'color-wheel.png', // Use consistent name for attachment reference
         });
 
-        // Create embed
+        // Create embed with color wheel image
         const embed = createHarmonyEmbed(baseColor, baseDye, harmonyType, companions);
+        embed.setImage('attachment://color-wheel.png'); // Reference the attachment
 
         // Collect attachments (color wheel + base dye emoji if available)
         const files = [attachment];
