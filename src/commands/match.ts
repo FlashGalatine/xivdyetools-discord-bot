@@ -16,8 +16,9 @@ import {
     type Dye,
 } from 'xivdyetools-core';
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
-import { createErrorEmbed, formatColorSwatch, formatRGB, formatHSV, createDyeEmojiAttachment } from '../utils/embed-builder.js';
+import { createErrorEmbed, formatColorSwatch, formatRGB, formatHSV } from '../utils/embed-builder.js';
 import { logger } from '../utils/logger.js';
+import { emojiService } from '../services/emoji-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -121,7 +122,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
                 {
                     name: `Closest Dye: ${closestDye.name}`,
                     value: [
-                        formatColorSwatch(closestDye.hex, 6),
+                        emojiService.getDyeEmojiOrSwatch(closestDye, 6),
                         `**Hex:** ${closestDye.hex.toUpperCase()}`,
                         `**RGB:** ${formatRGB(closestDye.hex)}`,
                         `**HSV:** ${formatHSV(closestDye.hex)}`,
@@ -149,17 +150,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             });
         }
 
-        // Attach emoji if available
-        const emojiAttachment = createDyeEmojiAttachment(closestDye);
-        const files = emojiAttachment ? [emojiAttachment] : [];
-
-        // Add thumbnail to embed if emoji available
-        if (emojiAttachment) {
-            embed.setThumbnail(`attachment://${emojiAttachment.name}`);
+        // Add emoji thumbnail if available
+        const emoji = emojiService.getDyeEmoji(closestDye);
+        if (emoji) {
+            embed.setThumbnail(emoji.url);
         }
 
         // Send response
-        await interaction.editReply({ embeds: [embed], files });
+        await interaction.editReply({ embeds: [embed] });
 
         logger.info(`Match command completed: ${closestDye.name} (distance: ${distance.toFixed(2)})`);
     } catch (error) {

@@ -20,6 +20,7 @@ import { validateHexColor, findDyeByName } from '../utils/validators.js';
 import { createErrorEmbed, formatColorSwatch, formatRGB, formatHSV } from '../utils/embed-builder.js';
 import { renderSwatchGrid } from '../renderers/swatch-grid.js';
 import { logger } from '../utils/logger.js';
+import { emojiService } from '../services/emoji-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -139,7 +140,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             embed.addFields({
                 name: `${emoji} ${dye.name}`,
                 value: [
-                    formatColorSwatch(dye.hex, 6),
+                    emojiService.getDyeEmojiOrSwatch(dye, 6),
                     `**Hex:** ${dye.hex.toUpperCase()}`,
                     `**RGB:** ${formatRGB(dye.hex)}`,
                     `**HSV:** ${formatHSV(dye.hex)}`,

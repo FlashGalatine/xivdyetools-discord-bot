@@ -5,6 +5,29 @@
 import { describe, it, expect, vi } from 'vitest';
 import { execute, autocomplete } from './match.js';
 import type { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
+import type { Dye } from 'xivdyetools-core';
+
+// Mock emoji service
+vi.mock('../services/emoji-service.js', () => ({
+    emojiService: {
+        getDyeEmojiOrSwatch: vi.fn((dye: Dye) => {
+            if (dye.name === 'Dalamud Red') {
+                return '<:dye_5730:123456789>';
+            }
+            return `████ ${dye.hex.toUpperCase()}`;
+        }),
+        getDyeEmoji: vi.fn((dye: Dye) => {
+            if (dye.name === 'Dalamud Red') {
+                return {
+                    id: '123456789',
+                    name: 'dye_5730',
+                    url: 'https://cdn.discordapp.com/emojis/dye_5730.webp',
+                };
+            }
+            return undefined;
+        }),
+    },
+}));
 
 /**
  * Create mock ChatInputCommandInteraction
@@ -291,7 +314,7 @@ describe('Match Command - Embed Content', () => {
 });
 
 describe('Match Command - Emoji Attachments', () => {
-    it('should include emoji attachment when available', async () => {
+    it('should not include emoji attachment', async () => {
         const interaction = createMockInteraction('Dalamud Red'); // Has emoji
 
         await execute(interaction);
@@ -299,9 +322,8 @@ describe('Match Command - Emoji Attachments', () => {
         const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
         const files = (editCall as any).files;
 
-        expect(files.length).toBe(1);
-        expect(files[0].name).toContain('dye_');
-        expect(files[0].name).toContain('.webp');
+        // Should be undefined as we use URL now
+        expect(files).toBeUndefined();
     });
 
     it('should set thumbnail when emoji available', async () => {
@@ -312,7 +334,7 @@ describe('Match Command - Emoji Attachments', () => {
         const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
         const embed = (editCall as any).embeds[0];
 
-        expect(embed.data.thumbnail?.url).toContain('attachment://dye_');
+        expect(embed.data.thumbnail?.url).toContain('https://cdn.discordapp.com/emojis/dye_5730.webp');
     });
 
     it('should not include emoji when not available', async () => {
@@ -323,9 +345,7 @@ describe('Match Command - Emoji Attachments', () => {
         const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
         const files = (editCall as any).files;
 
-        // May or may not have emoji depending on closest match
-        // Just verify it's an array
-        expect(Array.isArray(files)).toBe(true);
+        expect(files).toBeUndefined();
     });
 });
 
@@ -442,7 +462,7 @@ describe('Match Command - Color Formatting', () => {
         expect(inputField?.value).toContain('#FF0000');
     });
 
-    it('should include color swatches for both input and match', async () => {
+    it('should include color swatches or emojis for both input and match', async () => {
         const interaction = createMockInteraction('#FF0000');
 
         await execute(interaction);
@@ -453,9 +473,10 @@ describe('Match Command - Color Formatting', () => {
         const inputField = embed.data.fields?.find((f: any) => f.name === 'Input Color');
         const dyeField = embed.data.fields?.find((f: any) => f.name.includes('Closest Dye'));
 
-        // Both should have color swatches (Unicode blocks)
+        // Input field always uses swatch
         expect(inputField?.value).toContain('█');
-        expect(dyeField?.value).toContain('█');
+        // Dye field uses emoji or swatch
+        expect(dyeField?.value).toMatch(/█|<:dye_/);
     });
 
     it('should format RGB values correctly', async () => {

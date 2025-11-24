@@ -5,6 +5,19 @@
 import { describe, it, expect, vi } from 'vitest';
 import { execute, autocomplete } from './comparison.js';
 import type { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
+import type { Dye } from 'xivdyetools-core';
+
+// Mock emoji service
+vi.mock('../services/emoji-service.js', () => ({
+    emojiService: {
+        getDyeEmojiOrSwatch: vi.fn((dye: Dye) => {
+            if (dye.name === 'Dalamud Red') {
+                return '<:dye_5730:123456789>';
+            }
+            return `████ ${dye.hex.toUpperCase()}`;
+        }),
+    },
+}));
 
 /**
  * Create mock ChatInputCommandInteraction
@@ -365,7 +378,7 @@ describe('Comparison Command - Embed Content', () => {
         });
     });
 
-    it('should include color swatches', async () => {
+    it('should include color swatches or emojis', async () => {
         const interaction = createMockInteraction({
             dye1: '#FF0000',
             dye2: '#0000FF',
@@ -379,7 +392,11 @@ describe('Comparison Command - Embed Content', () => {
 
         const dyeFields = fields.filter((f: any) => !f.name.includes('📊'));
         dyeFields.forEach((field: any) => {
-            expect(field.value).toContain('█');
+            // Mock returns swatch for hex inputs (since they find closest dye but mock logic is simple)
+            // Actually, findClosestDye returns a real dye object, but our mock checks dye.name
+            // If we use #FF0000, it finds "Dalamud Red" (probably), so it might return emoji if name matches
+            // Let's just check for either
+            expect(field.value).toMatch(/█|<:dye_/);
         });
     });
 
