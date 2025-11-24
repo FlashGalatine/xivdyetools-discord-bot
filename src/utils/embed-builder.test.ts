@@ -20,21 +20,27 @@ import type { Dye } from 'xivdyetools-core';
 
 // Mock dye for testing
 const mockDye: Dye = {
+    id: 5730,
     name: 'Dalamud Red',
     hex: '#D42F2F',
+    rgb: { r: 212, g: 47, b: 47 },
+    hsv: { h: 0, s: 78, v: 83 },
     category: 'Reds',
     itemID: 5730,
     acquisition: 'Vendor (200 Gil)',
-    price: 200,
+    cost: 200,
 };
 
 const mockDyeWithoutEmoji: Dye = {
+    id: 99999,
     name: 'Test Dye',
     hex: '#FFFFFF',
+    rgb: { r: 255, g: 255, b: 255 },
+    hsv: { h: 0, s: 0, v: 100 },
     category: 'Special',
     itemID: 99999,
     acquisition: 'Unknown',
-    price: 0,
+    cost: 0,
 };
 
 describe('COLORS constant', () => {
