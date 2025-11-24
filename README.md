@@ -15,6 +15,17 @@
 🌈 **Color Mixing** - Find intermediate dyes for smooth color gradients
 💰 **Live Pricing** - Market board prices via Universalis API
 
+## Privacy
+
+🔒 **Privacy Policy:** See [PRIVACY.md](./docs/PRIVACY.md) for information about data collection, storage, and usage.
+
+**Summary:**
+- We collect Discord user IDs and command usage statistics for analytics
+- Data is retained for 7-30 days and automatically deleted
+- Images uploaded via `/match-image` are processed but **not stored**
+- We do not share or sell your data
+- Full details in [PRIVACY.md](./docs/PRIVACY.md)
+
 ## Commands
 
 - `/harmony` - Generate color harmonies with color wheel visualization
