@@ -144,7 +144,7 @@ class MatchCommand extends CommandBase {
     // Add emoji thumbnail if available
     const emoji = emojiService.getDyeEmoji(closestDye);
     if (emoji) {
-      embed.setThumbnail(emoji.url);
+      embed.setThumbnail(emoji.imageURL());
     }
 
     // Send response

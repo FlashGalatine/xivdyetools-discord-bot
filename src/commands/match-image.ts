@@ -7,6 +7,7 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   ColorResolvable,
+  MessageFlags,
 } from 'discord.js';
 import sharp from 'sharp';
 import { DyeService, ColorService, dyeDatabase } from 'xivdyetools-core';
@@ -16,11 +17,11 @@ import {
   formatColorSwatch,
   formatRGB,
   formatHSV,
-  createDyeEmojiAttachment,
 } from '../utils/embed-builder.js';
 import { validateImage, processWithTimeout } from '../utils/image-validator.js';
 import { logger } from '../utils/logger.js';
 import { WorkerPool } from '../utils/worker-pool.js';
+import { emojiService } from '../services/emoji-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -247,7 +248,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         {
           name: `Closest Dye: ${closestDye.name}`,
           value: [
-            formatColorSwatch(closestDye.hex, 6),
+            emojiService.getDyeEmojiOrSwatch(closestDye, 6),
             `**Hex:** ${closestDye.hex.toUpperCase()}`,
             `**RGB:** ${formatRGB(closestDye.hex)}`,
             `**HSV:** ${formatHSV(closestDye.hex)}`,
@@ -276,16 +277,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       });
     }
 
-    // Attach emoji if available
-    const emojiAttachment = createDyeEmojiAttachment(closestDye);
-    const files = emojiAttachment ? [emojiAttachment] : [];
-
-    // Add thumbnail to embed if emoji available
-    if (emojiAttachment) {
-      embed.setThumbnail(`attachment://${emojiAttachment.name}`);
+    // Add emoji thumbnail if available
+    const emoji = emojiService.getDyeEmoji(closestDye);
+    if (emoji) {
+      embed.setThumbnail(emoji.imageURL());
     }
 
-    await interaction.editReply({ embeds: [embed], files });
+    await interaction.editReply({ embeds: [embed] });
 
     logger.info(`Image match completed: ${closestDye.name} (distance: ${distance.toFixed(2)})`);
   } catch (error) {
@@ -309,7 +307,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (interaction.deferred) {
       await interaction.editReply({ embeds: [errorEmbed] });
     } else {
-      await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
   }
 }

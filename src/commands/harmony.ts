@@ -7,6 +7,7 @@ import {
     ChatInputCommandInteraction,
     AttachmentBuilder,
     AutocompleteInteraction,
+    MessageFlags,
 } from 'discord.js';
 import {
     DyeService,
@@ -150,6 +151,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
                 break;
         }
 
+        // Filter out Facewear category dyes
+        harmonyDyes = harmonyDyes.filter((dye) => dye.category !== 'Facewear');
+
         if (harmonyDyes.length === 0) {
             const errorEmbed = createErrorEmbed('Error', 'Could not generate harmony.');
             await interaction.editReply({ embeds: [errorEmbed] });
@@ -227,7 +231,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         if (interaction.deferred) {
             await interaction.editReply({ embeds: [errorEmbed] });
         } else {
-            await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+            await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
         }
     }
 }

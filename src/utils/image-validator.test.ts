@@ -54,10 +54,13 @@ describe('validateImage', () => {
 
     it('should reject images with too many pixels', async () => {
         const mockSharp = sharp as any;
+        // Use dimensions that exceed MAX_DIMENSION (4096) to test dimension validation
+        // Note: Pixel count check would require dimensions within MAX_DIMENSION but exceeding
+        // MAX_PIXEL_COUNT, which is impossible since MAX_PIXEL_COUNT = MAX_DIMENSION^2
         mockSharp.mockReturnValue({
             metadata: vi.fn().mockResolvedValue({
-                width: 4096,
-                height: 4096,
+                width: 4097,
+                height: 4097,
                 format: 'jpeg',
             }),
         });
@@ -66,7 +69,9 @@ describe('validateImage', () => {
         const result = await validateImage(buffer, 8 * 1024 * 1024);
         expect(result.success).toBe(false);
         if (!result.success) {
-            expect(result.error).toContain('too many pixels');
+            // Dimension check runs first, so we get dimension error
+            expect(result.error).toContain('exceed');
+            expect(result.error).toContain('4096');
         }
     });
 

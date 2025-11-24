@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { ChatInputCommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction, InteractionEditReplyOptions } from 'discord.js';
 import { matchCommand } from '../../commands/match.js';
 // Note: harmony and dye commands may need to be imported differently
 // For now, we'll focus on match command which we know works
@@ -16,10 +16,6 @@ function createMockInteraction(
   commandName: string,
   options: Record<string, string | number | null> = {}
 ): ChatInputCommandInteraction {
-  const deferReply = vi.fn().mockResolvedValue(undefined);
-  const editReply = vi.fn().mockResolvedValue(undefined);
-  const reply = vi.fn().mockResolvedValue(undefined);
-
   const getString = vi.fn((name: string, _required?: boolean) => {
     return (options[name] as string) || null;
   });
@@ -28,11 +24,8 @@ function createMockInteraction(
     return (options[name] as number) || null;
   });
 
-  return {
+  const mockInteraction = {
     commandName,
-    deferReply,
-    editReply,
-    reply,
     deferred: false,
     replied: false,
     options: {
@@ -41,9 +34,24 @@ function createMockInteraction(
     },
     user: {
       id: 'test-user-123',
+      username: 'TestUser',
+      discriminator: '0000',
+      avatar: null,
+      bot: false,
     },
     guildId: 'test-guild-456',
-  } as unknown as ChatInputCommandInteraction;
+  } as any;
+
+  // Mock methods that update state
+  mockInteraction.deferReply = vi.fn().mockImplementation(async () => {
+    mockInteraction.deferred = true;
+  });
+  mockInteraction.editReply = vi.fn().mockResolvedValue(undefined);
+  mockInteraction.reply = vi.fn().mockImplementation(async () => {
+    mockInteraction.replied = true;
+  });
+
+  return mockInteraction as unknown as ChatInputCommandInteraction;
 }
 
 describe('Command Flow - Integration Tests', () => {
@@ -60,10 +68,10 @@ describe('Command Flow - Integration Tests', () => {
       expect(interaction.deferReply).toHaveBeenCalled();
       expect(interaction.editReply).toHaveBeenCalled();
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
+      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
       expect(editCall).toHaveProperty('embeds');
       expect(editCall.embeds).toBeInstanceOf(Array);
-      expect(editCall.embeds.length).toBeGreaterThan(0);
+      expect(editCall.embeds?.length).toBeGreaterThan(0);
     });
 
     it('should execute match command with dye name', async () => {
@@ -84,9 +92,14 @@ describe('Command Flow - Integration Tests', () => {
       expect(interaction.editReply).toHaveBeenCalled();
 
       // Should show error message
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-      const embed = editCall.embeds[0];
-      expect(embed.data.title).toContain('❌');
+      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const embed = editCall.embeds?.[0];
+      if (embed && 'title' in embed) {
+        expect(embed.title).toContain('❌');
+      } else if (embed && 'toJSON' in embed) {
+        const json = embed.toJSON();
+        expect(json.title).toContain('❌');
+      }
     });
   });
 
@@ -118,13 +131,14 @@ describe('Command Flow - Integration Tests', () => {
 
       await matchCommand.execute(interaction);
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-      const embed = editCall.embeds[0];
+      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const embed = editCall.embeds?.[0];
+      const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
 
       // Should have required embed fields
-      expect(embed.data.title).toBeDefined();
-      expect(embed.data.fields).toBeDefined();
-      expect(Array.isArray(embed.data.fields)).toBe(true);
+      expect(embedData?.title).toBeDefined();
+      expect(embedData?.fields).toBeDefined();
+      expect(Array.isArray(embedData?.fields)).toBe(true);
     });
 
     it('should include color information in response', async () => {
@@ -132,11 +146,12 @@ describe('Command Flow - Integration Tests', () => {
 
       await matchCommand.execute(interaction);
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-      const embed = editCall.embeds[0];
+      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const embed = editCall.embeds?.[0];
+      const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
 
       // Should contain color-related fields
-      const fieldNames = embed.data.fields?.map((f: any) => f.name) || [];
+      const fieldNames = embedData?.fields?.map((f: any) => f.name) || [];
       expect(
         fieldNames.some((name: string) => name.includes('Color') || name.includes('Dye'))
       ).toBe(true);

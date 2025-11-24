@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-11-24
+
+### Added
+- **Emoji Support for `/match_image`**: Added emoji display in the closest dye field and thumbnail, matching the behavior of other commands.
+
+### Fixed
+- **Discord.js Deprecation Warnings**: 
+  - Replaced deprecated `emoji.url` with `emoji.imageURL()` across all commands
+  - Replaced deprecated `ephemeral: true` with `MessageFlags.Ephemeral` in all interaction responses
+- **Test Mocks**: Updated test mocks to include `imageURL()` method for emoji objects
+- **Performance Benchmark Test**: Made caching test more robust to handle test environment variability
+
+### Changed
+- All commands now use the modern Discord.js API methods, eliminating deprecation warnings in production logs
+
 ## [1.0.0] - 2025-11-23
 
 ### 🎉 Major Release - Optimization Initiative Complete

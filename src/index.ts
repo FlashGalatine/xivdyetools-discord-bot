@@ -3,7 +3,7 @@
  * Main entry point
  */
 
-import { Client, GatewayIntentBits, Events, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Events, Collection, MessageFlags } from 'discord.js';
 import express from 'express';
 import { config } from './config.js';
 import { logger } from './utils/logger.js';
@@ -127,7 +127,7 @@ client.on(Events.InteractionCreate, (interaction) => {
         );
         await interaction.reply({
           content: `❌ Invalid input: ${validationResult.error}`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
 
         await analytics.trackCommand({
@@ -159,7 +159,7 @@ client.on(Events.InteractionCreate, (interaction) => {
             `⏱️ You're sending commands too quickly! Please wait ${userLimit.retryAfter} seconds.\n\n` +
             `**Limit:** ${userLimit.limit} commands per minute\n` +
             `**Try again:** <t:${Math.floor(userLimit.resetAt.getTime() / 1000)}:R>`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
 
         await analytics.trackCommand({
@@ -183,7 +183,7 @@ client.on(Events.InteractionCreate, (interaction) => {
             `⏱️ You've reached your hourly command limit! Please wait ${Math.ceil(userHourlyLimit.retryAfter! / 60)} minutes.\n\n` +
             `**Limit:** ${userHourlyLimit.limit} commands per hour\n` +
             `**Try again:** <t:${Math.floor(userHourlyLimit.resetAt.getTime() / 1000)}:R>`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
 
         await analytics.trackCommand({
@@ -204,7 +204,7 @@ client.on(Events.InteractionCreate, (interaction) => {
         await securityLogger.rateLimitExceeded('global', commandName, 'global', guildId);
         await interaction.reply({
           content: '⏱️ The bot is currently experiencing high load. Please try again in a moment.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
 
         await analytics.trackCommand({
@@ -235,15 +235,16 @@ client.on(Events.InteractionCreate, (interaction) => {
       logger.error(`Error executing ${interaction.commandName}:`, error);
 
       try {
-        const errorMessage = {
-          content: '❌ There was an error executing this command!',
-          ephemeral: true,
-        };
-
         if (interaction.replied || interaction.deferred) {
-          await interaction.followUp(errorMessage);
+          await interaction.followUp({
+            content: '❌ There was an error executing this command!',
+            flags: MessageFlags.Ephemeral,
+          });
         } else {
-          await interaction.reply(errorMessage);
+          await interaction.reply({
+            content: '❌ There was an error executing this command!',
+            flags: MessageFlags.Ephemeral,
+          });
         }
       } catch (replyError) {
         // If we can't even report the error (e.g. interaction is dead), just log it

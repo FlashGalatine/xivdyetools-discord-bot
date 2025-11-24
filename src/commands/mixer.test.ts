@@ -27,15 +27,17 @@ function createMockInteraction(options: {
     end_color: string;
     steps?: number | null;
 }): ChatInputCommandInteraction {
-    const deferReply = vi.fn().mockResolvedValue(undefined);
-    const editReply = vi.fn().mockResolvedValue(undefined);
-    const reply = vi.fn().mockResolvedValue(undefined);
-
     const mockInteraction = {
-        deferReply,
-        editReply,
-        reply,
-        deferred: true,
+        deferred: false,
+        replied: false,
+        user: {
+            id: 'test-user-123',
+            username: 'TestUser',
+            discriminator: '0000',
+            avatar: null,
+            bot: false,
+        },
+        guildId: 'test-guild-123',
         options: {
             getString: vi.fn((name: string, required?: boolean) => {
                 if (name === 'start_color') return options.start_color;
@@ -47,9 +49,18 @@ function createMockInteraction(options: {
                 return null;
             }),
         },
-    } as unknown as ChatInputCommandInteraction;
+    } as any;
 
-    return mockInteraction;
+    // Mock methods that update state
+    mockInteraction.deferReply = vi.fn().mockImplementation(async () => {
+        mockInteraction.deferred = true;
+    });
+    mockInteraction.editReply = vi.fn().mockResolvedValue(undefined);
+    mockInteraction.reply = vi.fn().mockImplementation(async () => {
+        mockInteraction.replied = true;
+    });
+
+    return mockInteraction as unknown as ChatInputCommandInteraction;
 }
 
 /**

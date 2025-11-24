@@ -101,12 +101,21 @@ async function extractDominantColor(
 }
 
 /**
+ * Simplified image metadata
+ */
+interface ImageMetadata {
+  width: number;
+  height: number;
+  format: string;
+}
+
+/**
  * Validate image buffer
  */
 async function validateImage(
   imageBuffer: Buffer,
   maxSizeBytes: number
-): Promise<{ success: boolean; metadata?: sharp.Metadata; error?: string }> {
+): Promise<{ success: boolean; metadata?: ImageMetadata; error?: string }> {
   try {
     // Check size
     if (imageBuffer.length > maxSizeBytes) {

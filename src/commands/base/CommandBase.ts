@@ -22,7 +22,7 @@
  * ```
  */
 
-import { ChatInputCommandInteraction, AutocompleteInteraction, EmbedBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, AutocompleteInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
 import { createErrorEmbed } from '../../utils/embed-builder.js';
 import { logger } from '../../utils/logger.js';
 import type { BotCommand } from '../../types/index.js';
@@ -105,7 +105,12 @@ export abstract class CommandBase implements BotCommand {
       });
 
       // Provide user-friendly error messages
-      if (error.message.includes('rate limit')) {
+      if (error.message.includes('Invalid input')) {
+        errorTitle = 'Invalid Input';
+        // Extract the user-friendly part of the error message
+        // Format: "Invalid input: \"...\" is not a valid hex color or dye name."
+        errorMessage = error.message;
+      } else if (error.message.includes('rate limit')) {
         errorTitle = 'Rate Limit Exceeded';
         errorMessage = "You're sending commands too quickly. Please wait a moment and try again.";
       } else if (error.message.includes('permission') || error.message.includes('Missing')) {
@@ -130,7 +135,7 @@ export abstract class CommandBase implements BotCommand {
       if (interaction.deferred || interaction.replied) {
         await interaction.editReply({ embeds: [errorEmbed] });
       } else {
-        await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
       }
     } catch (replyError) {
       // If we can't even send the error message, log it

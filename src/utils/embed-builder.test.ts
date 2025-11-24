@@ -24,7 +24,10 @@ vi.mock('../services/emoji-service.js', () => ({
     emojiService: {
         getDyeEmoji: vi.fn((dye: Dye) => {
             if (dye.itemID === 5730) {
-                return { url: 'https://cdn.discordapp.com/emojis/dye_5730.webp' };
+                return {
+                    url: 'https://cdn.discordapp.com/emojis/dye_5730.webp',
+                    imageURL: vi.fn(() => 'https://cdn.discordapp.com/emojis/dye_5730.webp'),
+                };
             }
             return undefined;
         }),
