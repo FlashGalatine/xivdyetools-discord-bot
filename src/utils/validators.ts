@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
 /**
  * Input validation utilities
  * Enhanced with strict validation per S-1 security requirements
@@ -12,7 +13,7 @@ const dyeService = new DyeService(dyeDatabase);
 /**
  * Result type for validation operations
  */
-export type ValidationResult<T> = 
+export type ValidationResult<T> =
     | { success: true; value: T }
     | { success: false; error: string };
 
@@ -22,16 +23,21 @@ export type ValidationResult<T> =
  */
 export function validateHexColor(hex: string): ValidationResult<string> {
     // Normalize: trim and uppercase
-    const normalized = hex.trim().toUpperCase();
-    
+    let normalized = hex.trim().toUpperCase();
+
+    // Check if it's a 6-character hex string without hash and prepend it
+    if (/^[0-9A-F]{6}$/.test(normalized)) {
+        normalized = `#${normalized}`;
+    }
+
     // Strict regex: must be exactly #RRGGBB
     if (!/^#[0-9A-F]{6}$/.test(normalized)) {
         return {
             success: false,
-            error: `Invalid hex color format: "${hex}". Expected #RRGGBB format (e.g., #FF0000).`,
+            error: `Invalid hex color format: "${hex}". Expected #RRGGBB format (e.g., #FF0000) or RRGGBB (e.g., FF0000).`,
         };
     }
-    
+
     return { success: true, value: normalized };
 }
 
@@ -46,14 +52,14 @@ export function validateDyeId(id: number): ValidationResult<number> {
             error: 'Dye ID must be an integer.',
         };
     }
-    
+
     if (id < 1) {
         return {
             success: false,
             error: 'Dye ID must be a positive integer.',
         };
     }
-    
+
     // Check against known dye range (1-125 currently, allow headroom for future dyes)
     if (id > 200) {
         return {
@@ -61,7 +67,7 @@ export function validateDyeId(id: number): ValidationResult<number> {
             error: 'Dye ID out of known range (1-200).',
         };
     }
-    
+
     return { success: true, value: id };
 }
 
@@ -71,11 +77,12 @@ export function validateDyeId(id: number): ValidationResult<number> {
  */
 export function sanitizeSearchQuery(query: string): string {
     // Remove control characters (0x00-0x1F, 0x7F-0x9F)
+    // eslint-disable-next-line no-control-regex
     const sanitized = query.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-    
+
     // Limit length to 50 characters (prevent ReDoS via complex patterns)
     const limited = sanitized.substring(0, 50);
-    
+
     // Trim whitespace
     return limited.trim();
 }
@@ -99,13 +106,13 @@ export function validateHexColorLegacy(color: string): { valid: boolean; error?:
 export function findDyeByName(name: string): { dye?: Dye; error?: string } {
     // Sanitize input to prevent injection attacks
     const sanitized = sanitizeSearchQuery(name);
-    
+
     if (sanitized.length === 0) {
         return {
             error: 'Dye name cannot be empty.',
         };
     }
-    
+
     // Try search by name
     const searchResults = dyeService.searchByName(sanitized);
     if (searchResults.length > 0) {
@@ -205,7 +212,7 @@ export function validateIntRange(
  */
 export function validateCommandInputs(interaction: ChatInputCommandInteraction): ValidationResult<void> {
     const commandName = interaction.commandName;
-    
+
     try {
         // Validate based on command type
         switch (commandName) {
@@ -215,13 +222,13 @@ export function validateCommandInputs(interaction: ChatInputCommandInteraction):
             case 'mixer':
             case 'accessibility': {
                 // These commands accept color inputs (hex or dye name)
-                const colorOption = interaction.options.getString('color') || 
-                                   interaction.options.getString('base_color') ||
-                                   interaction.options.getString('dye1') ||
-                                   interaction.options.getString('dye2') ||
-                                   interaction.options.getString('start_color') ||
-                                   interaction.options.getString('end_color');
-                
+                const colorOption = interaction.options.getString('color') ||
+                    interaction.options.getString('base_color') ||
+                    interaction.options.getString('dye1') ||
+                    interaction.options.getString('dye2') ||
+                    interaction.options.getString('start_color') ||
+                    interaction.options.getString('end_color');
+
                 if (colorOption) {
                     // If it looks like a hex color, validate it strictly
                     if (colorOption.trim().startsWith('#')) {
@@ -241,13 +248,13 @@ export function validateCommandInputs(interaction: ChatInputCommandInteraction):
                 }
                 break;
             }
-            
+
             case 'dye': {
                 // Dye command has subcommands
                 const subcommand = interaction.options.getSubcommand();
                 if (subcommand === 'info' || subcommand === 'search') {
-                    const query = interaction.options.getString('name') || 
-                                 interaction.options.getString('query');
+                    const query = interaction.options.getString('name') ||
+                        interaction.options.getString('query');
                     if (query) {
                         const sanitized = sanitizeSearchQuery(query);
                         if (sanitized.length === 0) {
@@ -261,7 +268,7 @@ export function validateCommandInputs(interaction: ChatInputCommandInteraction):
                 break;
             }
         }
-        
+
         // Validate integer options (dye IDs, counts, etc.)
         const integerOptions = interaction.options.data.filter(opt => opt.type === 4); // INTEGER type
         for (const opt of integerOptions) {
@@ -275,7 +282,7 @@ export function validateCommandInputs(interaction: ChatInputCommandInteraction):
                 }
             }
         }
-        
+
         return { success: true, value: undefined };
     } catch (error) {
         return {

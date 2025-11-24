@@ -11,6 +11,7 @@ import { matchCommand } from './src/commands/match.js';
 import { mixerCommand } from './src/commands/mixer.js';
 import { dyeCommand } from './src/commands/dye.js';
 import { matchImageCommand } from './src/commands/match-image.js';
+import { matchImageHelpCommand } from './src/commands/match-image-help.js';
 import { comparisonCommand } from './src/commands/comparison.js';
 import { accessibilityCommand } from './src/commands/accessibility.js';
 import { statsCommand } from './src/commands/stats.js';
@@ -22,6 +23,7 @@ const commands = [
     mixerCommand.data.toJSON(),
     dyeCommand.data.toJSON(),
     matchImageCommand.data.toJSON(),
+    matchImageHelpCommand.data.toJSON(),
     comparisonCommand.data.toJSON(),
     accessibilityCommand.data.toJSON(),
     statsCommand.data.toJSON(),

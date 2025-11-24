@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
 /**
  * /stats command - Display bot usage analytics
  */
@@ -12,6 +13,15 @@ export const statsCommand: BotCommand = {
         .setDescription('Display bot usage statistics'),
 
     async execute(interaction: ChatInputCommandInteraction) {
+        // Restrict to specific user
+        if (interaction.user.id !== '110457699291906048') {
+            await interaction.reply({
+                content: '⛔ You do not have permission to use this command.',
+                ephemeral: true
+            });
+            return;
+        }
+
         await interaction.deferReply();
 
         try {

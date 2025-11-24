@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
 import Client from 'ssh2-sftp-client';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { execSync } from 'child_process';
 
 // Load environment variables
@@ -24,6 +26,35 @@ if (!config.host || !config.username || !config.password) {
 
 const sftp = new Client();
 
+interface FileManifest {
+  [path: string]: string; // path -> hash
+}
+
+function computeFileHash(filePath: string): string {
+  const fileBuffer = fs.readFileSync(filePath);
+  const hashSum = crypto.createHash('md5');
+  hashSum.update(fileBuffer);
+  return hashSum.digest('hex');
+}
+
+function getFilesRecursively(dir: string, baseDir: string): string[] {
+  let results: string[] = [];
+  const list = fs.readdirSync(dir);
+
+  list.forEach((file) => {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+
+    if (stat && stat.isDirectory()) {
+      results = results.concat(getFilesRecursively(filePath, baseDir));
+    } else {
+      results.push(path.relative(baseDir, filePath).replace(/\\/g, '/'));
+    }
+  });
+
+  return results;
+}
+
 async function deploy(): Promise<void> {
   try {
     console.log('🚀 Starting deployment...');
@@ -40,34 +71,103 @@ async function deploy(): Promise<void> {
     });
     console.log('✅ Connected!');
 
-    // 3. Upload files
-    const localDist = path.resolve(process.cwd(), 'dist');
-    const localEmoji = path.resolve(process.cwd(), 'emoji');
-    const remoteDist = `${config.remotePath}/dist`;
-    const remoteEmoji = `${config.remotePath}/emoji`;
+    // 3. Prepare local manifest
+    console.log('📊 Computing local file hashes...');
+    const localManifest: FileManifest = {};
+    const filesToSync: { localPath: string; remotePath: string; relativePath: string }[] = [];
 
-    // Ensure remote directories exist
-    console.log('📂 Ensuring remote directories exist...');
-    await sftp.mkdir(remoteDist, true);
-    await sftp.mkdir(remoteEmoji, true);
+    // Define directories/files to sync
+    const syncConfig = [
+      { local: 'dist', remote: 'dist' },
+      { local: 'emoji', remote: 'emoji' },
+      { local: 'package.json', remote: 'package.json' },
+      { local: 'package-lock.json', remote: 'package-lock.json' },
+      { local: 'start.js', remote: 'start.js' },
+    ];
 
-    // Upload dist
-    console.log('⬆️ Uploading dist/ folder...');
-    await sftp.uploadDir(localDist, remoteDist);
+    for (const item of syncConfig) {
+      const localItemPath = path.resolve(process.cwd(), item.local);
 
-    // Upload emoji (optional, if they change)
-    console.log('⬆️ Uploading emoji/ folder...');
-    await sftp.uploadDir(localEmoji, remoteEmoji);
-
-    // Upload individual files
-    const filesToUpload = ['package.json', 'package-lock.json', 'start.js'];
-    for (const file of filesToUpload) {
-      const localPath = path.resolve(process.cwd(), file);
-      const remotePath = `${config.remotePath}/${file}`;
-      if (fs.existsSync(localPath)) {
-        console.log(`⬆️ Uploading ${file}...`);
-        await sftp.put(localPath, remotePath);
+      if (!fs.existsSync(localItemPath)) {
+        console.warn(`⚠️ Local path not found: ${item.local}`);
+        continue;
       }
+
+      const stat = fs.statSync(localItemPath);
+      if (stat.isDirectory()) {
+        const files = getFilesRecursively(localItemPath, process.cwd());
+        for (const file of files) {
+          // Only include files that are within the current item.local directory
+          if (file.startsWith(item.local + '/')) {
+            const fullLocalPath = path.resolve(process.cwd(), file);
+            const hash = computeFileHash(fullLocalPath);
+            localManifest[file] = hash;
+            filesToSync.push({
+              localPath: fullLocalPath,
+              remotePath: `${config.remotePath}/${file}`,
+              relativePath: file
+            });
+          }
+        }
+      } else {
+        // Single file
+        const hash = computeFileHash(localItemPath);
+        localManifest[item.local] = hash;
+        filesToSync.push({
+          localPath: localItemPath,
+          remotePath: `${config.remotePath}/${item.remote}`,
+          relativePath: item.local
+        });
+      }
+    }
+
+    // 4. Get remote manifest
+    let remoteManifest: FileManifest = {};
+    const manifestPath = `${config.remotePath}/deploy-manifest.json`;
+
+    try {
+      console.log('📥 Checking remote manifest...');
+      const remoteManifestBuffer = await sftp.get(manifestPath);
+      if (remoteManifestBuffer) {
+        remoteManifest = JSON.parse((remoteManifestBuffer as Buffer).toString());
+      }
+    } catch (err) {
+      console.log('ℹ️ No remote manifest found (first deploy or deleted). Uploading all files.');
+    }
+
+    // 5. Determine files to upload
+    const uploadQueue = filesToSync.filter(file => {
+      const localHash = localManifest[file.relativePath];
+      const remoteHash = remoteManifest[file.relativePath];
+      return localHash !== remoteHash;
+    });
+
+    if (uploadQueue.length === 0) {
+      console.log('✨ No changes detected. Everything is up to date!');
+    } else {
+      console.log(`⬆️ Uploading ${uploadQueue.length} changed files...`);
+
+      // Ensure directories exist for queued files
+      // We can be lazy and just ensure the main dirs exist, or robust and ensure all parents
+      // For simplicity, let's ensure base dirs exist. 
+      // Ideally we should ensure parent dir for each file.
+
+      for (const file of uploadQueue) {
+        const remoteDir = path.dirname(file.remotePath);
+        const dirExists = await sftp.exists(remoteDir);
+        if (!dirExists) {
+          await sftp.mkdir(remoteDir, true);
+        }
+
+        console.log(`  - ${file.relativePath}`);
+        await sftp.put(file.localPath, file.remotePath);
+      }
+
+      console.log('✅ Files uploaded.');
+
+      // 6. Upload new manifest
+      console.log('📝 Updating remote manifest...');
+      await sftp.put(Buffer.from(JSON.stringify(localManifest, null, 2)), manifestPath);
     }
 
     console.log('✅ Deployment complete!');
