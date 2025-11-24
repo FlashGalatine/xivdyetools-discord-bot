@@ -46,6 +46,16 @@ RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/deploy-commands.ts ./
 
+# Per S-3: Create non-root user for security
+RUN addgroup -g 1001 -S botuser && \
+    adduser -u 1001 -S botuser -G botuser
+
+# Change ownership of app directory
+RUN chown -R botuser:botuser /app
+
+# Switch to non-root user
+USER botuser
+
 # Set environment
 ENV NODE_ENV=production
 

@@ -100,7 +100,8 @@ export class RateLimiter {
     }
 
     /**
-     * Redis-based rate limiting using INCR and EXPIRE
+     * Redis-based rate limiting using pipeline for atomic operations
+     * Per P-5: Combines INCR + EXPIRE + TTL in single pipeline (reduces 3 round-trips to 1)
      */
     private async checkLimitRedis(
         key: string,
@@ -110,13 +111,21 @@ export class RateLimiter {
         const now = Date.now();
         const resetAt = new Date(now + windowSeconds * 1000);
 
-        // Increment counter
-        const count = await this.redis!.incr(key);
-
-        // Set expiration on first request
-        if (count === 1) {
-            await this.redis!.expire(key, windowSeconds);
+        // Per P-5: Use pipeline to combine INCR, EXPIRE, and TTL in single round-trip
+        const pipeline = this.redis!.pipeline();
+        pipeline.incr(key);
+        pipeline.expire(key, windowSeconds, 'NX'); // Only set if key doesn't exist
+        pipeline.ttl(key);
+        
+        const results = await pipeline.exec();
+        
+        if (!results || results.length < 3) {
+            throw new Error('Pipeline execution failed');
         }
+
+        // Extract results from pipeline
+        const count = results[0][1] as number;
+        const ttl = results[2][1] as number;
 
         const remaining = Math.max(0, limit - count);
         const allowed = count <= limit;
@@ -129,8 +138,6 @@ export class RateLimiter {
         };
 
         if (!allowed) {
-            // Get TTL to calculate retry-after
-            const ttl = await this.redis!.ttl(key);
             result.retryAfter = ttl > 0 ? ttl : windowSeconds;
         }
 

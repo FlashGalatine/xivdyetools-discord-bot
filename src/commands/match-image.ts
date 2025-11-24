@@ -16,6 +16,7 @@ import {
 } from 'xivdyetools-core';
 import { config } from '../config.js';
 import { createErrorEmbed, formatColorSwatch, formatRGB, formatHSV, createDyeEmojiAttachment } from '../utils/embed-builder.js';
+import { validateImage, processWithTimeout } from '../utils/image-validator.js';
 import { logger } from '../utils/logger.js';
 import type { BotCommand } from '../types/index.js';
 
@@ -39,32 +40,35 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
         logger.info(`Analyzing image: ${attachment.name} (${attachment.size} bytes)`);
 
-        // Validate file size
+        // Fetch image buffer from Discord CDN (with timeout)
+        const imageBuffer = await processWithTimeout(
+            fetchImageBuffer(attachment.url),
+            10000 // 10 second timeout
+        );
+
+        // Comprehensive image validation (S-2: Image Upload Security)
         const maxSizeBytes = config.image.maxSizeMB * 1024 * 1024;
-        if (attachment.size > maxSizeBytes) {
+        const validationResult = await processWithTimeout(
+            validateImage(imageBuffer, maxSizeBytes),
+            10000 // 10 second timeout
+        );
+
+        if (!validationResult.success) {
             const errorEmbed = createErrorEmbed(
-                'Image Too Large',
-                `Maximum file size is ${config.image.maxSizeMB}MB. Your file is ${(attachment.size / 1024 / 1024).toFixed(2)}MB.`
+                'Image Validation Failed',
+                validationResult.error || 'Image validation failed.'
             );
             await interaction.editReply({ embeds: [errorEmbed] });
             return;
         }
 
-        // Validate content type (if available)
-        if (attachment.contentType && !isValidImageType(attachment.contentType)) {
-            const errorEmbed = createErrorEmbed(
-                'Invalid File Type',
-                `File must be an image (PNG, JPG, GIF, BMP, WebP).\n\nYour file type: ${attachment.contentType}`
-            );
-            await interaction.editReply({ embeds: [errorEmbed] });
-            return;
-        }
+        logger.debug(`Image validated: ${validationResult.metadata?.width}x${validationResult.metadata?.height}, format: ${validationResult.metadata?.format}`);
 
-        // Fetch image buffer from Discord CDN
-        const imageBuffer = await fetchImageBuffer(attachment.url);
-
-        // Extract dominant color
-        const dominantRGB = await extractDominantColor(imageBuffer);
+        // Extract dominant color (with timeout protection)
+        const dominantRGB = await processWithTimeout(
+            extractDominantColor(imageBuffer),
+            10000 // 10 second timeout
+        );
         const dominantHex = ColorService.rgbToHex(dominantRGB.r, dominantRGB.g, dominantRGB.b);
 
         logger.debug(`Extracted dominant color: ${dominantHex} (RGB: ${dominantRGB.r}, ${dominantRGB.g}, ${dominantRGB.b})`);
@@ -208,12 +212,14 @@ async function fetchImageBuffer(url: string): Promise<Buffer> {
 
 /**
  * Extract dominant color from image buffer using Sharp's histogram analysis
+ * Per P-3: Optimized with downsampling to 256x256 before analysis
  */
 async function extractDominantColor(imageBuffer: Buffer): Promise<{ r: number; g: number; b: number }> {
     try {
+        // Downsample to 256x256 for faster processing (P-3 optimization)
         const stats = await sharp(imageBuffer)
-            .resize(250, 250, {
-                fit: 'cover',
+            .resize(256, 256, {
+                fit: 'inside',
                 withoutEnlargement: true,
             })
             .stats();
@@ -225,22 +231,6 @@ async function extractDominantColor(imageBuffer: Buffer): Promise<{ r: number; g
     }
 }
 
-/**
- * Validate image content type
- */
-function isValidImageType(contentType: string): boolean {
-    const validTypes = [
-        'image/png',
-        'image/jpeg',
-        'image/jpg',
-        'image/gif',
-        'image/bmp',
-        'image/webp',
-        'image/tiff',
-        'image/avif',
-    ];
-    return validTypes.includes(contentType.toLowerCase());
-}
 
 export const matchImageCommand: BotCommand = {
     data,

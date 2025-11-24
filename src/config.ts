@@ -47,6 +47,7 @@ export interface BotConfig {
 
 /**
  * Validate required environment variables
+ * Per S-5: Secret validation on startup
  */
 function validateEnv(): void {
   const required = ['DISCORD_TOKEN', 'DISCORD_CLIENT_ID'];
@@ -56,6 +57,32 @@ function validateEnv(): void {
     throw new Error(
       `Missing required environment variables: ${missing.join(', ')}`
     );
+  }
+
+  // Validate secrets are not placeholders
+  validateSecrets();
+}
+
+/**
+ * Validate secrets are not placeholders or suspicious values
+ * Per S-5: Prevents accidental use of placeholder tokens
+ */
+function validateSecrets(): void {
+  const token = process.env.DISCORD_TOKEN;
+  
+  // Check for placeholder values
+  if (token && (token.includes('your_') || token.includes('example') || token.includes('placeholder'))) {
+    throw new Error('DISCORD_TOKEN appears to be a placeholder. Please set a real token.');
+  }
+  
+  // Check for suspicious token lengths (Discord tokens are typically 59+ characters)
+  if (token && token.length < 50) {
+    console.warn('⚠️  WARNING: DISCORD_TOKEN appears unusually short. Please verify it is correct.');
+  }
+  
+  // Check for common test tokens
+  if (token && token === 'test' || token === 'TEST' || token === '123') {
+    throw new Error('DISCORD_TOKEN appears to be a test value. Please set a real token.');
   }
 }
 

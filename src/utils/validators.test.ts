@@ -42,7 +42,9 @@ describe('validateHexColor', () => {
     it('should reject invalid hex colors', () => {
         const invalid = validateHexColor('#GG0000');
         expect(invalid.success).toBe(false);
-        expect(invalid.error).toContain('Invalid hex color format');
+        if (!invalid.success) {
+            expect(invalid.error).toContain('Invalid hex color format');
+        }
     });
 
     it('should reject hex colors with wrong length', () => {
@@ -84,7 +86,9 @@ describe('validateHarmonyType', () => {
     it('should reject invalid harmony types', () => {
         const invalid = validateHarmonyType('invalid_type');
         expect(invalid.valid).toBe(false);
-        expect(invalid.error).toContain('Invalid harmony type');
+        if (!invalid.valid) {
+            expect(invalid.error).toContain('Invalid harmony type');
+        }
     });
 
     it('should reject empty string', () => {
@@ -126,7 +130,9 @@ describe('validateDataCenter', () => {
     it('should reject invalid data centers', () => {
         const invalid = validateDataCenter('InvalidDC');
         expect(invalid.valid).toBe(false);
-        expect(invalid.error).toContain('Invalid data center');
+        if (!invalid.valid) {
+            expect(invalid.error).toContain('Invalid data center');
+        }
     });
 
     it('should be case-sensitive', () => {
@@ -148,18 +154,24 @@ describe('validateIntRange', () => {
     it('should reject values below minimum', () => {
         const invalid = validateIntRange(0, 1, 10, 'Test');
         expect(invalid.valid).toBe(false);
-        expect(invalid.error).toContain('must be between 1 and 10');
+        if (!invalid.valid) {
+            expect(invalid.error).toContain('must be between 1 and 10');
+        }
     });
 
     it('should reject values above maximum', () => {
         const invalid = validateIntRange(11, 1, 10, 'Test');
         expect(invalid.valid).toBe(false);
-        expect(invalid.error).toContain('must be between 1 and 10');
+        if (!invalid.valid) {
+            expect(invalid.error).toContain('must be between 1 and 10');
+        }
     });
 
     it('should use custom field name in error message', () => {
         const invalid = validateIntRange(0, 1, 10, 'Steps');
-        expect(invalid.error).toContain('Steps must be between 1 and 10');
+        if (!invalid.valid) {
+            expect(invalid.error).toContain('Steps must be between 1 and 10');
+        }
     });
 
     it('should handle negative ranges', () => {

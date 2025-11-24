@@ -1,5 +1,6 @@
 /**
  * Simple console-based logger with color-coded output
+ * Per S-5: Secret redaction to prevent credential leaks
  */
 
 import { config } from '../config.js';
@@ -9,6 +10,47 @@ export enum LogLevel {
     INFO = 1,
     WARN = 2,
     ERROR = 3,
+}
+
+/**
+ * Sensitive keys that should be redacted from logs
+ * Per S-5: Secret redaction
+ */
+const SENSITIVE_KEYS = ['token', 'password', 'secret', 'key', 'webhook', 'auth', 'credential'];
+
+/**
+ * Redact sensitive information from objects
+ * Per S-5: Recursive object traversal, redacts sensitive keys
+ */
+export function redactSensitive<T>(obj: T): T {
+    if (obj === null || obj === undefined) {
+        return obj;
+    }
+
+    if (typeof obj !== 'object') {
+        return obj;
+    }
+
+    // Handle arrays
+    if (Array.isArray(obj)) {
+        return obj.map(item => redactSensitive(item)) as T;
+    }
+
+    // Handle objects
+    const redacted = { ...obj } as Record<string, unknown>;
+    for (const key of Object.keys(redacted)) {
+        const lowerKey = key.toLowerCase();
+        
+        // Check if key contains any sensitive keyword
+        if (SENSITIVE_KEYS.some(sensitive => lowerKey.includes(sensitive))) {
+            redacted[key] = '[REDACTED]';
+        } else if (typeof redacted[key] === 'object' && redacted[key] !== null) {
+            // Recursively redact nested objects
+            redacted[key] = redactSensitive(redacted[key]);
+        }
+    }
+
+    return redacted as T;
 }
 
 const LOG_LEVEL_MAP: Record<string, LogLevel> = {
@@ -50,6 +92,7 @@ class Logger {
 
     /**
      * Log message if level is sufficient
+     * Per S-5: Automatically redacts sensitive information
      */
     private log(level: LogLevel, levelName: string, color: string, message: string, ...args: any[]): void {
         if (level < this.minLevel) return;
@@ -57,7 +100,15 @@ class Logger {
         const timestamp = this.getTimestamp();
         const prefix = `${colors.gray}${timestamp}${colors.reset} ${color}[${levelName}]${colors.reset}`;
 
-        console.log(prefix, message, ...args);
+        // Redact sensitive information from args
+        const redactedArgs = args.map(arg => {
+            if (typeof arg === 'object' && arg !== null) {
+                return redactSensitive(arg);
+            }
+            return arg;
+        });
+
+        console.log(prefix, message, ...redactedArgs);
     }
 
     /**
