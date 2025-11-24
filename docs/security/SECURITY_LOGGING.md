@@ -147,3 +147,4 @@ Security events can be monitored by:
 - Integration with external security monitoring tools
 - Dashboard for security event visualization
 
+
