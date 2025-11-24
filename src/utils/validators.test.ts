@@ -22,10 +22,10 @@ describe('validateHexColor', () => {
         expect(validateHexColor('#123456')).toEqual({ success: true, value: '#123456' });
     });
 
-    it('should require # prefix', () => {
-        expect(validateHexColor('FF0000').success).toBe(false);
-        expect(validateHexColor('00FF00').success).toBe(false);
-        expect(validateHexColor('ABCDEF').success).toBe(false);
+    it('should accept hex colors without # prefix and normalize them', () => {
+        expect(validateHexColor('FF0000')).toEqual({ success: true, value: '#FF0000' });
+        expect(validateHexColor('00FF00')).toEqual({ success: true, value: '#00FF00' });
+        expect(validateHexColor('ABCDEF')).toEqual({ success: true, value: '#ABCDEF' });
     });
 
     it('should normalize lowercase hex colors to uppercase', () => {
