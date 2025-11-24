@@ -49,7 +49,7 @@ The Bot collects the following information when you use its commands:
 
 - **Primary Storage:** Redis database (if configured)
 - **Fallback Storage:** In-memory storage (if Redis unavailable)
-- **Hosting:** Data is stored on the hosting provider's infrastructure (Fly.io)
+- **Hosting:** Data is stored on the hosting provider's infrastructure (PebbleHost)
 
 ### Data Retention
 
@@ -191,12 +191,11 @@ The Bot uses the following third-party services:
 
 2. **Redis** (if configured)
    - Used for data storage
-   - Hosted on Fly.io infrastructure
-   - Subject to Fly.io's privacy policy: https://fly.io/legal/privacy-policy/
+   - Self-hosted or third-party provider
 
-3. **Fly.io** (Hosting)
+3. **PebbleHost** (Hosting)
    - Bot hosting infrastructure
-   - Subject to Fly.io's privacy policy
+   - Subject to PebbleHost's terms of service: https://pebblehost.com/tos
 
 ## Data Breach Notification
 

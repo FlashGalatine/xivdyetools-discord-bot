@@ -120,21 +120,27 @@ npm run lint         # Type check
 
 ## Deployment
 
-### Docker
+### PebbleHost (Current Hosting)
+
+The bot is deployed to PebbleHost using SFTP. To deploy:
 
 ```bash
-docker build -t xivdyetools-bot .
-docker run -d --env-file .env xivdyetools-bot
+# Configure SFTP credentials in .env
+SFTP_HOST=your_host.pebblehost.net
+SFTP_PORT=2222
+SFTP_USERNAME=your_username
+SFTP_PASSWORD=your_password
+PORT=8017  # Health check port assigned by PebbleHost
+
+# Deploy to PebbleHost
+npm run deploy
 ```
 
-### Fly.io
-
-```bash
-fly launch
-fly deploy
-```
-
-See [docs/DEPLOYMENT.md](../../XIVDyeTools/docs/discord-bot/DEPLOYMENT.md) for detailed deployment instructions.
+The deployment script (`scripts/deploy.ts`) will:
+1. Build the TypeScript project
+2. Connect to PebbleHost via SFTP
+3. Upload dist/, emoji/, and configuration files
+4. Bot will automatically restart with new code
 
 ## Performance
 

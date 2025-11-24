@@ -17,6 +17,6 @@
     "types": ["node"],
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "deploy-commands.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -17,15 +17,16 @@ This document outlines the procedure for rotating secrets used by the XIV Dye To
    - Click "Reset Token" (or "Regenerate" if token is already visible)
    - **Important:** Copy the new token immediately (you won't see it again)
 
-2. **Update Fly.io Secrets**
+2. **Update .env File**
+   - Update `DISCORD_TOKEN=<new_token>` in your local `.env` file
+   - Deploy to PebbleHost:
    ```bash
-   fly secrets set DISCORD_TOKEN=<new_token>
+   npm run deploy
    ```
 
-3. **Restart Bot**
-   ```bash
-   fly apps restart xivdyetools-discord-bot
-   ```
+3. **Restart Bot on PebbleHost**
+   - Use PebbleHost control panel to restart the bot
+   - Or manually restart via SFTP/SSH if available
 
 4. **Verify Bot is Online**
    - Check Discord server - bot should appear online
@@ -55,15 +56,15 @@ This document outlines the procedure for rotating secrets used by the XIV Dye To
    CONFIG SET requirepass <new_password>
    ```
 
-3. **Update Fly.io Secrets**
+3. **Update .env File**
+   - Update `REDIS_URL` or `REDIS_PASSWORD` in your local `.env` file
+   - Deploy to PebbleHost:
    ```bash
-   fly secrets set REDIS_PASSWORD=<new_password>
+   npm run deploy
    ```
 
-4. **Restart Bot**
-   ```bash
-   fly apps restart xivdyetools-discord-bot
-   ```
+4. **Restart Bot on PebbleHost**
+   - Use PebbleHost control panel to restart the bot
 
 5. **Verify Redis Connection**
    - Check bot logs for Redis connection errors
@@ -84,15 +85,15 @@ This document outlines the procedure for rotating secrets used by the XIV Dye To
    - Create new webhook or regenerate existing one
    - Copy the webhook URL
 
-2. **Update Fly.io Secrets**
+2. **Update .env File**
+   - Update `ERROR_WEBHOOK_URL=<new_webhook_url>` in your local `.env` file
+   - Deploy to PebbleHost:
    ```bash
-   fly secrets set ERROR_WEBHOOK_URL=<new_webhook_url>
+   npm run deploy
    ```
 
-3. **Restart Bot**
-   ```bash
-   fly apps restart xivdyetools-discord-bot
-   ```
+3. **Restart Bot on PebbleHost**
+   - Use PebbleHost control panel to restart the bot
 
 4. **Test Error Reporting**
    - Trigger a test error (if possible) or wait for next error
@@ -124,7 +125,7 @@ If a secret is compromised:
 
 After rotating any secret:
 
-- [ ] New secret is set in Fly.io
+- [ ] New secret is set in .env and deployed to PebbleHost
 - [ ] Bot has been restarted
 - [ ] Bot appears online in Discord
 - [ ] Commands are working correctly
