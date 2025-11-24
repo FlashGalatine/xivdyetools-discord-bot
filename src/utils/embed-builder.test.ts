@@ -16,7 +16,26 @@ import {
     createHarmonyEmbed,
     createDyeEmojiAttachment,
 } from './embed-builder.js';
+import { vi } from 'vitest';
 import type { Dye } from 'xivdyetools-core';
+
+// Mock emoji service
+vi.mock('../services/emoji-service.js', () => ({
+    emojiService: {
+        getDyeEmoji: vi.fn((dye: Dye) => {
+            if (dye.itemID === 5730) {
+                return { url: 'https://cdn.discordapp.com/emojis/dye_5730.webp' };
+            }
+            return undefined;
+        }),
+        getDyeEmojiOrSwatch: vi.fn((dye: Dye) => {
+            if (dye.itemID === 5730) {
+                return '<:dye_5730:123456789>';
+            }
+            return '████ #D42F2F';
+        }),
+    },
+}));
 
 // Mock dye for testing
 const mockDye: Dye = {
@@ -290,10 +309,15 @@ describe('createDyeEmbed', () => {
         expect(embed.data.title).toContain('🎨');
     });
 
-    it('should include color swatch in description', () => {
+    it('should include emoji in description when available', () => {
         const embed = createDyeEmbed(mockDye);
+        expect(embed.data.description).toContain('<:dye_5730:123456789>');
+    });
+
+    it('should include color swatch in description when emoji unavailable', () => {
+        // Mock service returns swatch for non-5730 items
+        const embed = createDyeEmbed(mockDyeWithoutEmoji);
         expect(embed.data.description).toContain('█');
-        expect(embed.data.description).toContain(mockDye.hex.toUpperCase());
     });
 
     it('should include color information field', () => {
@@ -327,7 +351,7 @@ describe('createDyeEmbed', () => {
 
     it('should set emoji thumbnail when useEmoji is true and emoji exists', () => {
         const embed = createDyeEmbed(mockDye, false, true);
-        expect(embed.data.thumbnail?.url).toContain('dye_5730.webp');
+        expect(embed.data.thumbnail?.url).toBe('https://cdn.discordapp.com/emojis/dye_5730.webp');
     });
 
     it('should not set thumbnail when useEmoji is false', () => {

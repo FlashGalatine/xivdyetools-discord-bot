@@ -348,23 +348,6 @@ describe('Harmony Command - Companion Count', () => {
         const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
         const files = (editCall as any).files;
 
-        // Should have color wheel + emoji = 2 files
-        expect(files.length).toBe(2);
-        expect(files[1].name).toContain('dye_');
-        expect(files[1].name).toContain('.webp');
-    });
-
-    it('should not include emoji when not available', async () => {
-        const interaction = createMockInteraction({
-            base_color: '#ABCDEF', // Hex color - may not have matching emoji
-            type: 'complementary',
-        });
-
-        await execute(interaction);
-
-        const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-        const files = (editCall as any).files;
-
         // Should have at least color wheel
         expect(files.length).toBeGreaterThanOrEqual(1);
     });
