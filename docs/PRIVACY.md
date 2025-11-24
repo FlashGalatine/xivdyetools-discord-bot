@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last Updated:** December 2024 (Copyright © 2025)  
+**Last Updated:** November 2025 (Copyright © 2025)  
 **Bot Name:** XIV Dye Tools Discord Bot  
 **Developer:** Flash Galatine
 

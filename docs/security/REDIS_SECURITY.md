@@ -275,7 +275,7 @@ npm run dev
 
 ---
 
-**Last Updated:** December 2024 (Copyright © 2025)  
+**Last Updated:** November 2025 (Copyright © 2025)  
 **Related:** S-9: Redis Security
 
 ## Legal Notice
