@@ -11,7 +11,7 @@ import { harmonyCommand } from './commands/harmony.js';
 import { matchCommand } from './commands/match.js';
 import { mixerCommand } from './commands/mixer.js';
 import { dyeCommand } from './commands/dye.js';
-import { matchImageCommand } from './commands/match-image.js';
+import { matchImageCommand, cleanupWorkerPool } from './commands/match-image.js';
 import { comparisonCommand } from './commands/comparison.js';
 import { accessibilityCommand } from './commands/accessibility.js';
 import { statsCommand } from './commands/stats.js';
@@ -291,6 +291,7 @@ process.on('SIGINT', () => {
     logger.info('Shutting down gracefully...');
     server.close();
     closeErrorWebhook();
+    await cleanupWorkerPool(); // Per P-6: Cleanup worker pool
     await closeRedis();
     await client.destroy();
     process.exit(0);
@@ -305,6 +306,7 @@ process.on('SIGTERM', () => {
     logger.info('Shutting down gracefully...');
     server.close();
     closeErrorWebhook();
+    await cleanupWorkerPool(); // Per P-6: Cleanup worker pool
     await closeRedis();
     await client.destroy();
     process.exit(0);
