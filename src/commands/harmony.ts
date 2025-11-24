@@ -200,12 +200,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         const embed = createHarmonyEmbed(baseColor, baseDye, harmonyType, companions);
         embed.setImage('attachment://color-wheel.png'); // Reference the attachment
 
-        // Collect attachments (color wheel + base dye emoji if available)
+        // Collect attachments (color wheel)
         const files = [attachment];
-        const baseDyeEmoji = createDyeEmojiAttachment(baseDye);
-        if (baseDyeEmoji) {
-            files.push(baseDyeEmoji);
-        }
+
+        // Base dye emoji is now handled via embed thumbnail URL in createHarmonyEmbed -> createDyeEmbed logic if we wanted it,
+        // but createHarmonyEmbed doesn't call createDyeEmbed.
+        // However, createHarmonyEmbed sets the thumbnail? No, it sets the image to the color wheel.
+        // We might want to add the base dye emoji as a thumbnail if it's not the main image.
+        // But the design has the color wheel as the main image.
+        // Let's just leave the files list with just the attachment.
 
         // Send response
         await interaction.editReply({

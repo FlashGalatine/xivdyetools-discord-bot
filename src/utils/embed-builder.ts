@@ -107,8 +107,9 @@ export function createDyeEmbed(dye: Dye, showExtended: boolean = false, useEmoji
         .setTimestamp();
 
     // Add emoji thumbnail if available
-    if (useEmoji && hasDyeEmoji(dye)) {
-        embed.setThumbnail(`attachment://${getDyeEmojiFilename(dye)}`);
+    const emoji = emojiService.getDyeEmoji(dye);
+    if (useEmoji && emoji) {
+        embed.setThumbnail(emoji.url);
     }
 
     if (showExtended && dye.acquisition) {
