@@ -20,6 +20,7 @@ import { validateHexColor, findDyeByName, validateIntRange } from '../utils/vali
 import { createErrorEmbed, formatColorSwatch, formatHSV } from '../utils/embed-builder.js';
 import { renderGradient } from '../renderers/gradient.js';
 import { logger } from '../utils/logger.js';
+import { emojiService } from '../services/emoji-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -186,8 +187,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             .setTitle('🎨 Color Gradient Mixer')
             .setDescription(
                 [
-                    `**Start:** ${formatColorSwatch(startColor, 4)} ${startDye ? startDye.name : startColor.toUpperCase()}`,
-                    `**End:** ${formatColorSwatch(endColor, 4)} ${endDye ? endDye.name : endColor.toUpperCase()}`,
+                    `**Start:** ${startDye ? emojiService.getDyeEmojiOrSwatch(startDye, 4) : formatColorSwatch(startColor, 4)} ${startDye ? startDye.name : startColor.toUpperCase()}`,
+                    `**End:** ${endDye ? emojiService.getDyeEmojiOrSwatch(endDye, 4) : formatColorSwatch(endColor, 4)} ${endDye ? endDye.name : endColor.toUpperCase()}`,
                     `**Steps:** ${steps}`,
                     '',
                     '**🎯 Intermediate Dyes:**',
@@ -203,14 +204,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
             const matchQuality =
                 match.distance === 0 ? 'Perfect' :
-                match.distance < 10 ? 'Excellent' :
-                match.distance < 25 ? 'Good' :
-                match.distance < 50 ? 'Fair' : 'Approximate';
+                    match.distance < 10 ? 'Excellent' :
+                        match.distance < 25 ? 'Good' :
+                            match.distance < 50 ? 'Fair' : 'Approximate';
 
             embed.addFields({
                 name: `${emoji} Step ${stepNumber}: ${match.dye.name}`,
                 value: [
-                    formatColorSwatch(match.color, 4),
+                    emojiService.getDyeEmojiOrSwatch(match.dye, 4),
                     `**Target:** ${match.color.toUpperCase()}`,
                     `**Match:** ${match.dye.hex.toUpperCase()} (${matchQuality}, Δ=${match.distance.toFixed(1)})`,
                     `**Category:** ${match.dye.category}`,

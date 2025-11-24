@@ -5,6 +5,19 @@
 import { describe, it, expect, vi } from 'vitest';
 import { execute, autocomplete } from './mixer.js';
 import type { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
+import type { Dye } from 'xivdyetools-core';
+
+// Mock emoji service
+vi.mock('../services/emoji-service.js', () => ({
+    emojiService: {
+        getDyeEmojiOrSwatch: vi.fn((dye: Dye) => {
+            if (dye.name === 'Dalamud Red') {
+                return '<:dye_5730:123456789>';
+            }
+            return `████ ${dye.hex.toUpperCase()}`;
+        }),
+    },
+}));
 
 /**
  * Create mock ChatInputCommandInteraction
@@ -333,6 +346,20 @@ describe('Mixer Command - Embed Content', () => {
         const embed = (editCall as any).embeds[0];
         expect(embed.data.description).toContain('Dalamud Red');
         expect(embed.data.description).toContain('Snow White');
+    });
+
+    it('should use emojis for dyes when available', async () => {
+        const interaction = createMockInteraction({
+            start_color: 'Dalamud Red',
+            end_color: 'Snow White',
+        });
+
+        await execute(interaction);
+
+        const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
+        const embed = (editCall as any).embeds[0];
+        // Check for mocked emoji
+        expect(embed.data.description).toContain('<:dye_5730:123456789>');
     });
 
     it('should include numbered emojis for steps', async () => {
