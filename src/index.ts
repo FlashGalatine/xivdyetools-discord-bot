@@ -21,6 +21,7 @@ import { closeRedis } from './services/redis.js';
 import { emojiService } from './services/emoji-service.js';
 import { initErrorWebhook, notifyError, closeErrorWebhook } from './utils/error-webhook.js';
 import { validateCommandInputs } from './utils/validators.js';
+import { securityLogger } from './utils/security-logger.js';
 import type { BotClient, BotCommand } from './types/index.js';
 
 // Initialize error webhook
@@ -117,6 +118,13 @@ client.on(Events.InteractionCreate, (interaction) => {
       const validationResult = validateCommandInputs(interaction);
       if (!validationResult.success) {
         logger.warn(`Input validation failed for user ${userId}: ${validationResult.error}`);
+        // Per S-7: Log validation failure
+        await securityLogger.validationFailure(
+          userId,
+          interaction.commandName,
+          validationResult.error,
+          guildId
+        );
         await interaction.reply({
           content: `❌ Invalid input: ${validationResult.error}`,
           ephemeral: true,
@@ -144,6 +152,8 @@ client.on(Events.InteractionCreate, (interaction) => {
       // Check if any rate limit is exceeded
       if (!userLimit.allowed) {
         logger.warn(`User ${userId} rate limited (per-minute)`);
+        // Per S-7: Log rate limit violation
+        await securityLogger.rateLimitExceeded(userId, commandName, 'per_minute', guildId);
         await interaction.reply({
           content:
             `⏱️ You're sending commands too quickly! Please wait ${userLimit.retryAfter} seconds.\n\n` +
@@ -166,6 +176,8 @@ client.on(Events.InteractionCreate, (interaction) => {
 
       if (!userHourlyLimit.allowed) {
         logger.warn(`User ${userId} rate limited (hourly)`);
+        // Per S-7: Log rate limit violation
+        await securityLogger.rateLimitExceeded(userId, commandName, 'per_hour', guildId);
         await interaction.reply({
           content:
             `⏱️ You've reached your hourly command limit! Please wait ${Math.ceil(userHourlyLimit.retryAfter! / 60)} minutes.\n\n` +
@@ -188,6 +200,8 @@ client.on(Events.InteractionCreate, (interaction) => {
 
       if (!globalLimit.allowed) {
         logger.warn('Global rate limit exceeded');
+        // Per S-7: Log global rate limit (no specific user)
+        await securityLogger.rateLimitExceeded('global', commandName, 'global', guildId);
         await interaction.reply({
           content: '⏱️ The bot is currently experiencing high load. Please try again in a moment.',
           ephemeral: true,
