@@ -57,7 +57,13 @@ function getFilesRecursively(dir: string, baseDir: string): string[] {
 
 async function deploy(): Promise<void> {
   try {
+    // Check for --full flag
+    const isFullDeploy = process.argv.includes('--full');
+
     console.log('🚀 Starting deployment...');
+    if (isFullDeploy) {
+      console.log('📦 Full deployment mode: All files will be uploaded');
+    }
 
     // 1. Build project
     console.log('📦 Building project...');
@@ -105,7 +111,7 @@ async function deploy(): Promise<void> {
             filesToSync.push({
               localPath: fullLocalPath,
               remotePath: `${config.remotePath}/${file}`,
-              relativePath: file
+              relativePath: file,
             });
           }
         }
@@ -116,7 +122,7 @@ async function deploy(): Promise<void> {
         filesToSync.push({
           localPath: localItemPath,
           remotePath: `${config.remotePath}/${item.remote}`,
-          relativePath: item.local
+          relativePath: item.local,
         });
       }
     }
@@ -125,18 +131,25 @@ async function deploy(): Promise<void> {
     let remoteManifest: FileManifest = {};
     const manifestPath = `${config.remotePath}/deploy-manifest.json`;
 
-    try {
-      console.log('📥 Checking remote manifest...');
-      const remoteManifestBuffer = await sftp.get(manifestPath);
-      if (remoteManifestBuffer) {
-        remoteManifest = JSON.parse((remoteManifestBuffer as Buffer).toString());
+    if (!isFullDeploy) {
+      try {
+        console.log('📥 Checking remote manifest...');
+        const remoteManifestBuffer = await sftp.get(manifestPath);
+        if (remoteManifestBuffer) {
+          remoteManifest = JSON.parse((remoteManifestBuffer as Buffer).toString());
+        }
+      } catch (err) {
+        console.log('ℹ️ No remote manifest found (first deploy or deleted). Uploading all files.');
       }
-    } catch (err) {
-      console.log('ℹ️ No remote manifest found (first deploy or deleted). Uploading all files.');
+    } else {
+      console.log('📦 Full deploy mode: Skipping manifest check');
     }
 
     // 5. Determine files to upload
-    const uploadQueue = filesToSync.filter(file => {
+    const uploadQueue = filesToSync.filter((file) => {
+      if (isFullDeploy) {
+        return true; // Upload all files in full deploy mode
+      }
       const localHash = localManifest[file.relativePath];
       const remoteHash = remoteManifest[file.relativePath];
       return localHash !== remoteHash;
@@ -145,11 +158,15 @@ async function deploy(): Promise<void> {
     if (uploadQueue.length === 0) {
       console.log('✨ No changes detected. Everything is up to date!');
     } else {
-      console.log(`⬆️ Uploading ${uploadQueue.length} changed files...`);
+      if (isFullDeploy) {
+        console.log(`⬆️ Uploading all ${uploadQueue.length} files (full deploy)...`);
+      } else {
+        console.log(`⬆️ Uploading ${uploadQueue.length} changed files...`);
+      }
 
       // Ensure directories exist for queued files
       // We can be lazy and just ensure the main dirs exist, or robust and ensure all parents
-      // For simplicity, let's ensure base dirs exist. 
+      // For simplicity, let's ensure base dirs exist.
       // Ideally we should ensure parent dir for each file.
 
       for (const file of uploadQueue) {

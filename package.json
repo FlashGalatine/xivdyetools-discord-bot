@@ -21,6 +21,7 @@
     "docs:watch": "typedoc --watch",
     "deploy:commands": "tsx deploy-commands.ts",
     "deploy": "tsx scripts/deploy.ts",
+    "deploy:full": "tsx scripts/deploy.ts --full",
     "prepare": "husky install || true"
   },
   "keywords": [
