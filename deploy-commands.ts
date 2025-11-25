@@ -15,18 +15,22 @@ import { matchImageHelpCommand } from './src/commands/match-image-help.js';
 import { comparisonCommand } from './src/commands/comparison.js';
 import { accessibilityCommand } from './src/commands/accessibility.js';
 import { statsCommand } from './src/commands/stats.js';
+import { manualCommand } from './src/commands/manual.js';
+import { aboutCommand } from './src/commands/about.js';
 
 // Collect all commands
 const commands = [
-    harmonyCommand.data.toJSON(),
-    matchCommand.data.toJSON(),
-    mixerCommand.data.toJSON(),
-    dyeCommand.data.toJSON(),
-    matchImageCommand.data.toJSON(),
-    matchImageHelpCommand.data.toJSON(),
-    comparisonCommand.data.toJSON(),
-    accessibilityCommand.data.toJSON(),
-    statsCommand.data.toJSON(),
+  harmonyCommand.data.toJSON(),
+  matchCommand.data.toJSON(),
+  mixerCommand.data.toJSON(),
+  dyeCommand.data.toJSON(),
+  matchImageCommand.data.toJSON(),
+  matchImageHelpCommand.data.toJSON(),
+  comparisonCommand.data.toJSON(),
+  accessibilityCommand.data.toJSON(),
+  statsCommand.data.toJSON(),
+  manualCommand.data.toJSON(),
+  aboutCommand.data.toJSON(),
 ];
 
 const rest = new REST().setToken(config.token);
@@ -35,46 +39,42 @@ const rest = new REST().setToken(config.token);
  * Deploy commands
  */
 async function deployCommands(): Promise<void> {
-    try {
-        logger.info(`Started refreshing ${commands.length} application (/) commands.`);
+  try {
+    logger.info(`Started refreshing ${commands.length} application (/) commands.`);
 
-        let data: any;
+    let data: any;
 
-        if (config.guildId) {
-            // Deploy to specific guild (faster, good for testing)
-            logger.info(`Deploying to guild: ${config.guildId}`);
-            data = await rest.put(
-                Routes.applicationGuildCommands(config.clientId, config.guildId),
-                { body: commands }
-            );
-        } else {
-            // Deploy globally (slower, takes up to 1 hour to propagate)
-            logger.info('Deploying globally...');
-            data = await rest.put(
-                Routes.applicationCommands(config.clientId),
-                { body: commands }
-            );
-        }
-
-        logger.info(`Successfully reloaded ${(data as any[]).length} application (/) commands.`);
-
-        // Log registered commands
-        (data as any[]).forEach((cmd: any) => {
-            logger.info(`  - /${cmd.name}: ${cmd.description}`);
-        });
-    } catch (error) {
-        logger.error('Error deploying commands:', error);
-        process.exit(1);
+    if (config.guildId) {
+      // Deploy to specific guild (faster, good for testing)
+      logger.info(`Deploying to guild: ${config.guildId}`);
+      data = await rest.put(Routes.applicationGuildCommands(config.clientId, config.guildId), {
+        body: commands,
+      });
+    } else {
+      // Deploy globally (slower, takes up to 1 hour to propagate)
+      logger.info('Deploying globally...');
+      data = await rest.put(Routes.applicationCommands(config.clientId), { body: commands });
     }
+
+    logger.info(`Successfully reloaded ${(data as any[]).length} application (/) commands.`);
+
+    // Log registered commands
+    (data as any[]).forEach((cmd: any) => {
+      logger.info(`  - /${cmd.name}: ${cmd.description}`);
+    });
+  } catch (error) {
+    logger.error('Error deploying commands:', error);
+    process.exit(1);
+  }
 }
 
 // Run deployment
 deployCommands()
-    .then(() => {
-        logger.info('Command deployment complete!');
-        process.exit(0);
-    })
-    .catch((error) => {
-        logger.error('Deployment failed:', error);
-        process.exit(1);
-    });
+  .then(() => {
+    logger.info('Command deployment complete!');
+    process.exit(0);
+  })
+  .catch((error) => {
+    logger.error('Deployment failed:', error);
+    process.exit(1);
+  });

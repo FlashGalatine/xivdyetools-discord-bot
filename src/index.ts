@@ -16,6 +16,8 @@ import { matchImageHelpCommand } from './commands/match-image-help.js';
 import { comparisonCommand } from './commands/comparison.js';
 import { accessibilityCommand } from './commands/accessibility.js';
 import { statsCommand } from './commands/stats.js';
+import { manualCommand } from './commands/manual.js';
+import { aboutCommand } from './commands/about.js';
 import { getRateLimiter } from './services/rate-limiter.js';
 import { getAnalytics } from './services/analytics.js';
 import { closeRedis } from './services/redis.js';
@@ -67,6 +69,8 @@ client.commands.set(matchImageHelpCommand.data.name, matchImageHelpCommand);
 client.commands.set(comparisonCommand.data.name, comparisonCommand);
 client.commands.set(accessibilityCommand.data.name, accessibilityCommand);
 client.commands.set(statsCommand.data.name, statsCommand);
+client.commands.set(manualCommand.data.name, manualCommand);
+client.commands.set(aboutCommand.data.name, aboutCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {
