@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) fs.rmSync('dist', {recursive: true, force: true})\"",
+    "rebuild": "npm run clean && npm run build",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -19,9 +21,9 @@
     "type-check": "tsc --noEmit",
     "docs": "typedoc",
     "docs:watch": "typedoc --watch",
-    "deploy:commands": "tsx deploy-commands.ts",
-    "deploy": "tsx scripts/deploy.ts",
-    "deploy:full": "tsx scripts/deploy.ts --full",
+    "deploy:commands": "tsx src/scripts/deploy-commands.ts",
+    "deploy": "tsx src/scripts/deploy.ts",
+    "deploy:full": "tsx src/scripts/deploy.ts --full",
     "prepare": "husky install || true"
   },
   "keywords": [

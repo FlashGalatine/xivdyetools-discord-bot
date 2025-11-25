@@ -4,19 +4,19 @@
  */
 
 import { REST, Routes } from 'discord.js';
-import { config } from './src/config.js';
-import { logger } from './src/utils/logger.js';
-import { harmonyCommand } from './src/commands/harmony.js';
-import { matchCommand } from './src/commands/match.js';
-import { mixerCommand } from './src/commands/mixer.js';
-import { dyeCommand } from './src/commands/dye.js';
-import { matchImageCommand } from './src/commands/match-image.js';
-import { matchImageHelpCommand } from './src/commands/match-image-help.js';
-import { comparisonCommand } from './src/commands/comparison.js';
-import { accessibilityCommand } from './src/commands/accessibility.js';
-import { statsCommand } from './src/commands/stats.js';
-import { manualCommand } from './src/commands/manual.js';
-import { aboutCommand } from './src/commands/about.js';
+import { config } from '../config.js';
+import { logger } from '../utils/logger.js';
+import { harmonyCommand } from '../commands/harmony.js';
+import { matchCommand } from '../commands/match.js';
+import { mixerCommand } from '../commands/mixer.js';
+import { dyeCommand } from '../commands/dye.js';
+import { matchImageCommand } from '../commands/match-image.js';
+import { matchImageHelpCommand } from '../commands/match-image-help.js';
+import { comparisonCommand } from '../commands/comparison.js';
+import { accessibilityCommand } from '../commands/accessibility.js';
+import { statsCommand } from '../commands/stats.js';
+import { manualCommand } from '../commands/manual.js';
+import { aboutCommand } from '../commands/about.js';
 
 // Collect all commands
 const commands = [
