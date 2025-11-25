@@ -16,15 +16,17 @@
  *
  *   protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
  *     // Command logic here
- *     await interaction.editReply({ content: 'Success!' });
+ *     // Use sendPublicSuccess() for success responses (public)
+ *     await sendPublicSuccess(interaction, { content: 'Success!' });
  *   }
  * }
  * ```
  */
 
-import { ChatInputCommandInteraction, AutocompleteInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
+import { ChatInputCommandInteraction, AutocompleteInteraction, EmbedBuilder } from 'discord.js';
 import { createErrorEmbed } from '../../utils/embed-builder.js';
 import { logger } from '../../utils/logger.js';
+import { sendEphemeralError } from '../../utils/response-helper.js';
 import type { BotCommand } from '../../types/index.js';
 
 /**
@@ -132,11 +134,7 @@ export abstract class CommandBase implements BotCommand {
     const errorEmbed = createErrorEmbed(errorTitle, errorMessage);
 
     try {
-      if (interaction.deferred || interaction.replied) {
-        await interaction.editReply({ embeds: [errorEmbed] });
-      } else {
-        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
-      }
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     } catch (replyError) {
       // If we can't even send the error message, log it
       logger.error('Failed to send error message to user:', replyError);

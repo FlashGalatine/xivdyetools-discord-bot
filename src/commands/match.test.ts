@@ -54,12 +54,19 @@ function createMockInteraction(color: string): ChatInputCommandInteraction {
   } as any;
 
   // Mock methods that update state
-  mockInteraction.deferReply = vi.fn().mockImplementation(async () => {
+  mockInteraction.deferReply = vi.fn().mockImplementation(() => {
     mockInteraction.deferred = true;
+    return Promise.resolve();
   });
   mockInteraction.editReply = vi.fn().mockResolvedValue(undefined);
-  mockInteraction.reply = vi.fn().mockImplementation(async () => {
+  mockInteraction.followUp = vi.fn().mockResolvedValue({
+    id: 'mock-message-id',
+    channelId: 'test-channel-123',
+    guildId: 'test-guild-123',
+  });
+  mockInteraction.reply = vi.fn().mockImplementation(() => {
     mockInteraction.replied = true;
+    return Promise.resolve();
   });
 
   return mockInteraction as unknown as ChatInputCommandInteraction;
@@ -115,8 +122,8 @@ describe('Match Command - Input Validation', () => {
 
     await matchCommand.execute(interaction);
 
-    const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-    const embed = (editCall as any).embeds[0];
+    const followUpCall = vi.mocked(interaction.followUp).mock.calls[0][0];
+    const embed = (followUpCall as any).embeds[0];
     expect(embed.data.title).toContain('❌');
     expect(embed.data.title).toContain('Invalid Input');
   });
@@ -126,8 +133,8 @@ describe('Match Command - Input Validation', () => {
 
     await matchCommand.execute(interaction);
 
-    const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-    const embed = (editCall as any).embeds[0];
+    const followUpCall = vi.mocked(interaction.followUp).mock.calls[0][0];
+    const embed = (followUpCall as any).embeds[0];
     expect(embed.data.title).toContain('❌');
     expect(embed.data.description).toContain('not a valid hex color or dye name');
   });
@@ -370,7 +377,7 @@ describe('Match Command - Error Handling', () => {
     await matchCommand.execute(interaction);
 
     expect(interaction.deferReply).toHaveBeenCalled();
-    expect(interaction.editReply).toHaveBeenCalled();
+    expect(interaction.followUp).toHaveBeenCalled();
   });
 
   it('should defer reply before editing', async () => {

@@ -101,6 +101,11 @@ describe('Performance Benchmarks', () => {
         commandName: 'match',
         deferReply: vi.fn().mockResolvedValue(undefined),
         editReply: vi.fn().mockResolvedValue(undefined),
+        followUp: vi.fn().mockResolvedValue({
+          id: 'mock-message-id',
+          channelId: 'test-channel-123',
+          guildId: 'test-guild-123',
+        }),
         deferred: false,
         replied: false,
         options: {

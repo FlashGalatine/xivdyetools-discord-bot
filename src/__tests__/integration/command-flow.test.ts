@@ -14,7 +14,8 @@ import { matchCommand } from '../../commands/match.js';
  */
 function createMockInteraction(
   commandName: string,
-  options: Record<string, string | number | null> = {}
+  options: Record<string, string | number | null> = {},
+  subcommand?: string
 ): ChatInputCommandInteraction {
   const getString = vi.fn((name: string, _required?: boolean) => {
     return (options[name] as string) || null;
@@ -24,6 +25,10 @@ function createMockInteraction(
     return (options[name] as number) || null;
   });
 
+  const getSubcommand = vi.fn(() => {
+    return subcommand || null;
+  });
+
   const mockInteraction = {
     commandName,
     deferred: false,
@@ -31,6 +36,7 @@ function createMockInteraction(
     options: {
       getString,
       getInteger,
+      getSubcommand,
     },
     user: {
       id: 'test-user-123',
@@ -43,12 +49,19 @@ function createMockInteraction(
   } as any;
 
   // Mock methods that update state
-  mockInteraction.deferReply = vi.fn().mockImplementation(async () => {
+  mockInteraction.deferReply = vi.fn().mockImplementation(() => {
     mockInteraction.deferred = true;
+    return Promise.resolve();
   });
   mockInteraction.editReply = vi.fn().mockResolvedValue(undefined);
-  mockInteraction.reply = vi.fn().mockImplementation(async () => {
+  mockInteraction.followUp = vi.fn().mockResolvedValue({
+    id: 'mock-message-id',
+    channelId: 'test-channel-123',
+    guildId: 'test-guild-123',
+  });
+  mockInteraction.reply = vi.fn().mockImplementation(() => {
     mockInteraction.replied = true;
+    return Promise.resolve();
   });
 
   return mockInteraction as unknown as ChatInputCommandInteraction;
@@ -68,7 +81,8 @@ describe('Command Flow - Integration Tests', () => {
       expect(interaction.deferReply).toHaveBeenCalled();
       expect(interaction.editReply).toHaveBeenCalled();
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const editCall = vi.mocked(interaction.editReply).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       expect(editCall).toHaveProperty('embeds');
       expect(editCall.embeds).toBeInstanceOf(Array);
       expect(editCall.embeds?.length).toBeGreaterThan(0);
@@ -89,10 +103,11 @@ describe('Command Flow - Integration Tests', () => {
       await matchCommand.execute(interaction);
 
       expect(interaction.deferReply).toHaveBeenCalled();
-      expect(interaction.editReply).toHaveBeenCalled();
+      expect(interaction.followUp).toHaveBeenCalled();
 
-      // Should show error message
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      // Should show error message (errors use followUp with ephemeral)
+      const editCall = vi.mocked(interaction.followUp).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       const embed = editCall.embeds?.[0];
       if (embed && 'title' in embed) {
         expect(embed.title).toContain('❌');
@@ -131,7 +146,8 @@ describe('Command Flow - Integration Tests', () => {
 
       await matchCommand.execute(interaction);
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const editCall = vi.mocked(interaction.editReply).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       const embed = editCall.embeds?.[0];
       const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
 
@@ -146,7 +162,8 @@ describe('Command Flow - Integration Tests', () => {
 
       await matchCommand.execute(interaction);
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const editCall = vi.mocked(interaction.editReply).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       const embed = editCall.embeds?.[0];
       const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
 

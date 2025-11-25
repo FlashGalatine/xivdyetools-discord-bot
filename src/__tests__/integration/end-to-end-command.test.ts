@@ -4,7 +4,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { ChatInputCommandInteraction, AutocompleteInteraction, InteractionEditReplyOptions } from 'discord.js';
+import type {
+  ChatInputCommandInteraction,
+  AutocompleteInteraction,
+  InteractionEditReplyOptions,
+} from 'discord.js';
 import { matchCommand } from '../../commands/match.js';
 import { harmonyCommand } from '../../commands/harmony.js';
 import { dyeCommand } from '../../commands/dye.js';
@@ -14,7 +18,8 @@ import { dyeCommand } from '../../commands/dye.js';
  */
 function createMockInteraction(
   commandName: string,
-  options: Record<string, string | number | null> = {}
+  options: Record<string, string | number | null> = {},
+  subcommand?: string
 ): ChatInputCommandInteraction {
   const getString = vi.fn((name: string) => {
     return (options[name] as string) || null;
@@ -24,6 +29,10 @@ function createMockInteraction(
     return (options[name] as number) || null;
   });
 
+  const getSubcommand = vi.fn(() => {
+    return subcommand || null;
+  });
+
   const mockInteraction = {
     commandName,
     deferred: false,
@@ -31,6 +40,7 @@ function createMockInteraction(
     options: {
       getString,
       getInteger,
+      getSubcommand,
     },
     user: {
       id: 'test-user-123',
@@ -43,12 +53,19 @@ function createMockInteraction(
   } as any;
 
   // Mock methods that update state
-  mockInteraction.deferReply = vi.fn().mockImplementation(async () => {
+  mockInteraction.deferReply = vi.fn().mockImplementation(() => {
     mockInteraction.deferred = true;
+    return Promise.resolve();
   });
   mockInteraction.editReply = vi.fn().mockResolvedValue(undefined);
-  mockInteraction.reply = vi.fn().mockImplementation(async () => {
+  mockInteraction.followUp = vi.fn().mockResolvedValue({
+    id: 'mock-message-id',
+    channelId: 'test-channel-123',
+    guildId: 'test-guild-123',
+  });
+  mockInteraction.reply = vi.fn().mockImplementation(() => {
     mockInteraction.replied = true;
+    return Promise.resolve();
   });
 
   return mockInteraction as unknown as ChatInputCommandInteraction;
@@ -86,7 +103,8 @@ describe('End-to-End Command Execution - Integration Tests', () => {
       expect(interaction.deferReply).toHaveBeenCalled();
       expect(interaction.editReply).toHaveBeenCalled();
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const editCall = vi.mocked(interaction.editReply).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       const embed = editCall.embeds?.[0];
       const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
 
@@ -114,7 +132,7 @@ describe('End-to-End Command Execution - Integration Tests', () => {
     });
 
     it('should execute dye command end-to-end', async () => {
-      const interaction = createMockInteraction('dye', { dye: 'Dalamud Red' });
+      const interaction = createMockInteraction('dye', { name: 'Dalamud Red' }, 'info');
 
       await dyeCommand.execute(interaction);
 
@@ -158,11 +176,12 @@ describe('End-to-End Command Execution - Integration Tests', () => {
 
       await matchCommand.execute(interaction);
 
-      // Should still defer and respond (with error)
+      // Should still defer and respond (with error via followUp for ephemeral)
       expect(interaction.deferReply).toHaveBeenCalled();
-      expect(interaction.editReply).toHaveBeenCalled();
+      expect(interaction.followUp).toHaveBeenCalled();
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const editCall = vi.mocked(interaction.followUp).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       const embed = editCall.embeds?.[0];
       const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
       expect(embedData?.title).toContain('❌');
@@ -211,7 +230,8 @@ describe('End-to-End Command Execution - Integration Tests', () => {
 
       await matchCommand.execute(interaction);
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const editCall = vi.mocked(interaction.editReply).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       const embed = editCall.embeds?.[0];
       const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
 
@@ -231,7 +251,8 @@ describe('End-to-End Command Execution - Integration Tests', () => {
 
       await matchCommand.execute(interaction);
 
-      const editCall = vi.mocked(interaction.editReply).mock.calls[0][0] as InteractionEditReplyOptions;
+      const editCall = vi.mocked(interaction.editReply).mock
+        .calls[0][0] as InteractionEditReplyOptions;
       const embed = editCall.embeds?.[0];
       const embedData = embed && 'toJSON' in embed ? embed.toJSON() : embed;
 

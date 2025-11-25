@@ -7,7 +7,6 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   ColorResolvable,
-  MessageFlags,
 } from 'discord.js';
 import sharp from 'sharp';
 import { DyeService, ColorService, dyeDatabase } from 'xivdyetools-core';
@@ -22,6 +21,7 @@ import { validateImage, processWithTimeout } from '../utils/image-validator.js';
 import { logger } from '../utils/logger.js';
 import { WorkerPool } from '../utils/worker-pool.js';
 import { emojiService } from '../services/emoji-service.js';
+import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -116,7 +116,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             'Image Validation Failed',
             workerValidation.error || 'Image validation failed.'
           );
-          await interaction.editReply({ embeds: [errorEmbed] });
+          await sendEphemeralError(interaction, { embeds: [errorEmbed] });
           return;
         }
 
@@ -164,7 +164,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             'Image Validation Failed',
             validationResult.error || 'Image validation failed.'
           );
-          await interaction.editReply({ embeds: [errorEmbed] });
+          await sendEphemeralError(interaction, { embeds: [errorEmbed] });
           return;
         }
 
@@ -179,7 +179,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
           'Image Validation Failed',
           validationResult.error || 'Image validation failed.'
         );
-        await interaction.editReply({ embeds: [errorEmbed] });
+        await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
       }
 
@@ -201,7 +201,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const closestDye = dyeService.findClosestDye(dominantHex);
     if (!closestDye) {
       const errorEmbed = createErrorEmbed('Error', 'Could not find matching dye.');
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
 
@@ -283,7 +283,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       embed.setThumbnail(emoji.imageURL());
     }
 
-    await interaction.editReply({ embeds: [embed] });
+    await sendPublicSuccess(interaction, { embeds: [embed] });
 
     logger.info(`Image match completed: ${closestDye.name} (distance: ${distance.toFixed(2)})`);
   } catch (error) {
@@ -304,11 +304,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     const errorEmbed = createErrorEmbed('Processing Error', errorMessage);
 
-    if (interaction.deferred) {
-      await interaction.editReply({ embeds: [errorEmbed] });
-    } else {
-      await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
-    }
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
 }
 

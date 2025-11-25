@@ -57,6 +57,11 @@ function createMockInteraction(options: {
     return Promise.resolve();
   });
   mockInteraction.editReply = vi.fn().mockResolvedValue(undefined);
+  mockInteraction.followUp = vi.fn().mockResolvedValue({
+    id: 'mock-message-id',
+    channelId: 'test-channel-123',
+    guildId: 'test-guild-123',
+  });
   mockInteraction.reply = vi.fn().mockImplementation(() => {
     mockInteraction.replied = true;
     return Promise.resolve();
@@ -138,8 +143,8 @@ describe('Mixer Command - Input Validation', () => {
 
     await execute(interaction);
 
-    const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-    const embed = (editCall as any).embeds[0];
+    const followUpCall = vi.mocked(interaction.followUp).mock.calls[0][0];
+    const embed = (followUpCall as any).embeds[0];
     expect(embed.data.title).toContain('❌');
     expect(embed.data.title).toContain('Invalid Start Color');
   });
@@ -152,8 +157,8 @@ describe('Mixer Command - Input Validation', () => {
 
     await execute(interaction);
 
-    const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
-    const embed = (editCall as any).embeds[0];
+    const followUpCall = vi.mocked(interaction.followUp).mock.calls[0][0];
+    const embed = (followUpCall as any).embeds[0];
     expect(embed.data.title).toContain('❌');
     expect(embed.data.title).toContain('Invalid End Color');
   });
@@ -578,7 +583,7 @@ describe('Mixer Command - Error Handling', () => {
     await execute(interaction);
 
     expect(interaction.deferReply).toHaveBeenCalled();
-    expect(interaction.editReply).toHaveBeenCalled();
+    expect(interaction.followUp).toHaveBeenCalled();
   });
 
   it('should defer reply before editing', async () => {

@@ -241,7 +241,13 @@ client.on(Events.InteractionCreate, (interaction) => {
       logger.error(`Error executing ${interaction.commandName}:`, error);
 
       try {
-        if (interaction.replied || interaction.deferred) {
+        if (interaction.deferred) {
+          // Use followUp with ephemeral flag for errors after defer
+          await interaction.followUp({
+            content: '❌ There was an error executing this command!',
+            flags: MessageFlags.Ephemeral,
+          });
+        } else if (interaction.replied) {
           await interaction.followUp({
             content: '❌ There was an error executing this command!',
             flags: MessageFlags.Ephemeral,

@@ -14,6 +14,7 @@ import { DyeService, ColorService, dyeDatabase, type Dye } from 'xivdyetools-cor
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
 import { formatColorSwatch, formatRGB, formatHSV } from '../utils/embed-builder.js';
 import { emojiService } from '../services/emoji-service.js';
+import { sendPublicSuccess } from '../utils/response-helper.js';
 import { CommandBase } from './base/CommandBase.js';
 import type { BotCommand } from '../types/index.js';
 
@@ -147,8 +148,8 @@ class MatchCommand extends CommandBase {
       embed.setThumbnail(emoji.imageURL());
     }
 
-    // Send response
-    await interaction.editReply({ embeds: [embed] });
+    // Send response (public)
+    await sendPublicSuccess(interaction, { embeds: [embed] });
   }
 
   async autocomplete(interaction: AutocompleteInteraction): Promise<void> {

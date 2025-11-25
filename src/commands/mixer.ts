@@ -9,11 +9,11 @@ import {
   AutocompleteInteraction,
   EmbedBuilder,
   ColorResolvable,
-  MessageFlags,
 } from 'discord.js';
 import { DyeService, ColorService, dyeDatabase, type Dye } from 'xivdyetools-core';
 import { validateHexColor, findDyeByName, validateIntRange } from '../utils/validators.js';
 import { createErrorEmbed, formatColorSwatch } from '../utils/embed-builder.js';
+import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { renderGradient } from '../renderers/gradient.js';
 import { logger } from '../utils/logger.js';
 import { emojiService } from '../services/emoji-service.js';
@@ -89,7 +89,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const stepsValidation = validateIntRange(steps, 2, 10, 'Steps');
     if (!stepsValidation.valid) {
       const errorEmbed = createErrorEmbed('Invalid Steps', stepsValidation.error!);
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
 
@@ -110,7 +110,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             `• Hex: \`#FF0000\`, \`#8A2BE2\`\n` +
             `• Dye: \`Dalamud Red\`, \`Snow White\``
         );
-        await interaction.editReply({ embeds: [errorEmbed] });
+        await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
       }
       startDye = startDyeResult.dye!;
@@ -134,7 +134,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             `• Hex: \`#FF0000\`, \`#8A2BE2\`\n` +
             `• Dye: \`Dalamud Red\`, \`Snow White\``
         );
-        await interaction.editReply({ embeds: [errorEmbed] });
+        await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
       }
       endDye = endDyeResult.dye!;
@@ -156,7 +156,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     if (dyeMatches.length === 0) {
       const errorEmbed = createErrorEmbed('Error', 'Could not find matching dyes.');
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
 
@@ -228,8 +228,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       inline: false,
     });
 
-    // Send response
-    await interaction.editReply({
+    // Send response (public)
+    await sendPublicSuccess(interaction, {
       embeds: [embed],
       files: [attachment],
     });
@@ -242,11 +242,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       'An error occurred while generating the gradient. Please try again.'
     );
 
-    if (interaction.deferred) {
-      await interaction.editReply({ embeds: [errorEmbed] });
-    } else {
-      await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
-    }
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
 }
 

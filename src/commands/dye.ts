@@ -20,6 +20,7 @@ import {
 } from '../utils/embed-builder.js';
 import { emojiService } from '../services/emoji-service.js';
 import { logger } from '../utils/logger.js';
+import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -109,7 +110,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         break;
       default: {
         const errorEmbed = createErrorEmbed('Unknown Subcommand', 'Invalid subcommand');
-        await interaction.editReply({ embeds: [errorEmbed] });
+        await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       }
     }
   } catch (error) {
@@ -120,7 +121,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     );
 
     if (interaction.deferred) {
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     } else {
       await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
     }
@@ -141,7 +142,7 @@ async function handleInfo(interaction: ChatInputCommandInteraction): Promise<voi
       'Dye Not Found',
       `Could not find dye "${dyeName}".\n\nTry using autocomplete or \`/dye search\` to find similar names.`
     );
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
   }
 
@@ -152,7 +153,7 @@ async function handleInfo(interaction: ChatInputCommandInteraction): Promise<voi
   const embed = createDyeEmbed(dye, true, true, !!emojiAttachment); // Show extended info, use file attachment if available
   const files = emojiAttachment ? [emojiAttachment] : [];
 
-  await interaction.editReply({ embeds: [embed], files });
+  await sendPublicSuccess(interaction, { embeds: [embed], files });
   logger.info(`Dye info completed: ${dye.name}`);
 }
 
@@ -172,7 +173,7 @@ async function handleSearch(interaction: ChatInputCommandInteraction): Promise<v
       'No Results',
       `No dyes found matching "${query}".\n\nTry a different search term or use \`/dye list\` to browse by category.`
     );
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
   }
 
@@ -198,7 +199,7 @@ async function handleSearch(interaction: ChatInputCommandInteraction): Promise<v
     })
     .setTimestamp();
 
-  await interaction.editReply({ embeds: [embed] });
+  await sendPublicSuccess(interaction, { embeds: [embed] });
   logger.info(`Dye search completed: ${matches.length} results`);
 }
 
@@ -218,7 +219,7 @@ async function handleList(interaction: ChatInputCommandInteraction): Promise<voi
       'Empty Category',
       `No dyes found in category "${category}".`
     );
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
   }
 
@@ -237,7 +238,7 @@ async function handleList(interaction: ChatInputCommandInteraction): Promise<voi
     .setFooter({ text: 'Use /dye info <name> to see full details' })
     .setTimestamp();
 
-  await interaction.editReply({ embeds: [embed] });
+  await sendPublicSuccess(interaction, { embeds: [embed] });
   logger.info(`Dye list completed: ${category} (${categoryDyes.length} dyes)`);
 }
 
@@ -253,7 +254,7 @@ async function handleRandom(interaction: ChatInputCommandInteraction): Promise<v
   const countValidation = validateIntRange(count, 1, 5, 'Count');
   if (!countValidation.valid) {
     const errorEmbed = createErrorEmbed('Invalid Count', countValidation.error!);
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
   }
 
@@ -283,7 +284,7 @@ async function handleRandom(interaction: ChatInputCommandInteraction): Promise<v
 
     const files = emojiAttachment ? [emojiAttachment] : [];
 
-    await interaction.editReply({ embeds: [embed], files });
+    await sendPublicSuccess(interaction, { embeds: [embed], files });
   } else {
     // Multiple dyes - use compact list
     const dyeList = randomDyes
@@ -306,7 +307,7 @@ async function handleRandom(interaction: ChatInputCommandInteraction): Promise<v
       .setFooter({ text: 'Use /dye info <name> for more details' })
       .setTimestamp();
 
-    await interaction.editReply({ embeds: [embed] });
+    await sendPublicSuccess(interaction, { embeds: [embed] });
   }
 
   logger.info(`Dye random completed: ${count} ${count === 1 ? 'dye' : 'dyes'}`);
