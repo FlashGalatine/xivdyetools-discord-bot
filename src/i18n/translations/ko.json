@@ -1,0 +1,424 @@
+{
+  "commands": {
+    "harmony": {
+      "description": "색채 이론을 기반으로 조화로운 색상 생성",
+      "options": {
+        "baseColor": "기본 색상: 16진수 (예: #FF0000) 또는 염료 이름 (예: 달라가브색)",
+        "type": "조화 유형",
+        "companionCount": "동반 염료 개수 제한 (선택 사항 - 기본값은 모두 표시)"
+      }
+    },
+    "match": {
+      "description": "지정된 색상과 가장 가까운 FFXIV 염료 검색",
+      "options": {
+        "color": "색상: 16진수 (예: #FF0000) 또는 염료 이름 (예: 달라가브색)"
+      }
+    },
+    "mixer": {
+      "description": "두 색상 사이의 그라데이션 생성",
+      "options": {
+        "startColor": "시작 색상: 16진수 (예: #FF0000) 또는 염료 이름",
+        "endColor": "끝 색상: 16진수 (예: #0000FF) 또는 염료 이름",
+        "steps": "색상 단계 수 (기본값: 6)"
+      }
+    },
+    "dye": {
+      "description": "FFXIV 염료 정보 및 검색",
+      "subcommands": {
+        "info": {
+          "description": "특정 염료에 대한 정보 가져오기",
+          "options": {
+            "name": "염료 이름"
+          }
+        },
+        "search": {
+          "description": "이름으로 염료 검색",
+          "options": {
+            "query": "검색어 (부분 일치)"
+          }
+        },
+        "list": {
+          "description": "카테고리별로 염료 나열",
+          "options": {
+            "category": "염료 카테고리"
+          }
+        },
+        "random": {
+          "description": "무작위 염료 가져오기",
+          "options": {
+            "count": "무작위 염료 개수 (기본값: 1)",
+            "excludeMetallic": "\"금속질\"로 시작하는 염료 제외",
+            "excludePastel": "\"부드러운\"으로 시작하는 염료 제외",
+            "excludeDark": "\"짙은\"으로 시작하는 염료 제외",
+            "excludeCosmic": "입수 방법이 \"코스모 탐사\" 또는 \"코스모 행운\"인 염료 제외",
+            "excludeExpensive": "순백색 (itemID 13114)과 칠흑색 (itemID 13115) 제외"
+          }
+        }
+      }
+    },
+    "comparison": {
+      "description": "여러 FFXIV 염료를 나란히 비교",
+      "options": {
+        "dye1": "첫 번째 염료: 16진수 (예: #FF0000) 또는 염료 이름",
+        "dye2": "두 번째 염료: 16진수 (예: #00FF00) 또는 염료 이름",
+        "dye3": "세 번째 염료 (선택 사항): 16진수 또는 염료 이름",
+        "dye4": "네 번째 염료 (선택 사항): 16진수 또는 염료 이름"
+      }
+    },
+    "accessibility": {
+      "description": "색각 특성에서 염료가 어떻게 보이는지 시뮬레이션",
+      "options": {
+        "dye": "염료 이름 또는 16진수 색상 (예: \"달라가브색\" 또는 \"#FF0000\")",
+        "visionType": "색각 유형 (기본값: 모두 표시)"
+      },
+      "visionTypes": {
+        "all": "모든 유형",
+        "protanopia": "제1색맹 (적록색맹)",
+        "deuteranopia": "제2색맹 (적록색맹)",
+        "tritanopia": "제3색맹 (청황색맹)"
+      }
+    },
+    "matchImage": {
+      "description": "이미지에서 주요 색상을 추출하고 일치하는 FFXIV 염료 검색",
+      "options": {
+        "image": "분석할 이미지 파일 (PNG, JPG, GIF, BMP, WebP)"
+      }
+    },
+    "matchImageHelp": {
+      "description": "/match_image 명령 사용 방법에 대한 팁과 요령 가져오기"
+    },
+    "stats": {
+      "description": "봇 사용 통계 표시"
+    },
+    "manual": {
+      "description": "모든 봇 명령에 대한 상세 정보 표시"
+    },
+    "about": {
+      "description": "이 봇에 대한 정보 표시"
+    },
+    "language": {
+      "description": "봇 응답에 사용할 언어 설정",
+      "subcommands": {
+        "set": {
+          "description": "사용할 언어 설정",
+          "options": {
+            "language": "사용할 언어"
+          }
+        },
+        "show": {
+          "description": "현재 언어 설정 표시"
+        },
+        "reset": {
+          "description": "Discord 언어 설정을 따르도록 초기화"
+        }
+      },
+      "languages": {
+        "en": "영어",
+        "ja": "일본어",
+        "de": "독일어",
+        "fr": "프랑스어",
+        "ko": "한국어",
+        "zh": "중국어"
+      }
+    }
+  },
+  "embeds": {
+    "colorInformation": "색상 정보",
+    "hex": "16진수",
+    "rgb": "RGB",
+    "hsv": "HSV",
+    "category": "카테고리",
+    "acquisition": "입수 방법",
+    "baseColor": "기본 색상",
+    "closestMatch": "가장 가까운 일치",
+    "harmonySuggestions": "조화 제안",
+    "base": "기본",
+    "inputColor": "입력 색상",
+    "closestDye": "가장 가까운 염료",
+    "matchQuality": "일치 품질",
+    "distance": "거리",
+    "euclidean": "유클리드",
+    "quality": "품질",
+    "dyeMatch": "염료 일치",
+    "findingClosestMatchFor": "가장 가까운 일치 검색 중",
+    "colorMatch": "색상 일치",
+    "analyzedImage": "분석된 이미지",
+    "extractedDominantColor": "추출된 주요 색상",
+    "extractedUsingHistogram": "히스토그램 분석을 사용하여 주요 색상 추출",
+    "colorGradientMixer": "색상 그라데이션 믹서",
+    "start": "시작",
+    "end": "종료",
+    "steps": "단계",
+    "intermediateDyes": "중간 염료",
+    "step": "단계",
+    "target": "대상",
+    "match": "일치",
+    "tip": "팁",
+    "useMatchForAcquisition": "개별 염료의 입수 방법을 확인하려면 `/match <색상>`을 사용하세요.",
+    "useDyeInfoForDetails": "자세한 내용은 /dye info <이름> 사용",
+    "useDyeInfoForFullDetails": "전체 세부정보는 /dye info <이름> 사용",
+    "useDyeInfoForMoreDetails": "자세한 내용은 /dye info <이름> 참조",
+    "dyeComparison": "염료 비교",
+    "dye": "염료",
+    "dyes": "염료",
+    "comparisonAnalysis": "비교 분석",
+    "mostSimilar": "가장 유사",
+    "mostDifferent": "가장 다름",
+    "averageDistance": "평균 거리",
+    "colorHarmony": "색상 조화",
+    "angle": "각도",
+    "fromBase": "기본에서",
+    "deviation": "편차",
+    "accessibilityTitle": "접근성",
+    "originalHex": "원본 16진수",
+    "affects": "영향",
+    "impact": "영향",
+    "protanopia": "제1색맹 (적록색맹)",
+    "protanopiaImpact": "빨강이 어둡게/갈색으로 보임",
+    "deuteranopia": "제2색맹 (적록색맹)",
+    "deuteranopiaImpact": "녹색이 베이지/황갈색으로 보임",
+    "tritanopia": "제3색맹 (청황색맹)",
+    "tritanopiaImpact": "파랑이 녹색으로 보임",
+    "protanopiaAffects": "남성의 약 1%",
+    "deuteranopiaAffects": "남성의 약 1%",
+    "tritanopiaAffects": "인구의 0.01% 미만",
+    "aboutCVD": "색각 특성에 대하여",
+    "cvdDescription": "색각 특성 (색각 이상)은 남성의 약 8%, 여성의 약 0.5%에 영향을 미칩니다. 이러한 시뮬레이션은 Brettel 1997 알고리즘을 사용하여 다양한 유형의 색각 특성을 가진 사람들에게 색상이 어떻게 보이는지 근사합니다.",
+    "botStatistics": "봇 통계",
+    "usage": "사용 현황",
+    "totalCommands": "총 명령 수",
+    "uniqueUsers": "고유 사용자 수",
+    "successRate": "성공률",
+    "botInfo": "봇 정보",
+    "servers": "서버",
+    "uptime": "가동 시간",
+    "commands": "명령",
+    "topCommands": "상위 명령",
+    "noCommandsYet": "아직 실행된 명령이 없습니다",
+    "recentErrors": "최근 오류",
+    "noRecentErrors": "최근 오류가 없습니다",
+    "dyeSearch": "염료 검색",
+    "found": "개 찾음",
+    "showingFirst15": "처음 15개 표시",
+    "tooManyResults": "결과가 너무 많습니다! 더 구체적으로 검색하거나 /dye info <이름>을 사용하세요",
+    "useDyeInfo": "자세한 내용은 /dye info <이름>을 사용하세요",
+    "categoryDyes": "{category} 염료",
+    "dyesInCategory": "이 카테고리의 염료",
+    "useDyeInfoDetails": "자세한 내용은 /dye info <이름>을 사용하세요",
+    "randomDyes": "무작위 염료"
+  },
+  "matchQuality": {
+    "perfect": "완벽한 일치",
+    "excellent": "우수한 일치",
+    "good": "좋은 일치",
+    "fair": "보통 일치",
+    "approximate": "대략적인 일치"
+  },
+  "comparisonQuality": {
+    "identical": "동일",
+    "verySimilar": "매우 유사",
+    "similar": "유사",
+    "somewhatDifferent": "약간 다름",
+    "different": "다름",
+    "veryDifferent": "매우 다름"
+  },
+  "errors": {
+    "error": "오류",
+    "invalidInput": "잘못된 입력",
+    "commandError": "명령 오류",
+    "processingError": "처리 오류",
+    "dyeNotFound": "염료를 찾을 수 없음",
+    "noResults": "결과 없음",
+    "emptyCategory": "빈 카테고리",
+    "unknownSubcommand": "알 수 없는 하위 명령",
+    "invalidSubcommand": "잘못된 하위 명령",
+    "noDyesAvailable": "사용 가능한 염료가 없습니다",
+    "noPermission": "이 명령을 사용할 권한이 없습니다.",
+    "failedToRetrieveStats": "통계를 가져오지 못했습니다. 나중에 다시 시도하세요.",
+    "couldNotFindMatchingDye": "일치하는 염료를 찾을 수 없습니다.",
+    "couldNotGenerateHarmony": "조화를 생성할 수 없습니다.",
+    "couldNotFindMatchingDyes": "일치하는 염료를 찾을 수 없습니다.",
+    "errorExecutingCommand": "이 명령을 실행하는 중 오류가 발생했습니다!",
+    "errorProcessingRequest": "요청을 처리하는 중 오류가 발생했습니다. 다시 시도하세요.",
+    "errorGeneratingHarmony": "색상 조화를 생성하는 중 오류가 발생했습니다. 다시 시도하세요.",
+    "errorGeneratingGradient": "그라데이션을 생성하는 중 오류가 발생했습니다. 다시 시도하세요.",
+    "errorComparingDyes": "염료를 비교하는 중 오류가 발생했습니다. 다시 시도하세요.",
+    "errorGeneratingAccessibility": "접근성 비교를 생성하는 중 오류가 발생했습니다. 다시 시도하세요.",
+    "imageValidationFailed": "이미지 검증 실패",
+    "imageValidationFailedGeneric": "이미지 검증에 실패했습니다.",
+    "failedToAnalyzeImage": "이미지 분석에 실패했습니다. 유효한 이미지 파일인지 확인하고 다시 시도하세요.",
+    "failedToDownloadImage": "Discord에서 이미지를 다운로드하지 못했습니다. 다시 업로드하세요.",
+    "invalidOrCorruptedImage": "잘못되었거나 손상된 이미지 파일입니다. 유효한 PNG, JPG, GIF, BMP 또는 WebP 이미지를 업로드하세요.",
+    "invalidHexOrDyeName": "\"{input}\"은(는) 유효한 16진수 색상 또는 염료 이름이 아닙니다.",
+    "invalidHexOrDyeNameWithExamples": "\"{input}\"은(는) 유효한 16진수 색상 또는 염료 이름이 아닙니다\n\n**예:*\n- 16진수: `#FF0000`, `#8A2BE2\n- 염료: `달라가브색`, `하얀 눈색`",
+    "invalidStartColor": "잘못된 시작 색상",
+    "invalidEndColor": "잘못된 끝 색상",
+    "invalidSteps": "잘못된 단계 수",
+    "invalidCount": "잘못된 개수",
+    "invalidHarmonyType": "잘못된 조화 유형",
+    "couldNotFindDye": "염료 \"{name}\"을(를) 찾을 수 없습니다.",
+    "couldNotFindDyeWithSuggestion": "염료 \"{name}\"을(를) 찾을 수 없습니다\n\n자동 완성을 사용하거나 `/dye search`로 유사한 이름을 검색하세요.",
+    "couldNotFindMatchingDyeForHex": "{hex}에 일치하는 염료를 찾을 수 없습니다.",
+    "noDyesInCategory": "카테고리 \"{category}\"에서 염료를 찾을 수 없습니다.",
+    "noMatchingDyesQuery": "\"{query}\"에 일치하는 염료를 찾을 수 없습니다\n\n다른 검색어를 시도하거나 `/dye list`로 카테고리별로 찾아보세요.",
+    "noDyesMatchFilter": "필터 조건에 일치하는 염료가 없습니다. 다른 제외 설정으로 다시 시도하세요.",
+    "noMatchingFilterCriteria": "필터 조건에 일치하는 염료가 없습니다. 다른 제외 설정으로 다시 시도하세요.",
+    "noDyesFoundWithSuggestion": "\"{query}\"에 일치하는 염료를 찾을 수 없습니다\n\n다른 검색어를 시도하거나 `/dye list`로 카테고리별로 찾아보세요.",
+    "invalidColorOrDyeNameWithExamples": "\"{input}\"은(는) 유효한 16진수 색상 또는 염료 이름이 아닙니다\n\n**예:*\n- 16진수: `#FF0000`, `#8A2BE2\n- 염료: `달라가브색`, `순백색`",
+    "invalidHexFormat": "잘못된 16진수 색상 형식: \"{hex}\". #RRGGBB 형식 (예: #FF0000) 또는 RRGGBB 형식 (예: FF0000)이 필요합니다.",
+    "dyeNameEmpty": "염료 이름은 비워둘 수 없습니다.",
+    "dyeNotFoundSearch": "염료를 찾을 수 없습니다: \"{name}\". 자동 완성 또는 검색을 사용하여 사용 가능한 염료를 찾으세요.",
+    "dyeIdMustBeInteger": "염료 ID는 정수여야 합니다.",
+    "dyeIdMustBePositive": "염료 ID는 양의 정수여야 합니다.",
+    "dyeIdOutOfRange": "염료 ID가 알려진 범위 (1-200) 밖입니다.",
+    "colorInputEmpty": "색상 입력은 비워둘 수 없습니다.",
+    "searchQueryEmpty": "검색 쿼리는 비워둘 수 없습니다.",
+    "validationError": "검증 오류가 발생했습니다.",
+    "paramMustBeInteger": "{param}은(는) 정수여야 합니다.",
+    "paramMustBeBetween": "{param}은(는) {min}에서 {max} 사이여야 합니다.",
+    "invalidDataCenter": "잘못된 데이터 센터: \"{dc}\". 사용 가능한 옵션에서 선택하세요.",
+    "invalidHarmonyTypeOption": "잘못된 조화 유형: \"{type}\". 사용 가능한 옵션에서 선택하세요."
+  },
+  "rateLimit": {
+    "tooQuickly": "명령을 너무 빨리 사용하고 있습니다! {seconds}초 후에 다시 시도하세요.",
+    "hourlyLimit": "이 명령의 시간당 한도에 도달했습니다! {minutes}분 후에 다시 시도하세요.",
+    "highLoad": "봇이 현재 높은 부하 상태입니다. 나중에 다시 시도하세요.",
+    "limit": "제한",
+    "tryAgain": "다시 시도",
+    "commandsPerMinute": "명령/분",
+    "commandsPerHour": "명령/시간"
+  },
+  "labels": {
+    "examples": "예",
+    "unknown": "알 수 없음",
+    "steps": "단계",
+    "step": "단계",
+    "count": "개수",
+    "dye": "염료",
+    "dyes": "염료",
+    "found": "찾음",
+    "dyesInCategory": "염료가 이 카테고리에 있습니다",
+    "showingFirst": "처음 {count}개 표시"
+  },
+  "language": {
+    "currentLanguage": "현재 언어",
+    "yourLanguage": "현재 언어 설정: **{language}**",
+    "usingDiscordLocale": "Discord 언어 설정 사용 중: **{language}**",
+    "languageSet": "언어를 설정했습니다",
+    "languageSetTo": "언어 설정을 변경했습니다: **{language}**",
+    "languageReset": "언어를 초기화했습니다",
+    "languageResetMessage": "언어 설정이 초기화되었습니다. 봇은 Discord 언어 설정을 사용합니다."
+  },
+  "manual": {
+    "title": "XIV Dye Tools Bot - 명령 매뉴얼",
+    "welcome": "**XIV Dye Tools Discord Bot**에 오신 것을 환영합니다! 이 봇은 웹 앱의 강력한 색상 분석 및 염료 매칭 도구를 Discord에 직접 제공합니다\n\n모든 명령은 염료 이름 및 매개변수에 대한 **자동 완성**을 지원합니다. 입력을 시작하면 제안이 표시됩니다!",
+    "colorTools": "색상 도구",
+    "dyeInformation": "염료 정보",
+    "analysisTools": "분석 도구",
+    "botInformation": "봇 정보",
+    "quickTips": "빠른 팁",
+    "tips": {
+      "autocomplete": "**자동 완성:** 염료 이름을 입력하면 제안이 표시됩니다",
+      "hexColors": "**16진수 색상:** `#FF0000`과 `FF0000` 모두 사용 가능",
+      "dyeNames": "**염료 이름:** 대소문자 구분 안 함 (예: \"dalamud red\"도 가능)",
+      "categoryExclusions": "**카테고리 제외:** 안경류 염료는 대부분의 검색에서 자동으로 제외됩니다",
+      "needHelp": "**도움이 필요하세요?** 이미지 매칭 팁은 `/match_image_help` 사용"
+    },
+    "website": "웹사이트",
+    "support": "지원",
+    "supportProject": "프로젝트 지원",
+    "footer": "FFXIV 글래머 애호가를 위해 사랑으로 제작",
+    "commands": {
+      "match": {
+        "title": "/match",
+        "description": "**지정된 색상과 가장 가까운 FFXIV 염료 검색*\n- **매개변수:*\n  - `color` - 16진수 코드 (예: `#FF0000` 또는 `FF0000`) 또는 염료 이\n- **예:** `/match color:#8B4513` 또는 `/match color:달라가브색\n- 일치 품질, 색상 거리, 입수 방법 표시"
+      },
+      "matchImage": {
+        "title": "/match_image",
+        "description": "**이미지에서 주요 색상을 추출하고 일치하는 염료 검색*\n- **매개변수:*\n  - `image` - 이미지 파일 (PNG, JPG, GIF, BMP, WebP\n- **예:** `/match_image image:[파일 첨부]\n- 최대 8MB 이미지 지\n- **팁:** 모범 사례는 `/match_image_help` 참조!"
+      },
+      "matchImageHelp": {
+        "title": "/match_image_help",
+        "description": "**/match_image를 효과적으로 사용하기 위한 팁*\n- 이미지 분석 작동 방식 이\n- 최상의 결과를 위한 팁 (자르기, 조명 등\n- 일반적인 문제 해결"
+      },
+      "harmony": {
+        "title": "/harmony",
+        "description": "**색채 이론 기반 색상 조화 제안 생성*\n- **매개변수:*\n  - `base_color` - 16진수 코드 또는 염료 이\n  - `harmony_type` - 보색, 삼원색, 분리 보색 \n  - `companion_count` (선택 사항) - 동반 염료 제한 (1-3\n- **예:** `/harmony base_color:달라가브색 harmony_type:triadic\n- 색상환 시각화 및 동반 염료의 편차 평가 표시"
+      },
+      "mixer": {
+        "title": "/mixer",
+        "description": "**두 색상 사이의 색상 그라데이션 생성*\n- **매개변수:*\n  - `start_color` - 16진수 코드 또는 염료 이\n  - `end_color` - 16진수 코드 또는 염료 이\n  - `steps` (선택 사항) - 단계 수 (2-10, 기본값: 6\n- **예:** `/mixer start_color:하얀 눈색 end_color:숯검정색 steps:8\n- 그라데이션 시각화 및 중간 염료 표시"
+      },
+      "dye": {
+        "title": "/dye",
+        "description": "**염료 검색 및 정보 (4개 하위 명령)*\n\n**`/dye info`** - 특정 염료의 상세 정보 가져오\n  - `dye_name` - 염료 이\n  - 색상 정보, 입수 방법 등 표\n\n**`/dye search`** - 이름으로 염료 검\n  - `query` - 검색\n  - 일치하는 염료 반\n\n**`/dye list`** - 카테고리 내 모든 염료 나\n  - `category` - 빨강 계열, 파랑 계열, 녹색 계열 \n  - 해당 카테고리의 모든 염료 표\n\n**`/dye random`** - 무작위 염료 제안 가져오\n  - `count` (선택 사항) - 염료 개수 (1-5, 기본값: 1\n  - 영감을 얻기에 최적!"
+      },
+      "comparison": {
+        "title": "/comparison",
+        "description": "**여러 염료를 나란히 비교*\n- **매개변수:*\n  - `dye1`, `dye2` (필수) - 16진수 코드 또는 염료 이\n  - `dye3`, `dye4` (선택 사항) - 추가 염\n- **예:** `/comparison dye1:달라가브색 dye2:롤란베리색\n- 비교 그리드 및 쌍별 색상 거리 표시"
+      },
+      "accessibility": {
+        "title": "/accessibility",
+        "description": "**색각 특성에서 염료가 어떻게 보이는지 시뮬레이션*\n- **매개변수:*\n  - `dye` - 16진수 코드 또는 염료 이\n  - `vision_type` - 제1색맹, 제2색맹 또는 제3색\n- **예:** `/accessibility dye:달라가브색 vision_type:protanopia\n- 원본 및 시뮬레이션된 색상을 대안과 함께 표시"
+      },
+      "about": {
+        "title": "/about",
+        "description": "**이 봇에 대한 정보 표시*\n- 버전, 작성자, 소셜 링\n- 웹사이트 및 지원 정보"
+      },
+      "manual": {
+        "title": "/manual",
+        "description": "**이 매뉴얼 표시 (현재 표시 중!)*\n- 포괄적인 명령 참\n- 사용 예 및 팁"
+      },
+      "stats": {
+        "title": "/stats",
+        "description": "**봇 사용 통계** *(접근 제한)\n- 명령 사용 분\n- 오류 추적 및 가동 시간"
+      }
+    }
+  },
+  "about": {
+    "title": "XIV Dye Tools Discord Bot 소개",
+    "description": "FFXIV를 위한 강력한 색상 분석 및 염료 매칭 도구인 XIV Dye Tools 웹 애플리케이션을 Discord에 직접 제공합니다!",
+    "botInformation": "봇 정보",
+    "version": "버전",
+    "author": "작성자",
+    "license": "라이선스",
+    "links": "링크",
+    "website": "웹사이트",
+    "discord": "Discord",
+    "bluesky": "BlueSky",
+    "support": "지원",
+    "patreon": "Patreon",
+    "supportMessage": "이 봇이 유용하다고 생각되면 Patreon에서 개발을 지원하는 것을 고려해 주세요!",
+    "gettingStarted": "시작하기",
+    "gettingStartedMessage": "사용 가능한 모든 명령과 사용 방법을 보려면 `/manual`을 사용하세요\n이미지 매칭에서 최상의 결과를 얻기 위한 팁은 `/match_image_help`를 사용하세요.",
+    "footer": "FFXIV 글래머 애호가를 위해 사랑으로 제작"
+  },
+  "matchImageHelp": {
+    "title": "/match_image 사용 방법",
+    "description": "`/match_image` 명령은 업로드한 이미지를 분석하여 주요 색상을 찾고 가장 가까운 FFXIV 염료와 매칭합니다. 최상의 결과를 얻기 위한 팁을 소개합니다!",
+    "howItWorks": "작동 방식",
+    "howItWorksContent": "**1. 이미지 분석*\n- 이미지 전체가 256×256 픽셀로 크기 조정됩니\n- 4096 빈의 3D 색상 히스토그램이 생성됩니\n- 가장 자주 나타나는 색상이 추출됩니\n\n**2. 염료 매칭*\n- 주요 색상이 모든 FFXIV 염료와 비교됩니\n- RGB 색상 공간에서의 유클리드 거리 사\n- 가장 가까운 매칭 염료 반환",
+    "tipsForBestResults": "최상의 결과를 얻기 위한 팁",
+    "tipsContent": "**이미지 자르기*\n- 매칭하려는 특정 장비 부위나 영역에 집\n- 불필요한 UI 요소와 배경 제\n- 영역이 작을수록 결과가 정확\n\n**좋은 조명 선택*\n- 밝은 장소에서 스크린샷 촬\n- 어두운 그림자나 극단적인 하이라이트 피하\n- 게임 내 정오 조명이 최\n\n**어두운 배경 피하기*\n- 검은색이나 매우 어두운 배경은 결과를 왜곡합니\n- 가능하면 중립적이고 밝은 배경 사\n- 사용자 정의 배경이 있는 `/gpose` 기능이 최적!",
+    "commonIssues": "일반적인 문제",
+    "commonIssuesContent": "**\"어두운 색이 나왔는데 장비는 밝아요!\"*\n→ 배경이 어두울 수 있습니다. 이미지를 장비만으로 자르세요\n\n**\"매칭이 이상해요\"*\n→ 이미지에 여러 색상이 있나요? 알고리즘은 가장 많은 색상을 선택합니다\n\n**\"특정 부분을 매칭하고 싶어요\"*\n→ 네! 업로드하기 전에 해당 부분만 자르세요.",
+    "proTips": "프로 팁",
+    "proTipsContent": "- 업로드하기 전에 이미지 편집 소프트웨어로 자르\n- 금속질/광택 장비는 조명에 따라 결과가 다를 수 있습니\n- 16진수 코드를 알고 있다면 정확한 결과를 위해 `/match` 사\n- 여러 스크린샷을 비교하여 조명이 색상에 미치는 영향 확\n- 1920×1080 이상으로 스크린샷 촬영하면 품질 향상",
+    "footer": "XIV Dye Tools - FFXIV 글래머 애호가를 위해 사랑으로 제작",
+    "exampleUseCases": "사용 예",
+    "goodExamples": "좋은 예",
+    "goodExamplesContent": "- 단일 흉갑의 자른 스크린\n- 중립 배경의 염색된 장비 클로즈\n- 밝은 낮 시간 지역에서 촬영한 스크린\n- 매칭하려는 색상에 초점을 맞춘 이미지",
+    "poorExamples": "나쁜 예",
+    "poorExamplesContent": "- UI가 많은 전체 화면 스크린\n- 어두운 던전이나 동굴의 캐릭\n- 다른 염료의 여러 장\n- 배경색이 지배적인 이미지",
+    "whenToUse": "/match_image와 /match 사용 시기",
+    "whenToUseContent": "**`/match_image` 사용:*\n- 스크린샷이 있고 염료를 찾고 싶을 \n- 정확한 색상 코드를 모를 \n- 영감 이미지의 색상을 매칭하고 싶을 \n\n**`/match` 사용:*\n- 이미 16진수 색상 코드를 알고 있을 \n- 더 정확/엄격한 결과가 필요할 \n- 색상 견본이나 디자인 파일로 작업할 때",
+    "technicalDetails": "기술 세부정보",
+    "supportedFormats": "지원되는 형식",
+    "supportedFormatsContent": "- PN\n- JPG/JPE\n- GI\n- BM\n- WebP",
+    "fileLimits": "파일 제한",
+    "fileLimitsContent": "- 최대 크기: {maxSize}M\n- 최대 크기: 자동 처\n- 처리 시간: 약 1-3초",
+    "matchQualityRatings": "일치 품질 등급",
+    "matchQualityRatingsContent": "**완벽** (거리 0\n**우수** (거리 <10\n**좋음** (거리 <25\n**보통** (거리 <50\n**대략적** (거리 >=50\n\n*거리가 낮을수록 좋은 일치*",
+    "poweredBy": "Sharp 이미지 처리 라이브러리로 구동"
+  }
+}

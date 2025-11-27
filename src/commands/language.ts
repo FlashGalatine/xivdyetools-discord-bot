@@ -20,6 +20,8 @@ const languageChoices = [
   { name: '日本語 (Japanese)', value: 'ja' },
   { name: 'Deutsch (German)', value: 'de' },
   { name: 'Français (French)', value: 'fr' },
+  { name: '한국어 (Korean)', value: 'ko' },
+  { name: '中文 (Chinese)', value: 'zh' },
 ];
 
 export const data = new SlashCommandBuilder()
@@ -29,6 +31,9 @@ export const data = new SlashCommandBuilder()
     ja: 'ボットの応答に使用する言語を設定',
     de: 'Stelle deine bevorzugte Sprache für Bot-Antworten ein',
     fr: 'Définir votre langue préférée pour les réponses du bot',
+    ko: '봇 응답에 사용할 언어를 설정합니다',
+    'zh-CN': '设置机器人回复的首选语言',
+    'zh-TW': '设置机器人回复的首选语言',
   })
   .addSubcommand((subcommand) =>
     subcommand
@@ -38,6 +43,9 @@ export const data = new SlashCommandBuilder()
         ja: '使用言語を設定',
         de: 'Stelle deine bevorzugte Sprache ein',
         fr: 'Définir votre langue préférée',
+        ko: '사용할 언어 설정',
+        'zh-CN': '设置首选语言',
+        'zh-TW': '设置首选语言',
       })
       .addStringOption((option) =>
         option
@@ -47,6 +55,9 @@ export const data = new SlashCommandBuilder()
             ja: '使用する言語',
             de: 'Zu verwendende Sprache',
             fr: 'Langue à utiliser',
+            ko: '사용할 언어',
+            'zh-CN': '使用的语言',
+            'zh-TW': '使用的语言',
           })
           .setRequired(true)
           .addChoices(...languageChoices)
@@ -60,6 +71,9 @@ export const data = new SlashCommandBuilder()
         ja: '現在の言語設定を表示',
         de: 'Zeige deine aktuelle Spracheinstellung an',
         fr: 'Afficher votre paramètre de langue actuel',
+        ko: '현재 언어 설정 표시',
+        'zh-CN': '显示当前语言设置',
+        'zh-TW': '显示当前语言设置',
       })
   )
   .addSubcommand((subcommand) =>
@@ -70,6 +84,9 @@ export const data = new SlashCommandBuilder()
         ja: 'Discordの言語設定を使用するようにリセット',
         de: 'Setze auf Discord-Sprache zurück',
         fr: 'Réinitialiser pour utiliser la langue de Discord',
+        ko: 'Discord 언어 설정을 따르도록 초기화',
+        'zh-CN': '重置为使用 Discord 语言',
+        'zh-TW': '重置为使用 Discord 语言',
       })
   );
 

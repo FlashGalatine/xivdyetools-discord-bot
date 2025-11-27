@@ -4,8 +4,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MockRedisClient } from '../__tests__/helpers/mock-redis.js';
+import { LocaleCode } from './i18n-service.js';
 import { createMockInteraction } from '../__tests__/helpers/mock-interaction.js';
-import { Locale } from 'discord.js';
 
 // Mock logger
 vi.mock('../utils/logger.js', () => ({
@@ -30,7 +30,7 @@ let mockRedisClient: MockRedisClient | null = null;
 
 // Mock the redis module
 vi.mock('./redis.js', () => ({
-  getRedisClient: () => mockRedisClient,
+  getRedisClient: (): MockRedisClient | null => mockRedisClient,
 }));
 
 // Mock translations
@@ -69,6 +69,22 @@ const mockTranslations = {
       dye: 'Teinture',
     },
   },
+  ko: {
+    errors: {
+      invalidInput: '유효하지 않은 입력',
+    },
+    labels: {
+      dye: '염료',
+    },
+  },
+  zh: {
+    errors: {
+      invalidInput: '无效输入',
+    },
+    labels: {
+      dye: '染剂',
+    },
+  },
 };
 
 // Mock fs module
@@ -78,6 +94,8 @@ vi.mock('fs', () => ({
     if (path.includes('ja.json')) return JSON.stringify(mockTranslations.ja);
     if (path.includes('de.json')) return JSON.stringify(mockTranslations.de);
     if (path.includes('fr.json')) return JSON.stringify(mockTranslations.fr);
+    if (path.includes('ko.json')) return JSON.stringify(mockTranslations.ko);
+    if (path.includes('zh.json')) return JSON.stringify(mockTranslations.zh);
     throw new Error(`File not found: ${path}`);
   }),
 }));
@@ -126,11 +144,27 @@ describe('i18n Service', () => {
       expect(getCurrentLocale()).toBe('fr');
     });
 
+    it('should set locale to ko', async () => {
+      vi.resetModules();
+      const { setLocale, getCurrentLocale } = await import('./i18n-service.js');
+
+      setLocale('ko');
+      expect(getCurrentLocale()).toBe('ko');
+    });
+
+    it('should set locale to zh', async () => {
+      vi.resetModules();
+      const { setLocale, getCurrentLocale } = await import('./i18n-service.js');
+
+      setLocale('zh');
+      expect(getCurrentLocale()).toBe('zh');
+    });
+
     it('should default to en for unsupported locales', async () => {
       vi.resetModules();
       const { setLocale, getCurrentLocale } = await import('./i18n-service.js');
 
-      setLocale('unsupported' as any);
+      setLocale('unsupported' as unknown as LocaleCode);
       expect(getCurrentLocale()).toBe('en');
     });
   });
@@ -216,11 +250,27 @@ describe('i18n Service', () => {
       expect(result).toBe('fr');
     });
 
-    it('should return null for unsupported locales', async () => {
+    it('should map ko to ko', async () => {
       vi.resetModules();
       const { i18nService } = await import('./i18n-service.js');
 
       const result = i18nService.discordLocaleToLocaleCode('ko');
+      expect(result).toBe('ko');
+    });
+
+    it('should map zh-CN to zh', async () => {
+      vi.resetModules();
+      const { i18nService } = await import('./i18n-service.js');
+
+      const result = i18nService.discordLocaleToLocaleCode('zh-CN');
+      expect(result).toBe('zh');
+    });
+
+    it('should return null for unsupported locales', async () => {
+      vi.resetModules();
+      const { i18nService } = await import('./i18n-service.js');
+
+      const result = i18nService.discordLocaleToLocaleCode('es-ES');
       expect(result).toBeNull();
     });
   });
@@ -325,7 +375,7 @@ describe('i18n Service', () => {
 
       const interaction = createMockInteraction({
         userId: 'new-user',
-        locale: 'ko', // Korean - not supported
+        locale: 'es-ES', // Spanish - not supported
       });
 
       await i18nService.setLocaleFromInteraction(interaction);
@@ -361,19 +411,35 @@ describe('i18n Service', () => {
 
       expect(getLocaleDisplayName('fr')).toBe('Français');
     });
+
+    it('should return 한국어 for ko', async () => {
+      vi.resetModules();
+      const { getLocaleDisplayName } = await import('./i18n-service.js');
+
+      expect(getLocaleDisplayName('ko')).toBe('한국어');
+    });
+
+    it('should return 中文 for zh', async () => {
+      vi.resetModules();
+      const { getLocaleDisplayName } = await import('./i18n-service.js');
+
+      expect(getLocaleDisplayName('zh')).toBe('中文');
+    });
   });
 
   describe('getSupportedLocales', () => {
-    it('should return all 4 supported locales', async () => {
+    it('should return all 6 supported locales', async () => {
       vi.resetModules();
       const { getSupportedLocales } = await import('./i18n-service.js');
 
       const locales = getSupportedLocales();
-      expect(locales).toHaveLength(4);
+      expect(locales).toHaveLength(6);
       expect(locales.map((l) => l.code)).toContain('en');
       expect(locales.map((l) => l.code)).toContain('ja');
       expect(locales.map((l) => l.code)).toContain('de');
       expect(locales.map((l) => l.code)).toContain('fr');
+      expect(locales.map((l) => l.code)).toContain('ko');
+      expect(locales.map((l) => l.code)).toContain('zh');
     });
   });
 
@@ -385,7 +451,14 @@ describe('i18n Service', () => {
 
       await i18nService.initialize();
 
-      expect(LocalizationService.preloadLocales).toHaveBeenCalledWith(['en', 'ja', 'de', 'fr']);
+      expect(LocalizationService.preloadLocales).toHaveBeenCalledWith([
+        'en',
+        'ja',
+        'de',
+        'fr',
+        'ko',
+        'zh',
+      ]);
     });
   });
 });

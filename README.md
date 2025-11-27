@@ -14,7 +14,7 @@
 📊 **Dye Comparison** - Side-by-side comparison of up to 4 dyes with visualizations
 🌈 **Color Mixing** - Find intermediate dyes for smooth color gradients
 💰 **Live Pricing** - Market board prices via Universalis API
-🌐 **Multi-Language Support** - Full localization for English, Japanese, German, and French
+🌐 **Multi-Language Support** - Full localization for English, Japanese, German, French, Korean, and Chinese
 
 ## Privacy
 

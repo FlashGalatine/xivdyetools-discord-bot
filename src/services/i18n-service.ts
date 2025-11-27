@@ -32,16 +32,18 @@ const enTranslations = loadTranslations('en');
 const jaTranslations = loadTranslations('ja');
 const deTranslations = loadTranslations('de');
 const frTranslations = loadTranslations('fr');
+const koTranslations = loadTranslations('ko');
+const zhTranslations = loadTranslations('zh');
 
 /**
  * Supported locale codes (matching xivdyetools-core)
  */
-export type LocaleCode = 'en' | 'ja' | 'de' | 'fr';
+export type LocaleCode = 'en' | 'ja' | 'de' | 'fr' | 'ko' | 'zh';
 
 /**
  * Array of supported locales
  */
-const SUPPORTED_LOCALES: readonly LocaleCode[] = ['en', 'ja', 'de', 'fr'] as const;
+const SUPPORTED_LOCALES: readonly LocaleCode[] = ['en', 'ja', 'de', 'fr', 'ko', 'zh'] as const;
 
 /**
  * Type for translation data structure
@@ -56,6 +58,8 @@ const translations: Record<LocaleCode, TranslationData> = {
   ja: jaTranslations,
   de: deTranslations,
   fr: frTranslations,
+  ko: koTranslations,
+  zh: zhTranslations,
 };
 
 /**
@@ -88,6 +92,11 @@ function discordLocaleToLocaleCode(discordLocale: Locale | string): LocaleCode |
     de: 'de',
     // French
     fr: 'fr',
+    // Korean
+    ko: 'ko',
+    // Chinese
+    'zh-CN': 'zh',
+    'zh-TW': 'zh',
   };
 
   // Try direct mapping first
@@ -304,6 +313,8 @@ function getLocaleDisplayName(locale: LocaleCode): string {
     ja: '日本語',
     de: 'Deutsch',
     fr: 'Français',
+    ko: '한국어',
+    zh: '中文',
   };
   return names[locale] || locale;
 }

@@ -1,0 +1,424 @@
+{
+  "commands": {
+    "harmony": {
+      "description": "根据色彩理论生成和谐的颜色",
+      "options": {
+        "baseColor": "基础颜色：十六进制（例如：#FF0000）或染剂名称（例如：卫月红）",
+        "type": "和谐类型",
+        "companionCount": "限制配色数量（可选 - 默认显示所有）"
+      }
+    },
+    "match": {
+      "description": "查找与指定颜色最接近的FFXIV染剂",
+      "options": {
+        "color": "颜色：十六进制（例如：#FF0000）或染剂名称（例如：卫月红）"
+      }
+    },
+    "mixer": {
+      "description": "在两种颜色之间生成渐变",
+      "options": {
+        "startColor": "开始颜色：十六进制（例如：#FF0000）或染剂名称",
+        "endColor": "结束颜色：十六进制（例如：#0000FF）或染剂名称",
+        "steps": "颜色步骤数（默认：6）"
+      }
+    },
+    "dye": {
+      "description": "FFXIV染剂信息和搜索",
+      "subcommands": {
+        "info": {
+          "description": "获取特定染剂的信息",
+          "options": {
+            "name": "染剂名称"
+          }
+        },
+        "search": {
+          "description": "按名称搜索染剂",
+          "options": {
+            "query": "搜索词（部分匹配）"
+          }
+        },
+        "list": {
+          "description": "按类别列出染剂",
+          "options": {
+            "category": "染剂类别"
+          }
+        },
+        "random": {
+          "description": "获取随机染剂",
+          "options": {
+            "count": "随机染剂数量（默认：1）",
+            "excludeMetallic": "排除以\"金属\"开头的染剂",
+            "excludePastel": "排除以\"柔彩\"开头的染剂",
+            "excludeDark": "排除以\"黑暗\"开头的染剂",
+            "excludeCosmic": "排除获取方式为\"宇宙探索\"或\"宇宙幸运\"的染剂",
+            "excludeExpensive": "排除无瑕白（itemID 13114）和煤玉黑（itemID 13115）"
+          }
+        }
+      }
+    },
+    "comparison": {
+      "description": "并排比较多个FFXIV染剂",
+      "options": {
+        "dye1": "第一个染剂：十六进制（例如：#FF0000）或染剂名称",
+        "dye2": "第二个染剂：十六进制（例如：#00FF00）或染剂名称",
+        "dye3": "第三个染剂（可选）：十六进制或染剂名称",
+        "dye4": "第四个染剂（可选）：十六进制或染剂名称"
+      }
+    },
+    "accessibility": {
+      "description": "模拟色觉特性下染剂的外观",
+      "options": {
+        "dye": "染剂名称或十六进制颜色（例如：\"卫月红\"或\"#FF0000\"）",
+        "visionType": "色觉类型（默认：显示所有）"
+      },
+      "visionTypes": {
+        "all": "所有类型",
+        "protanopia": "红色盲（红绿色盲）",
+        "deuteranopia": "绿色盲（红绿色盲）",
+        "tritanopia": "蓝色盲（蓝黄色盲）"
+      }
+    },
+    "matchImage": {
+      "description": "从图像中提取主要颜色并搜索匹配的FFXIV染剂",
+      "options": {
+        "image": "要分析的图像文件（PNG、JPG、GIF、BMP、WebP）"
+      }
+    },
+    "matchImageHelp": {
+      "description": "获取有关使用/match_image命令的提示和技巧"
+    },
+    "stats": {
+      "description": "显示机器人使用统计"
+    },
+    "manual": {
+      "description": "显示所有机器人命令的详细信息"
+    },
+    "about": {
+      "description": "显示有关此机器人的信息"
+    },
+    "language": {
+      "description": "设置机器人回复的首选语言",
+      "subcommands": {
+        "set": {
+          "description": "设置首选语言",
+          "options": {
+            "language": "使用的语言"
+          }
+        },
+        "show": {
+          "description": "显示当前语言设置"
+        },
+        "reset": {
+          "description": "重置为使用Discord语言"
+        }
+      },
+      "languages": {
+        "en": "英语",
+        "ja": "日语",
+        "de": "德语",
+        "fr": "法语",
+        "ko": "韩语",
+        "zh": "中文"
+      }
+    }
+  },
+  "embeds": {
+    "colorInformation": "颜色信息",
+    "hex": "十六进制",
+    "rgb": "RGB",
+    "hsv": "HSV",
+    "category": "类别",
+    "acquisition": "获取方式",
+    "baseColor": "基础颜色",
+    "closestMatch": "最接近的匹配",
+    "harmonySuggestions": "和谐建议",
+    "base": "基础",
+    "inputColor": "输入颜色",
+    "closestDye": "最接近的染剂",
+    "matchQuality": "匹配质量",
+    "distance": "距离",
+    "euclidean": "欧几里得",
+    "quality": "质量",
+    "dyeMatch": "染剂匹配",
+    "findingClosestMatchFor": "正在查找最接近的匹配",
+    "colorMatch": "颜色匹配",
+    "analyzedImage": "已分析图像",
+    "extractedDominantColor": "已提取主要颜色",
+    "extractedUsingHistogram": "使用直方图分析提取主要颜色",
+    "colorGradientMixer": "颜色渐变混合器",
+    "start": "开始",
+    "end": "结束",
+    "steps": "步骤",
+    "intermediateDyes": "中间染剂",
+    "step": "步骤",
+    "target": "目标",
+    "match": "匹配",
+    "tip": "提示",
+    "useMatchForAcquisition": "使用`/match <颜色>`查看各个染剂的获取方式。",
+    "useDyeInfoForDetails": "使用/dye info <名称>查看详细信息",
+    "useDyeInfoForFullDetails": "使用/dye info <名称>查看完整详细信息",
+    "useDyeInfoForMoreDetails": "有关详细信息，请参阅/dye info <名称>",
+    "dyeComparison": "染剂比较",
+    "dye": "染剂",
+    "dyes": "染剂",
+    "comparisonAnalysis": "比较分析",
+    "mostSimilar": "最相似",
+    "mostDifferent": "最不同",
+    "averageDistance": "平均距离",
+    "colorHarmony": "颜色和谐",
+    "angle": "角度",
+    "fromBase": "从基础",
+    "deviation": "偏差",
+    "accessibilityTitle": "无障碍",
+    "originalHex": "原始十六进制",
+    "affects": "影响",
+    "impact": "影响",
+    "protanopia": "红色盲（红绿色盲）",
+    "protanopiaImpact": "红色看起来较暗/偏棕色",
+    "deuteranopia": "绿色盲（红绿色盲）",
+    "deuteranopiaImpact": "绿色看起来像米色/黄褐色",
+    "tritanopia": "蓝色盲（蓝黄色盲）",
+    "tritanopiaImpact": "蓝色看起来偏绿",
+    "protanopiaAffects": "约1%的男性",
+    "deuteranopiaAffects": "约1%的男性",
+    "tritanopiaAffects": "不到0.01%的人口",
+    "aboutCVD": "关于色觉特性",
+    "cvdDescription": "色觉特性（色觉异常）影响约8%的男性和约0.5%的女性。这些模拟使用Brettel 1997算法来近似各种类型的色觉特性下颜色的外观。",
+    "botStatistics": "机器人统计",
+    "usage": "使用情况",
+    "totalCommands": "总命令数",
+    "uniqueUsers": "独立用户数",
+    "successRate": "成功率",
+    "botInfo": "机器人信息",
+    "servers": "服务器",
+    "uptime": "运行时间",
+    "commands": "命令",
+    "topCommands": "热门命令",
+    "noCommandsYet": "尚未执行命令",
+    "recentErrors": "最近的错误",
+    "noRecentErrors": "没有最近的错误",
+    "dyeSearch": "染剂搜索",
+    "found": "个找到",
+    "showingFirst15": "显示前15个",
+    "tooManyResults": "结果太多！请更具体地搜索或使用/dye info <名称>",
+    "useDyeInfo": "使用/dye info <名称>查看详细信息",
+    "categoryDyes": "{category}染剂",
+    "dyesInCategory": "此类别中的染剂",
+    "useDyeInfoDetails": "使用/dye info <名称>查看详细信息",
+    "randomDyes": "随机染剂"
+  },
+  "matchQuality": {
+    "perfect": "完美匹配",
+    "excellent": "优秀匹配",
+    "good": "良好匹配",
+    "fair": "一般匹配",
+    "approximate": "大致匹配"
+  },
+  "comparisonQuality": {
+    "identical": "相同",
+    "verySimilar": "非常相似",
+    "similar": "相似",
+    "somewhatDifferent": "略有不同",
+    "different": "不同",
+    "veryDifferent": "非常不同"
+  },
+  "errors": {
+    "error": "错误",
+    "invalidInput": "无效输入",
+    "commandError": "命令错误",
+    "processingError": "处理错误",
+    "dyeNotFound": "找不到染剂",
+    "noResults": "无结果",
+    "emptyCategory": "空类别",
+    "unknownSubcommand": "未知子命令",
+    "invalidSubcommand": "无效子命令",
+    "noDyesAvailable": "没有可用的染剂",
+    "noPermission": "您没有使用此命令的权限。",
+    "failedToRetrieveStats": "无法检索统计信息。请稍后再试。",
+    "couldNotFindMatchingDye": "找不到匹配的染剂。",
+    "couldNotGenerateHarmony": "无法生成和谐。",
+    "couldNotFindMatchingDyes": "找不到匹配的染剂。",
+    "errorExecutingCommand": "执行此命令时出错！",
+    "errorProcessingRequest": "处理请求时出错。请重试。",
+    "errorGeneratingHarmony": "生成颜色和谐时出错。请重试。",
+    "errorGeneratingGradient": "生成渐变时出错。请重试。",
+    "errorComparingDyes": "比较染剂时出错。请重试。",
+    "errorGeneratingAccessibility": "生成无障碍比较时出错。请重试。",
+    "imageValidationFailed": "图像验证失败",
+    "imageValidationFailedGeneric": "图像验证失败。",
+    "failedToAnalyzeImage": "分析图像失败。请确保它是有效的图像文件并重试。",
+    "failedToDownloadImage": "从Discord下载图像失败。请重新上传。",
+    "invalidOrCorruptedImage": "图像文件无效或损坏。请上传有效的PNG、JPG、GIF、BMP或WebP图像。",
+    "invalidHexOrDyeName": "\"{input}\"不是有效的十六进制颜色或染剂名称。",
+    "invalidHexOrDyeNameWithExamples": "\"{input}\"不是有效的十六进制颜色或染剂名称\n\n**示例：*\n- 十六进制：`#FF0000`、`#8A2BE2\n- 染剂：`卫月红`、`素雪白`",
+    "invalidStartColor": "无效的开始颜色",
+    "invalidEndColor": "无效的结束颜色",
+    "invalidSteps": "无效的步骤数",
+    "invalidCount": "无效的数量",
+    "invalidHarmonyType": "无效的和谐类型",
+    "couldNotFindDye": "找不到染剂\"{name}\"。",
+    "couldNotFindDyeWithSuggestion": "找不到染剂\"{name}\"\n\n请使用自动完成或`/dye search`搜索类似名称。",
+    "couldNotFindMatchingDyeForHex": "找不到{hex}的匹配染剂。",
+    "noDyesInCategory": "在类别\"{category}\"中找不到染剂。",
+    "noMatchingDyesQuery": "找不到与\"{query}\"匹配的染剂\n\n尝试其他搜索词或使用`/dye list`按类别浏览。",
+    "noDyesMatchFilter": "没有染剂符合过滤条件。请尝试不同的排除设置。",
+    "noMatchingFilterCriteria": "没有染剂符合过滤条件。请尝试不同的排除设置。",
+    "noDyesFoundWithSuggestion": "找不到与\"{query}\"匹配的染剂\n\n尝试其他搜索词或使用`/dye list`按类别浏览。",
+    "invalidColorOrDyeNameWithExamples": "\"{input}\"不是有效的十六进制颜色或染剂名称\n\n**示例：*\n- 十六进制：`#FF0000`、`#8A2BE2\n- 染剂：`卫月红`、`无瑕白`",
+    "invalidHexFormat": "无效的十六进制颜色格式：\"{hex}\"。需要#RRGGBB格式（例如：#FF0000）或RRGGBB格式（例如：FF0000）。",
+    "dyeNameEmpty": "染剂名称不能为空。",
+    "dyeNotFoundSearch": "找不到染剂：\"{name}\"。使用自动完成或搜索查找可用的染剂。",
+    "dyeIdMustBeInteger": "染剂ID必须是整数。",
+    "dyeIdMustBePositive": "染剂ID必须是正整数。",
+    "dyeIdOutOfRange": "染剂ID超出已知范围（1-200）。",
+    "colorInputEmpty": "颜色输入不能为空。",
+    "searchQueryEmpty": "搜索查询不能为空。",
+    "validationError": "发生验证错误。",
+    "paramMustBeInteger": "{param}必须是整数。",
+    "paramMustBeBetween": "{param}必须在{min}和{max}之间。",
+    "invalidDataCenter": "无效的数据中心：\"{dc}\"。请从可用选项中选择。",
+    "invalidHarmonyTypeOption": "无效的和谐类型：\"{type}\"。请从可用选项中选择。"
+  },
+  "rateLimit": {
+    "tooQuickly": "您使用此命令的速度太快！请在{seconds}秒后重试。",
+    "hourlyLimit": "您已达到此命令的每小时限制！请在{minutes}分钟后重试。",
+    "highLoad": "机器人目前负载较高。请稍后再试。",
+    "limit": "限制",
+    "tryAgain": "重试",
+    "commandsPerMinute": "命令/分钟",
+    "commandsPerHour": "命令/小时"
+  },
+  "labels": {
+    "examples": "示例",
+    "unknown": "未知",
+    "steps": "步骤",
+    "step": "步骤",
+    "count": "数量",
+    "dye": "染剂",
+    "dyes": "染剂",
+    "found": "找到",
+    "dyesInCategory": "染剂在此类别中",
+    "showingFirst": "显示前{count}个"
+  },
+  "language": {
+    "currentLanguage": "当前语言",
+    "yourLanguage": "当前语言设置：**{language}**",
+    "usingDiscordLocale": "正在使用Discord语言设置：**{language}**",
+    "languageSet": "已设置语言",
+    "languageSetTo": "语言设置已更改为：**{language}**",
+    "languageReset": "已重置语言",
+    "languageResetMessage": "语言设置已重置。机器人将使用Discord语言设置。"
+  },
+  "manual": {
+    "title": "XIV Dye Tools Bot - 命令手册",
+    "welcome": "欢迎使用**XIV Dye Tools Discord Bot**！此机器人将网页应用的强大颜色分析和染剂匹配工具直接带到Discord\n\n所有命令都支持染剂名称和参数的**自动完成**。开始输入即可看到建议！",
+    "colorTools": "颜色工具",
+    "dyeInformation": "染剂信息",
+    "analysisTools": "分析工具",
+    "botInformation": "机器人信息",
+    "quickTips": "快速提示",
+    "tips": {
+      "autocomplete": "**自动完成：**输入染剂名称时会显示建议",
+      "hexColors": "**十六进制颜色：**`#FF0000`和`FF0000`均可使用",
+      "dyeNames": "**染剂名称：**不区分大小写（例如：\"dalamud red\"也可以）",
+      "categoryExclusions": "**类别排除：**面部饰品染剂会自动从大多数搜索中排除",
+      "needHelp": "**需要帮助？**使用`/match_image_help`获取图像匹配提示"
+    },
+    "website": "网站",
+    "support": "支持",
+    "supportProject": "支持项目",
+    "footer": "为FFXIV时尚爱好者倾情打造",
+    "commands": {
+      "match": {
+        "title": "/match",
+        "description": "**查找与指定颜色最接近的FFXIV染剂*\n- **参数：*\n  - `color` - 十六进制代码（例如：`#FF0000`或`FF0000`）或染剂名\n- **示例：**`/match color:#8B4513`或`/match color:卫月红\n- 显示匹配质量、颜色距离、获取方式"
+      },
+      "matchImage": {
+        "title": "/match_image",
+        "description": "**从图像中提取主要颜色并搜索匹配的染剂*\n- **参数：*\n  - `image` - 图像文件（PNG、JPG、GIF、BMP、WebP\n- **示例：**`/match_image image:[附加文件]\n- 支持最大8MB的图\n- **提示：**查看`/match_image_help`了解最佳实践！"
+      },
+      "matchImageHelp": {
+        "title": "/match_image_help",
+        "description": "**有效使用/match_image的提示*\n- 了解图像分析的工作原\n- 获得最佳结果的提示（裁剪、照明等\n- 常见问题故障排除"
+      },
+      "harmony": {
+        "title": "/harmony",
+        "description": "**基于色彩理论生成颜色和谐建议*\n- **参数：*\n  - `base_color` - 十六进制代码或染剂名\n  - `harmony_type` - 互补色、三角配色、分裂互补色\n  - `companion_count`（可选）- 限制配色数量（1-3\n- **示例：**`/harmony base_color:卫月红 harmony_type:triadic\n- 显示色轮可视化和配色染剂的偏差评估"
+      },
+      "mixer": {
+        "title": "/mixer",
+        "description": "**在两种颜色之间生成颜色渐变*\n- **参数：*\n  - `start_color` - 十六进制代码或染剂名\n  - `end_color` - 十六进制代码或染剂名\n  - `steps`（可选）- 步骤数（2-10，默认：6\n- **示例：**`/mixer start_color:素雪白 end_color:煤烟黑 steps:8\n- 显示渐变可视化和中间染剂"
+      },
+      "dye": {
+        "title": "/dye",
+        "description": "**染剂搜索和信息（4个子命令）*\n\n**`/dye info`** - 获取特定染剂的详细信\n  - `dye_name` - 染剂名\n  - 显示颜色信息、获取方式\n\n**`/dye search`** - 按名称搜索染\n  - `query` - 搜索\n  - 返回匹配的染\n\n**`/dye list`** - 列出类别中的所有染\n  - `category` - 红色系、蓝色系、绿色系\n  - 显示该类别中的所有染\n\n**`/dye random`** - 获取随机染剂建\n  - `count`（可选）- 染剂数量（1-5，默认：1\n  - 非常适合寻找灵感！"
+      },
+      "comparison": {
+        "title": "/comparison",
+        "description": "**并排比较多个染剂*\n- **参数：*\n  - `dye1`、`dye2`（必需）- 十六进制代码或染剂名\n  - `dye3`、`dye4`（可选）- 额外的染\n- **示例：**`/comparison dye1:卫月红 dye2:罗兰莓\n- 显示比较网格和成对颜色距离"
+      },
+      "accessibility": {
+        "title": "/accessibility",
+        "description": "**模拟色觉特性下染剂的外观*\n- **参数：*\n  - `dye` - 十六进制代码或染剂名\n  - `vision_type` - 红色盲、绿色盲或蓝色\n- **示例：**`/accessibility dye:卫月红 vision_type:protanopia\n- 显示原始和模拟的颜色及替代方案"
+      },
+      "about": {
+        "title": "/about",
+        "description": "**显示有关此机器人的信息*\n- 版本、作者、社交链\n- 网站和支持信息"
+      },
+      "manual": {
+        "title": "/manual",
+        "description": "**显示此手册（当前显示！）*\n- 全面的命令参\n- 使用示例和提示"
+      },
+      "stats": {
+        "title": "/stats",
+        "description": "**机器人使用统计** *（访问受限）\n- 命令使用分\n- 错误跟踪和运行时间"
+      }
+    }
+  },
+  "about": {
+    "title": "关于XIV Dye Tools Discord Bot",
+    "description": "将XIV Dye Tools网页应用程序（FFXIV的强大颜色分析和染剂匹配工具）直接带到Discord！",
+    "botInformation": "机器人信息",
+    "version": "版本",
+    "author": "作者",
+    "license": "许可证",
+    "links": "链接",
+    "website": "网站",
+    "discord": "Discord",
+    "bluesky": "BlueSky",
+    "support": "支持",
+    "patreon": "Patreon",
+    "supportMessage": "如果您觉得此机器人有用，请考虑在Patreon上支持开发！",
+    "gettingStarted": "入门",
+    "gettingStartedMessage": "使用`/manual`查看所有可用命令及其使用方法\n使用`/match_image_help`获取图像匹配的最佳结果提示。",
+    "footer": "为FFXIV时尚爱好者倾情打造"
+  },
+  "matchImageHelp": {
+    "title": "如何使用/match_image",
+    "description": "`/match_image`命令分析您上传的图像以找到主要颜色，并将其与最接近的FFXIV染剂匹配。以下是获得最佳结果的一些提示！",
+    "howItWorks": "工作原理",
+    "howItWorksContent": "**1. 图像分析*\n- 整个图像被调整为256×256像\n- 创建4096个箱的3D颜色直方\n- 提取最频繁出现的颜\n\n**2. 染剂匹配*\n- 主要颜色与所有FFXIV染剂进行比\n- 使用RGB颜色空间的欧几里得距\n- 返回最接近的匹配染剂",
+    "tipsForBestResults": "获得最佳结果的提示",
+    "tipsContent": "**裁剪图像*\n- 专注于您想要匹配的特定装备部位或区\n- 删除不必要的UI元素和背\n- 区域越小，结果越准\n\n**选择良好的照明*\n- 在明亮的位置拍摄截\n- 避免深色阴影或极端高\n- 游戏内正午照明最\n\n**避免深色背景*\n- 黑色或非常深色的背景会扭曲结\n- 如果可能，使用中性明亮的背\n- 带自定义背景的`/gpose`功能最佳！",
+    "commonIssues": "常见问题",
+    "commonIssuesContent": "**\"得到了深色但装备是明亮的！\"*\n→ 背景可能很暗。将图像裁剪到仅装备\n\n**\"匹配很奇怪\"*\n→ 图像中有多种颜色吗？算法选择最多的颜色\n\n**\"我想匹配特定部分\"*\n→ 可以！在上传前将其裁剪到该部分。",
+    "proTips": "专业提示",
+    "proTipsContent": "- 使用图像编辑软件在上传前裁\n- 金属/光泽装备可能因照明而产生不同的结\n- 如果您知道十六进制代码，请使用`/match`获得精确结\n- 比较多个截图以查看照明对颜色的影\n- 以1920×1080或更高分辨率拍摄截图以获得更好的质量",
+    "footer": "XIV Dye Tools - 为FFXIV时尚爱好者倾情打造",
+    "exampleUseCases": "使用示例",
+    "goodExamples": "好的示例",
+    "goodExamplesContent": "- 单个胸甲的裁剪截\n- 中性背景上染色装备的特\n- 在明亮日间区域拍摄的截\n- 专注于您想要匹配的颜色的图像",
+    "poorExamples": "不好的示例",
+    "poorExamplesContent": "- 带有大量UI的全屏截\n- 黑暗地下城或洞穴中的角\n- 具有不同染剂的多件装\n- 背景色占主导地位的图像",
+    "whenToUse": "何时使用/match_image与/match",
+    "whenToUseContent": "**使用`/match_image`：*\n- 您有截图并想找到染\n- 您不知道确切的颜色代\n- 您想匹配灵感图像中的颜\n\n**使用`/match`：*\n- 您已经知道十六进制颜色代\n- 您需要更精确/严格的结\n- 您正在处理色板或设计文件",
+    "technicalDetails": "技术细节",
+    "supportedFormats": "支持的格式",
+    "supportedFormatsContent": "- PN\n- JPG/JPE\n- GI\n- BM\n- WebP",
+    "fileLimits": "文件限制",
+    "fileLimitsContent": "- 最大大小：{maxSize}M\n- 最大尺寸：自动处\n- 处理时间：约1-3秒",
+    "matchQualityRatings": "匹配质量评级",
+    "matchQualityRatingsContent": "**完美**（距离0\n**优秀**（距离<10\n**良好**（距离<25\n**一般**（距离<50\n**大致**（距离>=50\n\n*距离越低匹配越好*",
+    "poweredBy": "由Sharp图像处理库提供支持"
+  }
+}
