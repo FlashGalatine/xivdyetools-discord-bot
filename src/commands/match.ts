@@ -10,12 +10,19 @@ import {
   EmbedBuilder,
   ColorResolvable,
 } from 'discord.js';
-import { DyeService, ColorService, dyeDatabase, type Dye } from 'xivdyetools-core';
+import {
+  DyeService,
+  ColorService,
+  dyeDatabase,
+  LocalizationService,
+  type Dye,
+} from 'xivdyetools-core';
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
 import { formatColorSwatch, formatRGB, formatHSV } from '../utils/embed-builder.js';
 import { emojiService } from '../services/emoji-service.js';
 import { sendPublicSuccess } from '../utils/response-helper.js';
 import { CommandBase } from './base/CommandBase.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -28,10 +35,20 @@ class MatchCommand extends CommandBase {
   readonly data = new SlashCommandBuilder()
     .setName('match')
     .setDescription('Find the closest FFXIV dye to a given color')
+    .setDescriptionLocalizations({
+      ja: '指定した色に最も近いFFXIVの染料を検索',
+      de: 'Finde den nächsten FFXIV-Farbstoff zu einer gegebenen Farbe',
+      fr: "Trouver la teinture FFXIV la plus proche d'une couleur donnée",
+    })
     .addStringOption((option) =>
       option
         .setName('color')
         .setDescription('Color: hex (e.g., #FF0000) or dye name (e.g., Dalamud Red)')
+        .setDescriptionLocalizations({
+          ja: '色：16進数（例：#FF0000）または染料名（例：ダラガブレッド）',
+          de: 'Farbe: Hex (z.B. #FF0000) oder Farbstoffname (z.B. Dalamud-Rot)',
+          fr: 'Couleur : hex (ex. #FF0000) ou nom de teinture (ex. Rouge Dalamud)',
+        })
         .setRequired(true)
         .setAutocomplete(true)
     );
@@ -75,58 +92,63 @@ class MatchCommand extends CommandBase {
     let matchQuality: string;
     let matchEmoji: string;
     if (distance === 0) {
-      matchQuality = 'Perfect match';
+      matchQuality = t('matchQuality.perfect');
       matchEmoji = '🎯';
     } else if (distance < 10) {
-      matchQuality = 'Excellent match';
+      matchQuality = t('matchQuality.excellent');
       matchEmoji = '✨';
     } else if (distance < 25) {
-      matchQuality = 'Good match';
+      matchQuality = t('matchQuality.good');
       matchEmoji = '👍';
     } else if (distance < 50) {
-      matchQuality = 'Fair match';
+      matchQuality = t('matchQuality.fair');
       matchEmoji = '👌';
     } else {
-      matchQuality = 'Approximate match';
+      matchQuality = t('matchQuality.approximate');
       matchEmoji = '🔍';
     }
+
+    // Get localized dye name and category
+    const localizedDyeName = LocalizationService.getDyeName(closestDye.id);
+    const localizedCategory = LocalizationService.getDyeCategory(closestDye.id);
+    const localizedInputDyeName = inputDye ? LocalizationService.getDyeName(inputDye.id) : null;
 
     // Create embed
     const embed = new EmbedBuilder()
       .setColor(parseInt(closestDye.hex.replace('#', ''), 16) as ColorResolvable)
-      .setTitle(`${matchEmoji} Dye Match: ${closestDye.name}`)
+      .setTitle(`${matchEmoji} ${t('embeds.dyeMatch')}: ${localizedDyeName}`)
       .setDescription(
-        inputDye
-          ? `Finding closest match for **${inputDye.name}**`
-          : `Finding closest match for **${targetColor.toUpperCase()}**`
+        localizedInputDyeName
+          ? `${t('embeds.findingClosestMatchFor')} **${localizedInputDyeName}**`
+          : `${t('embeds.findingClosestMatchFor')} **${targetColor.toUpperCase()}**`
       )
       .addFields(
         {
-          name: 'Input Color',
+          name: t('embeds.inputColor'),
           value: [
             formatColorSwatch(targetColor, 6),
-            `**Hex:** ${targetColor.toUpperCase()}`,
-            `**RGB:** ${formatRGB(targetColor)}`,
-            `**HSV:** ${formatHSV(targetColor)}`,
+            `**${t('embeds.hex')}:** ${targetColor.toUpperCase()}`,
+            `**${t('embeds.rgb')}:** ${formatRGB(targetColor)}`,
+            `**${t('embeds.hsv')}:** ${formatHSV(targetColor)}`,
           ].join('\n'),
           inline: false,
         },
         {
-          name: `Closest Dye: ${closestDye.name}`,
+          name: `${t('embeds.closestDye')}: ${localizedDyeName}`,
           value: [
             emojiService.getDyeEmojiOrSwatch(closestDye, 6),
-            `**Hex:** ${closestDye.hex.toUpperCase()}`,
-            `**RGB:** ${formatRGB(closestDye.hex)}`,
-            `**HSV:** ${formatHSV(closestDye.hex)}`,
-            `**Category:** ${closestDye.category}`,
+            `**${t('embeds.hex')}:** ${closestDye.hex.toUpperCase()}`,
+            `**${t('embeds.rgb')}:** ${formatRGB(closestDye.hex)}`,
+            `**${t('embeds.hsv')}:** ${formatHSV(closestDye.hex)}`,
+            `**${t('embeds.category')}:** ${localizedCategory}`,
           ].join('\n'),
           inline: false,
         },
         {
-          name: 'Match Quality',
+          name: t('embeds.matchQuality'),
           value: [
-            `**Distance:** ${distance.toFixed(2)} (Euclidean)`,
-            `**Quality:** ${matchQuality}`,
+            `**${t('embeds.distance')}:** ${distance.toFixed(2)} (${t('embeds.euclidean')})`,
+            `**${t('embeds.quality')}:** ${matchQuality}`,
           ].join('\n'),
           inline: false,
         }
@@ -136,7 +158,7 @@ class MatchCommand extends CommandBase {
     // Add acquisition info if available
     if (closestDye.acquisition) {
       embed.addFields({
-        name: 'Acquisition',
+        name: t('embeds.acquisition'),
         value: closestDye.acquisition,
         inline: false,
       });
@@ -171,14 +193,21 @@ class MatchCommand extends CommandBase {
           // Exclude Facewear category
           if (dye.category === 'Facewear') return false;
 
-          // Match name (case-insensitive)
-          return dye.name.toLowerCase().includes(query);
+          // Match both localized and English names (case-insensitive)
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          return (
+            dye.name.toLowerCase().includes(query) || localizedName.toLowerCase().includes(query)
+          );
         })
         .slice(0, 25) // Discord limits to 25 choices
-        .map((dye) => ({
-          name: `${dye.name} (${dye.category})`,
-          value: dye.name,
-        }));
+        .map((dye) => {
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          const localizedCategory = LocalizationService.getDyeCategory(dye.id);
+          return {
+            name: `${localizedName} (${localizedCategory})`,
+            value: dye.name, // Keep English name as value for lookup
+          };
+        });
 
       await interaction.respond(matches);
     }
