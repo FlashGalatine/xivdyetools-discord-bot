@@ -1,0 +1,405 @@
+{
+  "commands": {
+    "harmony": {
+      "description": "色彩理論に基づいた調和の取れた色を生成",
+      "options": {
+        "baseColor": "ベースカラー：16進数（例：#FF0000）またはカララント名（例：ダラガブレッド）",
+        "type": "調和タイプ",
+        "companionCount": "コンパニオンの数を制限（任意 - デフォルトは全て表示）"
+      }
+    },
+    "match": {
+      "description": "指定した色に最も近いFFXIVのカララントを検索",
+      "options": {
+        "color": "色：16進数（例：#FF0000）またはカララント名（例：ダラガブレッド）"
+      }
+    },
+    "mixer": {
+      "description": "2つの色の間のグラデーションを生成",
+      "options": {
+        "startColor": "開始色：16進数（例：#FF0000）またはカララント名",
+        "endColor": "終了色：16進数（例：#0000FF）またはカララント名",
+        "steps": "色のステップ数（デフォルト：6）"
+      }
+    },
+    "dye": {
+      "description": "FFXIVカララント情報と検索",
+      "subcommands": {
+        "info": {
+          "description": "特定のカララントの情報を取得",
+          "options": {
+            "name": "カララント名"
+          }
+        },
+        "search": {
+          "description": "名前でカララントを検索",
+          "options": {
+            "query": "検索語（部分一致）"
+          }
+        },
+        "list": {
+          "description": "カテゴリ別にカララントを一覧表示",
+          "options": {
+            "category": "カララントカテゴリ"
+          }
+        },
+        "random": {
+          "description": "ランダムなカララントを取得",
+          "options": {
+            "count": "ランダムなカララントの数（デフォルト：1）",
+            "excludeMetallic": "「メタリック」で始まるカララントを除外",
+            "excludePastel": "「パステル」で始まるカララントを除外",
+            "excludeDark": "「ダーク」で始まるカララントを除外",
+            "excludeCosmic": "入手方法が「宇宙探索」または「宇宙くじ」のカララントを除外",
+            "excludeExpensive": "ピュアホワイト（itemID 13114）とジェットブラック（itemID 13115）を除外"
+          }
+        }
+      }
+    },
+    "comparison": {
+      "description": "複数のFFXIVカララントを並べて比較",
+      "options": {
+        "dye1": "1番目のカララント：16進数（例：#FF0000）またはカララント名",
+        "dye2": "2番目のカララント：16進数（例：#00FF00）またはカララント名",
+        "dye3": "3番目のカララント（任意）：16進数またはカララント名",
+        "dye4": "4番目のカララント（任意）：16進数またはカララント名"
+      }
+    },
+    "accessibility": {
+      "description": "色覚特性でカララントがどのように見えるかをシミュレート",
+      "options": {
+        "dye": "カララント名または16進数カラー（例：「ダラガブレッド」または「#FF0000」）",
+        "visionType": "色覚タイプ（デフォルト：全て表示）"
+      },
+      "visionTypes": {
+        "all": "全タイプ",
+        "protanopia": "1型色覚（赤色盲）",
+        "deuteranopia": "2型色覚（緑色盲）",
+        "tritanopia": "3型色覚（青色盲）"
+      }
+    },
+    "matchImage": {
+      "description": "画像から主要な色を抽出し、マッチするFFXIVカララントを検索",
+      "options": {
+        "image": "分析する画像ファイル（PNG、JPG、GIF、BMP、WebP）"
+      }
+    },
+    "matchImageHelp": {
+      "description": "/match_imageコマンドの使い方のヒントとコツを取得"
+    },
+    "stats": {
+      "description": "ボットの使用統計を表示"
+    },
+    "manual": {
+      "description": "全てのボットコマンドの詳細情報を表示"
+    },
+    "about": {
+      "description": "このボットについての情報を表示"
+    },
+    "language": {
+      "description": "ボットの応答に使用する言語を設定",
+      "subcommands": {
+        "set": {
+          "description": "使用言語を設定",
+          "options": {
+            "language": "使用する言語"
+          }
+        },
+        "show": {
+          "description": "現在の言語設定を表示"
+        },
+        "reset": {
+          "description": "Discordの言語設定を使用するようにリセット"
+        }
+      },
+      "languages": {
+        "en": "英語",
+        "ja": "日本語",
+        "de": "ドイツ語",
+        "fr": "フランス語"
+      }
+    }
+  },
+  "embeds": {
+    "colorInformation": "カラー情報",
+    "hex": "16進数",
+    "rgb": "RGB",
+    "hsv": "HSV",
+    "category": "カテゴリ",
+    "acquisition": "入手方法",
+    "baseColor": "ベースカラー",
+    "closestMatch": "最も近いマッチ",
+    "harmonySuggestions": "調和の提案",
+    "base": "ベース",
+    "inputColor": "入力カラー",
+    "closestDye": "最も近いカララント",
+    "matchQuality": "マッチ品質",
+    "distance": "距離",
+    "euclidean": "ユークリッド",
+    "quality": "品質",
+    "dyeMatch": "カララントマッチ",
+    "findingClosestMatchFor": "最も近いマッチを検索中",
+    "colorMatch": "カラーマッチ",
+    "analyzedImage": "分析した画像",
+    "extractedDominantColor": "抽出した主要色",
+    "extractedUsingHistogram": "主要色のヒストグラム分析により抽出",
+    "colorGradientMixer": "カラーグラデーションミキサー",
+    "start": "開始",
+    "end": "終了",
+    "steps": "ステップ",
+    "intermediateDyes": "中間カララント",
+    "step": "ステップ",
+    "target": "ターゲット",
+    "match": "マッチ",
+    "tip": "ヒント",
+    "tipMatchAcquisition": "個々のカララントの入手方法を確認するには `/match <color>` を使用してください。",
+    "dyeComparison": "カララント比較",
+    "dye": "カララント",
+    "dyes": "カララント",
+    "comparisonAnalysis": "比較分析",
+    "mostSimilar": "最も類似",
+    "mostDifferent": "最も異なる",
+    "averageDistance": "平均距離",
+    "colorHarmony": "カラーハーモニー",
+    "angle": "角度",
+    "fromBase": "ベースから",
+    "deviation": "偏差",
+    "accessibilityTitle": "アクセシビリティ",
+    "originalHex": "元の16進数",
+    "affects": "影響",
+    "impact": "影響",
+    "protanopia": "1型色覚（赤色盲）",
+    "protanopiaImpact": "赤が暗く/茶色っぽく見える",
+    "deuteranopia": "2型色覚（緑色盲）",
+    "deuteranopiaImpact": "緑がベージュ/タンに見える",
+    "tritanopia": "3型色覚（青色盲）",
+    "tritanopiaImpact": "青が緑っぽく見える",
+    "aboutCVD": "色覚特性について",
+    "cvdDescription": "色覚特性（色覚異常）は男性の約8%、女性の約0.5%に影響します。これらのシミュレーションはBrettel 1997アルゴリズムを使用して、さまざまなタイプの色覚特性を持つ人々に色がどのように見えるかを近似しています。",
+    "botStatistics": "ボット統計",
+    "usage": "使用状況",
+    "totalCommands": "合計コマンド数",
+    "uniqueUsers": "ユニークユーザー数",
+    "successRate": "成功率",
+    "botInfo": "ボット情報",
+    "servers": "サーバー",
+    "uptime": "稼働時間",
+    "commands": "コマンド",
+    "topCommands": "トップコマンド",
+    "noCommandsYet": "まだコマンドが実行されていません",
+    "recentErrors": "最近のエラー",
+    "noRecentErrors": "最近のエラーはありません",
+    "dyeSearch": "カララント検索",
+    "found": "件見つかりました",
+    "showingFirst15": "最初の15件を表示",
+    "tooManyResults": "結果が多すぎます！より具体的な検索を行うか、/dye info <名前> を使用してください",
+    "useDyeInfo": "詳細を見るには /dye info <名前> を使用してください",
+    "categoryDyes": "{category} カララント",
+    "dyesInCategory": "このカテゴリのカララント",
+    "useDyeInfoDetails": "詳細を見るには /dye info <名前> を使用してください",
+    "randomDyes": "ランダムカララント"
+  },
+  "matchQuality": {
+    "perfect": "完璧なマッチ",
+    "excellent": "優秀なマッチ",
+    "good": "良いマッチ",
+    "fair": "まずまずのマッチ",
+    "approximate": "おおよそのマッチ"
+  },
+  "comparisonQuality": {
+    "identical": "同一",
+    "verySimilar": "非常に類似",
+    "similar": "類似",
+    "somewhatDifferent": "やや異なる",
+    "different": "異なる",
+    "veryDifferent": "非常に異なる"
+  },
+  "errors": {
+    "error": "エラー",
+    "invalidInput": "無効な入力",
+    "commandError": "コマンドエラー",
+    "processingError": "処理エラー",
+    "dyeNotFound": "カララントが見つかりません",
+    "noResults": "結果なし",
+    "emptyCategory": "空のカテゴリ",
+    "unknownSubcommand": "不明なサブコマンド",
+    "invalidSubcommand": "無効なサブコマンド",
+    "noDyesAvailable": "利用可能なカララントがありません",
+    "noPermission": "このコマンドを使用する権限がありません。",
+    "failedToRetrieveStats": "統計の取得に失敗しました。後でもう一度お試しください。",
+    "couldNotFindMatchingDye": "マッチするカララントが見つかりませんでした。",
+    "couldNotGenerateHarmony": "調和を生成できませんでした。",
+    "couldNotFindMatchingDyes": "マッチするカララントが見つかりませんでした。",
+    "errorExecutingCommand": "このコマンドの実行中にエラーが発生しました！",
+    "errorProcessingRequest": "リクエストの処理中にエラーが発生しました。もう一度お試しください。",
+    "errorGeneratingHarmony": "カラーハーモニーの生成中にエラーが発生しました。もう一度お試しください。",
+    "errorGeneratingGradient": "グラデーションの生成中にエラーが発生しました。もう一度お試しください。",
+    "errorComparingDyes": "カララントの比較中にエラーが発生しました。もう一度お試しください。",
+    "errorGeneratingAccessibility": "アクセシビリティ比較の生成中にエラーが発生しました。もう一度お試しください。",
+    "imageValidationFailed": "画像検証失敗",
+    "imageValidationFailedGeneric": "画像の検証に失敗しました。",
+    "failedToAnalyzeImage": "画像の分析に失敗しました。有効な画像ファイルであることを確認して、もう一度お試しください。",
+    "failedToDownloadImage": "Discordから画像のダウンロードに失敗しました。もう一度アップロードしてください。",
+    "invalidOrCorruptedImage": "無効または破損した画像ファイルです。有効なPNG、JPG、GIF、BMP、またはWebP画像をアップロードしてください。",
+    "invalidHexOrDyeName": "「{input}」は有効な16進数カラーまたはカララント名ではありません。",
+    "invalidHexOrDyeNameWithExamples": "「{input}」は有効な16進数カラーまたはカララント名ではありません。\n\n**例:**\n- 16進数: `#FF0000`, `#8A2BE2`\n- カララント: `ダラガブレッド`, `スノウホワイト`",
+    "invalidStartColor": "無効な開始色",
+    "invalidEndColor": "無効な終了色",
+    "invalidSteps": "無効なステップ数",
+    "invalidCount": "無効なカウント",
+    "invalidHarmonyType": "無効な調和タイプ",
+    "couldNotFindDye": "カララント「{name}」が見つかりませんでした。",
+    "couldNotFindDyeWithSuggestion": "カララント「{name}」が見つかりませんでした。\n\n自動補完を使用するか、`/dye search` で類似の名前を検索してください。",
+    "couldNotFindMatchingDyeForHex": "{hex}にマッチするカララントが見つかりませんでした。",
+    "noDyesInCategory": "カテゴリ「{category}」にカララントが見つかりませんでした。",
+    "noMatchingDyesQuery": "「{query}」にマッチするカララントが見つかりませんでした。\n\n別の検索語を試すか、`/dye list` でカテゴリ別に閲覧してください。",
+    "noDyesMatchFilter": "フィルター条件にマッチするカララントがありません。別の除外設定でもう一度お試しください。",
+    "invalidHexFormat": "無効な16進数カラー形式：「{hex}」。#RRGGBB形式（例：#FF0000）またはRRGGBB形式（例：FF0000）が必要です。",
+    "dyeNameEmpty": "カララント名は空にできません。",
+    "dyeNotFoundSearch": "カララントが見つかりません：「{name}」。自動補完または検索を使用して利用可能なカララントを見つけてください。",
+    "dyeIdMustBeInteger": "カララントIDは整数でなければなりません。",
+    "dyeIdMustBePositive": "カララントIDは正の整数でなければなりません。",
+    "dyeIdOutOfRange": "カララントIDが既知の範囲（1-200）外です。",
+    "colorInputEmpty": "カラー入力は空にできません。",
+    "searchQueryEmpty": "検索クエリは空にできません。",
+    "validationError": "検証エラーが発生しました。",
+    "paramMustBeInteger": "{param}は整数でなければなりません。",
+    "paramMustBeBetween": "{param}は{min}から{max}の間でなければなりません。",
+    "invalidDataCenter": "無効なデータセンター：「{dc}」。利用可能なオプションから選択してください。",
+    "invalidHarmonyTypeOption": "無効な調和タイプ：「{type}」。利用可能なオプションから選択してください。"
+  },
+  "rateLimit": {
+    "tooQuickly": "コマンドの送信が速すぎます！{seconds}秒お待ちください。",
+    "hourlyLimit": "1時間のコマンド制限に達しました！{minutes}分お待ちください。",
+    "highLoad": "ボットは現在高負荷状態です。しばらくしてからもう一度お試しください。",
+    "limit": "制限",
+    "tryAgain": "再試行",
+    "commandsPerMinute": "コマンド/分",
+    "commandsPerHour": "コマンド/時"
+  },
+  "labels": {
+    "examples": "例",
+    "unknown": "不明"
+  },
+  "language": {
+    "currentLanguage": "現在の言語",
+    "yourLanguage": "現在の言語設定：**{language}**",
+    "usingDiscordLocale": "Discordの言語設定を使用中：**{language}**",
+    "languageSet": "言語を設定しました",
+    "languageSetTo": "言語設定を変更しました：**{language}**",
+    "languageReset": "言語をリセットしました",
+    "languageResetMessage": "言語設定がリセットされました。ボットはDiscordの言語設定を使用します。"
+  },
+  "manual": {
+    "title": "XIV Dye Tools Bot - コマンドマニュアル",
+    "welcome": "**XIV Dye Tools Discord Bot** へようこそ！このボットは、Webアプリの強力なカラー分析とカララントマッチングツールを直接Discordに提供します。\n\n全てのコマンドでカララント名とパラメーターの**自動補完**がサポートされています。入力を開始すると候補が表示されます！",
+    "colorTools": "カラーツール",
+    "dyeInformation": "カララント情報",
+    "analysisTools": "分析ツール",
+    "botInformation": "ボット情報",
+    "quickTips": "クイックヒント",
+    "tips": {
+      "autocomplete": "**自動補完：** カララント名を入力すると候補が表示されます",
+      "hexColors": "**16進数カラー：** `#FF0000` と `FF0000` の両形式が使用可能",
+      "dyeNames": "**カララント名：** 大文字小文字を区別しません（例：「dalamud red」でもOK）",
+      "categoryExclusions": "**カテゴリ除外：** フェイスウェアカララントはほとんどの検索から自動的に除外されます",
+      "needHelp": "**ヘルプが必要？** 画像マッチングのヒントは `/match_image_help` を使用"
+    },
+    "website": "ウェブサイト",
+    "support": "サポート",
+    "supportProject": "プロジェクトを支援",
+    "footer": "FFXIVグラマー愛好家のために、愛を込めて作成",
+    "commands": {
+      "match": {
+        "title": "/match",
+        "description": "**指定した色に最も近いFFXIVカララントを検索**\n- **パラメーター：**\n  - `color` - 16進数コード（例：`#FF0000` または `FF0000`）またはカララント名\n- **例：** `/match color:#8B4513` または `/match color:ダラガブレッド`\n- マッチ品質、色距離、入手方法を表示"
+      },
+      "matchImage": {
+        "title": "/match_image",
+        "description": "**画像から主要色を抽出してマッチするカララントを検索**\n- **パラメーター：**\n  - `image` - 画像ファイル（PNG、JPG、GIF、BMP、WebP）\n- **例：** `/match_image image:[ファイルを添付]`\n- 最大8MBの画像をサポート\n- **ヒント：** ベストプラクティスは `/match_image_help` を参照！"
+      },
+      "matchImageHelp": {
+        "title": "/match_image_help",
+        "description": "**/match_imageを効果的に使用するためのヒント**\n- 画像分析の仕組みを学ぶ\n- 最良の結果を得るためのヒント（切り抜き、照明など）\n- 一般的な問題のトラブルシューティング"
+      },
+      "harmony": {
+        "title": "/harmony",
+        "description": "**色彩理論に基づいたカラーハーモニーの提案を生成**\n- **パラメーター：**\n  - `base_color` - 16進数コードまたはカララント名\n  - `harmony_type` - 補色、三色配色、分裂補色など\n  - `companion_count`（任意）- コンパニオンを制限（1-3）\n- **例：** `/harmony base_color:ダラガブレッド harmony_type:triadic`\n- カラーホイールの可視化とコンパニオンカララントの偏差評価を表示"
+      },
+      "mixer": {
+        "title": "/mixer",
+        "description": "**2つの色の間のカラーグラデーションを生成**\n- **パラメーター：**\n  - `start_color` - 16進数コードまたはカララント名\n  - `end_color` - 16進数コードまたはカララント名\n  - `steps`（任意）- ステップ数（2-10、デフォルト：6）\n- **例：** `/mixer start_color:スノウホワイト end_color:スートブラック steps:8`\n- グラデーションの可視化と中間カララントを表示"
+      },
+      "dye": {
+        "title": "/dye",
+        "description": "**カララント検索と情報（4つのサブコマンド）**\n\n**`/dye info`** - 特定のカララントの詳細情報を取得\n  - `dye_name` - カララントの名前\n  - 色情報、入手方法などを表示\n\n**`/dye search`** - 名前でカララントを検索\n  - `query` - 検索語\n  - マッチするカララントを返す\n\n**`/dye list`** - カテゴリ内の全カララントを一覧表示\n  - `category` - レッド、ブルー、グリーンなど\n  - そのカテゴリの全カララントを表示\n\n**`/dye random`** - ランダムなカララントの提案を取得\n  - `count`（任意）- カララント数（1-5、デフォルト：1）\n  - インスピレーションに最適！"
+      },
+      "comparison": {
+        "title": "/comparison",
+        "description": "**複数のカララントを並べて比較**\n- **パラメーター：**\n  - `dye1`, `dye2`（必須）- 16進数コードまたはカララント名\n  - `dye3`, `dye4`（任意）- 追加のカララント\n- **例：** `/comparison dye1:ダラガブレッド dye2:ローランベリーレッド`\n- 比較グリッドとペアワイズ色距離を表示"
+      },
+      "accessibility": {
+        "title": "/accessibility",
+        "description": "**色覚特性でカララントがどのように見えるかをシミュレート**\n- **パラメーター：**\n  - `dye` - 16進数コードまたはカララント名\n  - `vision_type` - 1型色覚、2型色覚、または3型色覚\n- **例：** `/accessibility dye:ダラガブレッド vision_type:protanopia`\n- オリジナルとシミュレートされた色を代替案と共に表示"
+      },
+      "about": {
+        "title": "/about",
+        "description": "**このボットについての情報を表示**\n- バージョン、作者、ソーシャルリンク\n- ウェブサイトとサポート情報"
+      },
+      "manual": {
+        "title": "/manual",
+        "description": "**このマニュアルを表示（現在表示中！）**\n- 包括的なコマンドリファレンス\n- 使用例とヒント"
+      },
+      "stats": {
+        "title": "/stats",
+        "description": "**ボット使用統計** *（アクセス制限）*\n- コマンド使用分析\n- エラー追跡と稼働時間"
+      }
+    }
+  },
+  "about": {
+    "title": "XIV Dye Tools Discord Bot について",
+    "description": "FFXIV向けの強力なカラー分析とカララントマッチングツール、XIV Dye Tools WebアプリケーションをDiscordに直接提供！",
+    "botInformation": "ボット情報",
+    "version": "バージョン",
+    "author": "作者",
+    "license": "ライセンス",
+    "links": "リンク",
+    "website": "ウェブサイト",
+    "discord": "Discord",
+    "bluesky": "BlueSky",
+    "support": "サポート",
+    "patreon": "Patreon",
+    "supportMessage": "このボットが役立つと思われたら、Patreonでの開発支援をご検討ください！",
+    "gettingStarted": "はじめに",
+    "gettingStartedMessage": "利用可能な全てのコマンドと使い方を見るには `/manual` を使用してください。\n画像マッチングで最良の結果を得るためのヒントは `/match_image_help` を使用してください。",
+    "footer": "FFXIVグラマー愛好家のために、愛を込めて作成"
+  },
+  "matchImageHelp": {
+    "title": "/match_image の使い方",
+    "description": "`/match_image` コマンドはアップロードした画像を分析して主要色を見つけ、最も近いFFXIVカララントにマッチングします。最良の結果を得るためのヒントをご紹介します！",
+    "howItWorks": "仕組み",
+    "howItWorksContent": "**1. 画像分析**\n- 画像全体が256×256ピクセルにリサイズされます\n- 4096ビンの3Dカラーヒストグラムが作成されます\n- 最も頻繁に出現する色が抽出されます\n\n**2. カララントマッチング**\n- 主要色が全てのFFXIVカララントと比較されます\n- RGBカラー空間でのユークリッド距離を使用\n- 最も近いマッチングカララントを返します",
+    "tipsForBestResults": "最良の結果を得るためのヒント",
+    "tipsContent": "**画像を切り抜く**\n- マッチさせたい特定の装備部位やエリアに焦点を当てる\n- 不要なUI要素と背景を削除する\n- エリアが小さいほど、結果が正確になります\n\n**良い照明を選ぶ**\n- 明るい場所でスクリーンショットを撮る\n- 暗い影や極端なハイライトを避ける\n- ゲーム内の正午の照明が最適です\n\n**暗い背景を避ける**\n- 黒や非常に暗い背景は結果を歪めます\n- 可能であれば中立的で明るい背景を使用\n- カスタム背景付きの `/gpose` 機能が最適！",
+    "commonIssues": "よくある問題",
+    "commonIssuesContent": "**「暗い色が出たけど装備は明るい！」**\n→ 背景が暗い可能性があります。画像を装備だけに切り抜いてください。\n\n**「マッチがおかしい」**\n→ 画像に複数の色がありますか？アルゴリズムは最も多い色を選びます。\n\n**「特定の部分をマッチさせたい」**\n→ はい！アップロード前にその部分だけに切り抜いてください。",
+    "proTips": "プロのヒント",
+    "proTipsContent": "- アップロード前に画像編集ソフトで切り抜く\n- メタリック/光沢のある装備は、照明により結果が異なる場合があります\n- 16進数コードがわかっている場合は、正確な結果を得るために `/match` を使用\n- 複数のスクリーンショットを比較して照明が色に与える影響を確認\n- 1920×1080以上でスクリーンショットを撮影すると品質が向上",
+    "footer": "XIV Dye Tools - FFXIVグラマー愛好家のために、愛を込めて作成",
+    "exampleUseCases": "使用例",
+    "goodExamples": "良い例",
+    "goodExamplesContent": "- 単一のチェストピースの切り抜きスクリーンショット\n- 中立的な背景のカララント済み装備のクローズアップ\n- 明るい日中のエリアで撮影したスクリーンショット\n- マッチさせたい色に焦点を当てた画像",
+    "poorExamples": "悪い例",
+    "poorExamplesContent": "- UIがたくさんあるフルスクリーンスクリーンショット\n- 暗いダンジョンや洞窟のキャラクター\n- 異なるカララントの複数の装備\n- 背景色に支配された画像",
+    "whenToUse": "/match_image と /match の使い分け",
+    "whenToUseContent": "**`/match_image` を使用する場合：**\n- スクリーンショットがあってカララントを見つけたい\n- 正確なカラーコードがわからない\n- インスピレーション画像の色をマッチさせたい\n\n**`/match` を使用する場合：**\n- すでに16進数カラーコードを知っている\n- より正確/厳密な結果が必要\n- カラースウォッチやデザインファイルで作業している",
+    "technicalDetails": "技術的な詳細",
+    "supportedFormats": "サポートされている形式",
+    "supportedFormatsContent": "- PNG\n- JPG/JPEG\n- GIF\n- BMP\n- WebP",
+    "fileLimits": "ファイル制限",
+    "fileLimitsContent": "- 最大サイズ：{maxSize}MB\n- 最大寸法：自動処理\n- 処理時間：約1-3秒",
+    "matchQualityRatings": "マッチ品質評価",
+    "matchQualityRatingsContent": "**完璧**（距離0）\n**優秀**（距離<10）\n**良い**（距離<25）\n**まずまず**（距離<50）\n**おおよそ**（距離>=50）\n\n*距離が低いほど良いマッチ*",
+    "poweredBy": "Sharp画像処理ライブラリにより駆動"
+  }
+}

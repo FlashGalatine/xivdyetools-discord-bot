@@ -1,0 +1,405 @@
+{
+  "commands": {
+    "harmony": {
+      "description": "Générer des suggestions d'harmonie de couleurs basées sur la théorie des couleurs",
+      "options": {
+        "baseColor": "Couleur de base : hex (ex. #FF0000) ou nom de teinture (ex. Rouge Dalamud)",
+        "type": "Type d'harmonie",
+        "companionCount": "Limiter le nombre de couleurs complémentaires (optionnel - affiche tout par défaut)"
+      }
+    },
+    "match": {
+      "description": "Trouver la teinture FFXIV la plus proche d'une couleur donnée",
+      "options": {
+        "color": "Couleur : hex (ex. #FF0000) ou nom de teinture (ex. Rouge Dalamud)"
+      }
+    },
+    "mixer": {
+      "description": "Générer un dégradé de couleurs entre deux couleurs avec des teintures intermédiaires",
+      "options": {
+        "startColor": "Couleur de départ : hex (ex. #FF0000) ou nom de teinture",
+        "endColor": "Couleur de fin : hex (ex. #0000FF) ou nom de teinture",
+        "steps": "Nombre d'étapes de couleur (défaut : 6)"
+      }
+    },
+    "dye": {
+      "description": "Informations et recherche de teintures FFXIV",
+      "subcommands": {
+        "info": {
+          "description": "Obtenir des informations sur une teinture spécifique",
+          "options": {
+            "name": "Nom de la teinture"
+          }
+        },
+        "search": {
+          "description": "Rechercher des teintures par nom",
+          "options": {
+            "query": "Terme de recherche (correspondance partielle)"
+          }
+        },
+        "list": {
+          "description": "Lister les teintures par catégorie",
+          "options": {
+            "category": "Catégorie de teinture"
+          }
+        },
+        "random": {
+          "description": "Obtenir des teinture(s) aléatoire(s)",
+          "options": {
+            "count": "Nombre de teintures aléatoires (défaut : 1)",
+            "excludeMetallic": "Exclure les teintures commençant par \"Métallique\"",
+            "excludePastel": "Exclure les teintures commençant par \"Pastel\"",
+            "excludeDark": "Exclure les teintures commençant par \"Sombre\"",
+            "excludeCosmic": "Exclure les teintures dont l'acquisition est \"Exploration cosmique\" ou \"Fortunes cosmiques\"",
+            "excludeExpensive": "Exclure Blanc pur (itemID 13114) et Noir de jais (itemID 13115)"
+          }
+        }
+      }
+    },
+    "comparison": {
+      "description": "Comparer plusieurs teintures FFXIV côte à côte",
+      "options": {
+        "dye1": "Première teinture : hex (ex. #FF0000) ou nom de teinture",
+        "dye2": "Deuxième teinture : hex (ex. #00FF00) ou nom de teinture",
+        "dye3": "Troisième teinture (optionnel) : hex ou nom de teinture",
+        "dye4": "Quatrième teinture (optionnel) : hex ou nom de teinture"
+      }
+    },
+    "accessibility": {
+      "description": "Simuler l'apparence d'une teinture avec le daltonisme",
+      "options": {
+        "dye": "Nom de teinture ou couleur hex (ex. \"Rouge Dalamud\" ou \"#FF0000\")",
+        "visionType": "Type de daltonisme (défaut : afficher tout)"
+      },
+      "visionTypes": {
+        "all": "Tous les types",
+        "protanopia": "Protanopie (daltonisme rouge)",
+        "deuteranopia": "Deutéranopie (daltonisme vert)",
+        "tritanopia": "Tritanopie (daltonisme bleu)"
+      }
+    },
+    "matchImage": {
+      "description": "Extraire la couleur dominante d'une image et trouver la teinture FFXIV correspondante",
+      "options": {
+        "image": "Fichier image à analyser (PNG, JPG, GIF, BMP, WebP)"
+      }
+    },
+    "matchImageHelp": {
+      "description": "Obtenir des conseils et astuces pour utiliser la commande /match_image"
+    },
+    "stats": {
+      "description": "Afficher les statistiques d'utilisation du bot"
+    },
+    "manual": {
+      "description": "Afficher des informations détaillées sur toutes les commandes du bot"
+    },
+    "about": {
+      "description": "Afficher des informations sur ce bot"
+    },
+    "language": {
+      "description": "Définir votre langue préférée pour les réponses du bot",
+      "subcommands": {
+        "set": {
+          "description": "Définir votre langue préférée",
+          "options": {
+            "language": "Langue à utiliser"
+          }
+        },
+        "show": {
+          "description": "Afficher votre paramètre de langue actuel"
+        },
+        "reset": {
+          "description": "Réinitialiser pour utiliser la langue de Discord"
+        }
+      },
+      "languages": {
+        "en": "Anglais",
+        "ja": "Japonais",
+        "de": "Allemand",
+        "fr": "Français"
+      }
+    }
+  },
+  "embeds": {
+    "colorInformation": "Informations de couleur",
+    "hex": "Hex",
+    "rgb": "RVB",
+    "hsv": "TSV",
+    "category": "Catégorie",
+    "acquisition": "Acquisition",
+    "baseColor": "Couleur de base",
+    "closestMatch": "Correspondance la plus proche",
+    "harmonySuggestions": "Suggestions d'harmonie",
+    "base": "Base",
+    "inputColor": "Couleur d'entrée",
+    "closestDye": "Teinture la plus proche",
+    "matchQuality": "Qualité de correspondance",
+    "distance": "Distance",
+    "euclidean": "Euclidienne",
+    "quality": "Qualité",
+    "dyeMatch": "Correspondance de teinture",
+    "findingClosestMatchFor": "Recherche de la correspondance la plus proche pour",
+    "colorMatch": "Correspondance de couleur",
+    "analyzedImage": "Image analysée",
+    "extractedDominantColor": "Couleur dominante extraite",
+    "extractedUsingHistogram": "Extraite par analyse d'histogramme de la couleur dominante",
+    "colorGradientMixer": "Mixeur de dégradé de couleurs",
+    "start": "Début",
+    "end": "Fin",
+    "steps": "Étapes",
+    "intermediateDyes": "Teintures intermédiaires",
+    "step": "Étape",
+    "target": "Cible",
+    "match": "Correspondance",
+    "tip": "Astuce",
+    "tipMatchAcquisition": "Utilisez `/match <couleur>` pour voir les détails d'acquisition des teintures individuelles.",
+    "dyeComparison": "Comparaison de teintures",
+    "dye": "teinture",
+    "dyes": "teintures",
+    "comparisonAnalysis": "Analyse comparative",
+    "mostSimilar": "Plus similaires",
+    "mostDifferent": "Plus différentes",
+    "averageDistance": "Distance moyenne",
+    "colorHarmony": "Harmonie de couleurs",
+    "angle": "Angle",
+    "fromBase": "depuis la base",
+    "deviation": "Déviation",
+    "accessibilityTitle": "Accessibilité",
+    "originalHex": "Hex original",
+    "affects": "Affecte",
+    "impact": "Impact",
+    "protanopia": "Protanopie (daltonisme rouge)",
+    "protanopiaImpact": "Les rouges apparaissent plus sombres/brunâtres",
+    "deuteranopia": "Deutéranopie (daltonisme vert)",
+    "deuteranopiaImpact": "Les verts apparaissent beiges/fauves",
+    "tritanopia": "Tritanopie (daltonisme bleu)",
+    "tritanopiaImpact": "Les bleus apparaissent verdâtres",
+    "aboutCVD": "À propos de la déficience de la vision des couleurs",
+    "cvdDescription": "La déficience de la vision des couleurs (daltonisme) affecte environ 8% des hommes et 0,5% des femmes. Ces simulations utilisent l'algorithme Brettel 1997 pour approximer l'apparence des couleurs pour les personnes atteintes de différents types de déficience de la vision des couleurs.",
+    "botStatistics": "Statistiques du bot",
+    "usage": "Utilisation",
+    "totalCommands": "Total des commandes",
+    "uniqueUsers": "Utilisateurs uniques",
+    "successRate": "Taux de réussite",
+    "botInfo": "Info bot",
+    "servers": "Serveurs",
+    "uptime": "Temps de fonctionnement",
+    "commands": "Commandes",
+    "topCommands": "Top commandes",
+    "noCommandsYet": "Aucune commande exécutée encore",
+    "recentErrors": "Erreurs récentes",
+    "noRecentErrors": "Pas d'erreurs récentes",
+    "dyeSearch": "Recherche de teinture",
+    "found": "trouvé(s)",
+    "showingFirst15": "affichage des 15 premiers",
+    "tooManyResults": "Trop de résultats ! Utilisez une recherche plus spécifique ou /dye info <nom>",
+    "useDyeInfo": "Utilisez /dye info <nom> pour voir les détails",
+    "categoryDyes": "Teintures {category}",
+    "dyesInCategory": "teintures dans cette catégorie",
+    "useDyeInfoDetails": "Utilisez /dye info <nom> pour voir tous les détails",
+    "randomDyes": "Teintures aléatoires"
+  },
+  "matchQuality": {
+    "perfect": "Correspondance parfaite",
+    "excellent": "Excellente correspondance",
+    "good": "Bonne correspondance",
+    "fair": "Correspondance acceptable",
+    "approximate": "Correspondance approximative"
+  },
+  "comparisonQuality": {
+    "identical": "Identique",
+    "verySimilar": "Très similaire",
+    "similar": "Similaire",
+    "somewhatDifferent": "Assez différent",
+    "different": "Différent",
+    "veryDifferent": "Très différent"
+  },
+  "errors": {
+    "error": "Erreur",
+    "invalidInput": "Entrée invalide",
+    "commandError": "Erreur de commande",
+    "processingError": "Erreur de traitement",
+    "dyeNotFound": "Teinture non trouvée",
+    "noResults": "Aucun résultat",
+    "emptyCategory": "Catégorie vide",
+    "unknownSubcommand": "Sous-commande inconnue",
+    "invalidSubcommand": "Sous-commande invalide",
+    "noDyesAvailable": "Aucune teinture disponible",
+    "noPermission": "Vous n'avez pas la permission d'utiliser cette commande.",
+    "failedToRetrieveStats": "Impossible de récupérer les statistiques. Veuillez réessayer plus tard.",
+    "couldNotFindMatchingDye": "Impossible de trouver une teinture correspondante.",
+    "couldNotGenerateHarmony": "Impossible de générer l'harmonie.",
+    "couldNotFindMatchingDyes": "Impossible de trouver des teintures correspondantes.",
+    "errorExecutingCommand": "Une erreur s'est produite lors de l'exécution de cette commande !",
+    "errorProcessingRequest": "Une erreur s'est produite lors du traitement de votre demande. Veuillez réessayer.",
+    "errorGeneratingHarmony": "Une erreur s'est produite lors de la génération de l'harmonie de couleurs. Veuillez réessayer.",
+    "errorGeneratingGradient": "Une erreur s'est produite lors de la génération du dégradé. Veuillez réessayer.",
+    "errorComparingDyes": "Une erreur s'est produite lors de la comparaison des teintures. Veuillez réessayer.",
+    "errorGeneratingAccessibility": "Une erreur s'est produite lors de la génération de la comparaison d'accessibilité. Veuillez réessayer.",
+    "imageValidationFailed": "Échec de la validation d'image",
+    "imageValidationFailedGeneric": "La validation de l'image a échoué.",
+    "failedToAnalyzeImage": "Impossible d'analyser l'image. Veuillez vous assurer qu'il s'agit d'un fichier image valide et réessayez.",
+    "failedToDownloadImage": "Impossible de télécharger l'image depuis Discord. Veuillez réessayer de la téléverser.",
+    "invalidOrCorruptedImage": "Fichier image invalide ou corrompu. Veuillez téléverser une image PNG, JPG, GIF, BMP ou WebP valide.",
+    "invalidHexOrDyeName": "« {input} » n'est pas une couleur hex valide ou un nom de teinture.",
+    "invalidHexOrDyeNameWithExamples": "« {input} » n'est pas une couleur hex valide ou un nom de teinture.\n\n**Exemples :**\n- Hex : `#FF0000`, `#8A2BE2`\n- Teinture : `Rouge Dalamud`, `Blanc neige`",
+    "invalidStartColor": "Couleur de départ invalide",
+    "invalidEndColor": "Couleur de fin invalide",
+    "invalidSteps": "Nombre d'étapes invalide",
+    "invalidCount": "Nombre invalide",
+    "invalidHarmonyType": "Type d'harmonie invalide",
+    "couldNotFindDye": "Impossible de trouver la teinture « {name} ».",
+    "couldNotFindDyeWithSuggestion": "Impossible de trouver la teinture « {name} ».\n\nEssayez d'utiliser l'autocomplétion ou `/dye search` pour trouver des noms similaires.",
+    "couldNotFindMatchingDyeForHex": "Impossible de trouver une teinture correspondant à {hex}.",
+    "noDyesInCategory": "Aucune teinture trouvée dans la catégorie « {category} ».",
+    "noMatchingDyesQuery": "Aucune teinture trouvée correspondant à « {query} ».\n\nEssayez un autre terme de recherche ou utilisez `/dye list` pour parcourir par catégorie.",
+    "noDyesMatchFilter": "Aucune teinture ne correspond à vos critères de filtre. Veuillez réessayer avec différents paramètres d'exclusion.",
+    "invalidHexFormat": "Format de couleur hex invalide : « {hex} ». Format attendu #RRGGBB (ex. #FF0000) ou RRGGBB (ex. FF0000).",
+    "dyeNameEmpty": "Le nom de la teinture ne peut pas être vide.",
+    "dyeNotFoundSearch": "Teinture non trouvée : « {name} ». Utilisez l'autocomplétion ou la recherche pour trouver les teintures disponibles.",
+    "dyeIdMustBeInteger": "L'ID de teinture doit être un entier.",
+    "dyeIdMustBePositive": "L'ID de teinture doit être un entier positif.",
+    "dyeIdOutOfRange": "L'ID de teinture est hors de la plage connue (1-200).",
+    "colorInputEmpty": "L'entrée de couleur ne peut pas être vide.",
+    "searchQueryEmpty": "La requête de recherche ne peut pas être vide.",
+    "validationError": "Une erreur de validation s'est produite.",
+    "paramMustBeInteger": "{param} doit être un entier.",
+    "paramMustBeBetween": "{param} doit être entre {min} et {max}.",
+    "invalidDataCenter": "Centre de données invalide : « {dc} ». Veuillez choisir parmi les options disponibles.",
+    "invalidHarmonyTypeOption": "Type d'harmonie invalide : « {type} ». Veuillez choisir parmi les options disponibles."
+  },
+  "rateLimit": {
+    "tooQuickly": "Vous envoyez des commandes trop rapidement ! Veuillez attendre {seconds} secondes.",
+    "hourlyLimit": "Vous avez atteint votre limite de commandes horaire ! Veuillez attendre {minutes} minutes.",
+    "highLoad": "Le bot connaît actuellement une charge élevée. Veuillez réessayer dans un moment.",
+    "limit": "Limite",
+    "tryAgain": "Réessayer",
+    "commandsPerMinute": "commandes par minute",
+    "commandsPerHour": "commandes par heure"
+  },
+  "labels": {
+    "examples": "Exemples",
+    "unknown": "Inconnu"
+  },
+  "language": {
+    "currentLanguage": "Langue actuelle",
+    "yourLanguage": "Votre préférence de langue est actuellement définie sur : **{language}**",
+    "usingDiscordLocale": "Vous utilisez votre paramètre de langue Discord : **{language}**",
+    "languageSet": "Langue définie",
+    "languageSetTo": "Votre préférence de langue a été définie sur : **{language}**",
+    "languageReset": "Langue réinitialisée",
+    "languageResetMessage": "Votre préférence de langue a été réinitialisée. Le bot utilisera maintenant votre paramètre de langue Discord."
+  },
+  "manual": {
+    "title": "XIV Dye Tools Bot - Manuel des commandes",
+    "welcome": "Bienvenue sur le **XIV Dye Tools Discord Bot** ! Ce bot apporte des outils puissants d'analyse de couleurs et de correspondance de teintures directement sur Discord.\n\nToutes les commandes prennent en charge l'**autocomplétion** pour les noms de teintures et les paramètres. Commencez à taper pour voir les suggestions !",
+    "colorTools": "Outils de couleur",
+    "dyeInformation": "Informations sur les teintures",
+    "analysisTools": "Outils d'analyse",
+    "botInformation": "Informations sur le bot",
+    "quickTips": "Conseils rapides",
+    "tips": {
+      "autocomplete": "**Autocomplétion :** Commencez à taper les noms de teintures pour voir les suggestions",
+      "hexColors": "**Couleurs hex :** Les formats `#FF0000` et `FF0000` fonctionnent",
+      "dyeNames": "**Noms de teintures :** Non sensible à la casse (ex. \"rouge dalamud\" fonctionne)",
+      "categoryExclusions": "**Exclusions de catégorie :** Les teintures d'accessoires de visage sont automatiquement masquées de la plupart des recherches",
+      "needHelp": "**Besoin d'aide ?** Utilisez `/match_image_help` pour des conseils sur la correspondance d'images"
+    },
+    "website": "Site web",
+    "support": "Support",
+    "supportProject": "Soutenir le projet",
+    "footer": "Fait avec amour pour les passionnés de glamour FFXIV",
+    "commands": {
+      "match": {
+        "title": "/match",
+        "description": "**Trouver la teinture FFXIV la plus proche d'une couleur donnée**\n- **Paramètres :**\n  - `color` - Code hex (ex. `#FF0000` ou `FF0000`) ou nom de teinture\n- **Exemple :** `/match color:#8B4513` ou `/match color:Rouge Dalamud`\n- Affiche la qualité de correspondance, la distance de couleur et les infos d'acquisition"
+      },
+      "matchImage": {
+        "title": "/match_image",
+        "description": "**Extraire la couleur dominante d'une image et trouver la teinture correspondante**\n- **Paramètres :**\n  - `image` - Fichier image (PNG, JPG, GIF, BMP, WebP)\n- **Exemple :** `/match_image image:[joindre fichier]`\n- Prend en charge les images jusqu'à 8 Mo\n- **Astuce :** Voir `/match_image_help` pour les meilleures pratiques !"
+      },
+      "matchImageHelp": {
+        "title": "/match_image_help",
+        "description": "**Obtenir des conseils pour utiliser efficacement /match_image**\n- Apprendre comment fonctionne l'analyse d'image\n- Conseils pour de meilleurs résultats (recadrage, éclairage, etc.)\n- Dépannage des problèmes courants"
+      },
+      "harmony": {
+        "title": "/harmony",
+        "description": "**Générer des suggestions d'harmonie de couleurs basées sur la théorie des couleurs**\n- **Paramètres :**\n  - `base_color` - Code hex ou nom de teinture\n  - `harmony_type` - Complémentaire, Triadique, Complémentaire divisé, etc.\n  - `companion_count` (optionnel) - Limiter les complémentaires (1-3)\n- **Exemple :** `/harmony base_color:Rouge Dalamud harmony_type:triadic`\n- Affiche la visualisation du cercle chromatique et les teintures complémentaires avec évaluations de déviation"
+      },
+      "mixer": {
+        "title": "/mixer",
+        "description": "**Générer un dégradé de couleurs entre deux couleurs**\n- **Paramètres :**\n  - `start_color` - Code hex ou nom de teinture\n  - `end_color` - Code hex ou nom de teinture\n  - `steps` (optionnel) - Nombre d'étapes (2-10, défaut : 6)\n- **Exemple :** `/mixer start_color:Blanc neige end_color:Noir suie steps:8`\n- Affiche la visualisation du dégradé avec les teintures intermédiaires"
+      },
+      "dye": {
+        "title": "/dye",
+        "description": "**Recherche et informations sur les teintures (4 sous-commandes)**\n\n**`/dye info`** - Obtenir des informations détaillées sur une teinture spécifique\n  - `dye_name` - Nom de la teinture\n  - Affiche les infos de couleur, acquisition, et plus\n\n**`/dye search`** - Rechercher des teintures par nom\n  - `query` - Terme de recherche\n  - Retourne les teintures correspondantes\n\n**`/dye list`** - Lister toutes les teintures d'une catégorie\n  - `category` - Rouges, Bleus, Verts, etc.\n  - Affiche toutes les teintures de cette catégorie\n\n**`/dye random`** - Obtenir des suggestions de teintures aléatoires\n  - `count` (optionnel) - Nombre de teintures (1-5, défaut : 1)\n  - Idéal pour l'inspiration !"
+      },
+      "comparison": {
+        "title": "/comparison",
+        "description": "**Comparer plusieurs teintures côte à côte**\n- **Paramètres :**\n  - `dye1`, `dye2` (requis) - Codes hex ou noms de teintures\n  - `dye3`, `dye4` (optionnel) - Teintures supplémentaires\n- **Exemple :** `/comparison dye1:Rouge Dalamud dye2:Rouge Rolanberry`\n- Affiche la grille de comparaison et les distances de couleur par paires"
+      },
+      "accessibility": {
+        "title": "/accessibility",
+        "description": "**Simuler l'apparence d'une teinture avec le daltonisme**\n- **Paramètres :**\n  - `dye` - Code hex ou nom de teinture\n  - `vision_type` - Protanopie, Deutéranopie ou Tritanopie\n- **Exemple :** `/accessibility dye:Rouge Dalamud vision_type:protanopia`\n- Affiche la couleur originale vs simulée avec des suggestions alternatives"
+      },
+      "about": {
+        "title": "/about",
+        "description": "**Afficher des informations sur ce bot**\n- Version, auteur et liens sociaux\n- Site web et informations de support"
+      },
+      "manual": {
+        "title": "/manual",
+        "description": "**Afficher ce manuel (vous êtes ici !)**\n- Référence complète des commandes\n- Exemples d'utilisation et conseils"
+      },
+      "stats": {
+        "title": "/stats",
+        "description": "**Statistiques d'utilisation du bot** *(accès restreint)*\n- Analyses d'utilisation des commandes\n- Suivi des erreurs et temps de fonctionnement"
+      }
+    }
+  },
+  "about": {
+    "title": "À propos de XIV Dye Tools Discord Bot",
+    "description": "Outils puissants d'analyse de couleurs et de correspondance de teintures pour FFXIV, apportant les fonctionnalités de l'application web XIV Dye Tools directement sur Discord !",
+    "botInformation": "Informations sur le bot",
+    "version": "Version",
+    "author": "Auteur",
+    "license": "Licence",
+    "links": "Liens",
+    "website": "Site web",
+    "discord": "Discord",
+    "bluesky": "BlueSky",
+    "support": "Support",
+    "patreon": "Patreon",
+    "supportMessage": "Si vous trouvez ce bot utile, veuillez envisager de soutenir le développement sur Patreon !",
+    "gettingStarted": "Pour commencer",
+    "gettingStartedMessage": "Utilisez `/manual` pour voir toutes les commandes disponibles et comment les utiliser.\nUtilisez `/match_image_help` pour des conseils sur l'obtention des meilleurs résultats de la correspondance d'images.",
+    "footer": "Fait avec amour pour les passionnés de glamour FFXIV"
+  },
+  "matchImageHelp": {
+    "title": "Comment utiliser /match_image",
+    "description": "La commande `/match_image` analyse votre image téléversée pour trouver la couleur dominante et la faire correspondre à la teinture FFXIV la plus proche. Voici quelques conseils pour obtenir les meilleurs résultats !",
+    "howItWorks": "Comment ça fonctionne",
+    "howItWorksContent": "**1. Analyse d'image**\n- L'image entière est redimensionnée à 256×256 pixels\n- Un histogramme de couleurs 3D à 4096 bins est créé\n- La couleur la plus fréquente est extraite\n\n**2. Correspondance de teinture**\n- La couleur dominante est comparée à toutes les teintures FFXIV\n- Utilise la distance euclidienne dans l'espace colorimétrique RVB\n- Retourne la teinture correspondante la plus proche",
+    "tipsForBestResults": "Conseils pour de meilleurs résultats",
+    "tipsContent": "**Recadrez vos images**\n- Concentrez-vous sur la pièce d'armure ou la zone spécifique que vous voulez faire correspondre\n- Supprimez les éléments d'interface utilisateur et les arrière-plans inutiles\n- Plus la zone est petite, plus le résultat est précis\n\n**Choisissez un bon éclairage**\n- Prenez des captures d'écran dans des zones bien éclairées\n- Évitez les ombres sombres ou les reflets extrêmes\n- L'éclairage de midi dans le jeu fonctionne le mieux\n\n**Évitez les arrière-plans sombres**\n- Les arrière-plans noirs ou très sombres peuvent fausser les résultats\n- Utilisez des arrière-plans neutres et plus clairs lorsque c'est possible\n- La fonction `/gpose` avec des arrière-plans personnalisés est excellente !",
+    "commonIssues": "Problèmes courants",
+    "commonIssuesContent": "**\"J'ai obtenu une couleur sombre mais mon équipement est brillant !\"**\n→ Votre arrière-plan est probablement sombre. Recadrez l'image sur votre équipement uniquement.\n\n**\"La correspondance semble incorrecte\"**\n→ Plusieurs couleurs dans l'image ? L'algorithme choisit la couleur la PLUS courante.\n\n**\"Puis-je faire correspondre une partie spécifique ?\"**\n→ Oui ! Recadrez exactement sur cette zone avant de téléverser.",
+    "proTips": "Conseils de pro",
+    "proTipsContent": "- Utilisez un logiciel de retouche d'image pour recadrer avant de téléverser\n- Pour les équipements métalliques/brillants, les résultats peuvent varier en raison de l'éclairage\n- Si vous connaissez le code hex, utilisez `/match` pour des résultats exacts\n- Comparez plusieurs captures d'écran pour voir comment l'éclairage affecte la couleur\n- Capturez en 1920×1080 ou plus pour une meilleure qualité",
+    "footer": "XIV Dye Tools - Fait avec amour pour les passionnés de glamour FFXIV",
+    "exampleUseCases": "Exemples d'utilisation",
+    "goodExamples": "Bons exemples",
+    "goodExamplesContent": "- Capture d'écran recadrée d'une seule pièce de poitrine\n- Gros plan d'une armure teinte avec un arrière-plan neutre\n- Capture d'écran prise en plein jour\n- Image focalisée sur la couleur que vous voulez faire correspondre",
+    "poorExamples": "Mauvais exemples",
+    "poorExamplesContent": "- Capture d'écran plein écran avec beaucoup d'interface utilisateur\n- Personnage dans un donjon ou une grotte sombre\n- Plusieurs pièces d'armure avec différentes teintures\n- Image dominée par les couleurs d'arrière-plan",
+    "whenToUse": "Quand utiliser /match_image vs /match",
+    "whenToUseContent": "**Utilisez `/match_image` quand :**\n- Vous avez une capture d'écran et voulez trouver la teinture\n- Vous n'êtes pas sûr du code de couleur exact\n- Vous voulez faire correspondre une couleur à partir de photos d'inspiration\n\n**Utilisez `/match` quand :**\n- Vous connaissez déjà le code couleur hex\n- Vous avez besoin de résultats plus précis/exacts\n- Vous travaillez avec des échantillons de couleurs ou des fichiers de design",
+    "technicalDetails": "Détails techniques",
+    "supportedFormats": "Formats supportés",
+    "supportedFormatsContent": "- PNG\n- JPG/JPEG\n- GIF\n- BMP\n- WebP",
+    "fileLimits": "Limites de fichier",
+    "fileLimitsContent": "- Taille maximale : {maxSize} Mo\n- Dimensions maximales : Gérées automatiquement\n- Temps de traitement : ~1-3 secondes",
+    "matchQualityRatings": "Évaluations de qualité de correspondance",
+    "matchQualityRatingsContent": "**Parfait** (distance 0)\n**Excellent** (distance <10)\n**Bon** (distance <25)\n**Acceptable** (distance <50)\n**Approximatif** (distance >=50)\n\n*Distance plus faible = meilleure correspondance*",
+    "poweredBy": "Propulsé par la bibliothèque de traitement d'images Sharp"
+  }
+}
