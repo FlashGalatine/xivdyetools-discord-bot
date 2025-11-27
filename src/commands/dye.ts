@@ -11,7 +11,7 @@ import {
   ColorResolvable,
   MessageFlags,
 } from 'discord.js';
-import { DyeService, dyeDatabase, type Dye } from 'xivdyetools-core';
+import { DyeService, dyeDatabase, LocalizationService, type Dye } from 'xivdyetools-core';
 import { findDyeByName, validateIntRange } from '../utils/validators.js';
 import {
   createErrorEmbed,
@@ -21,6 +21,7 @@ import {
 import { emojiService } from '../services/emoji-service.js';
 import { logger } from '../utils/logger.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -43,22 +44,51 @@ const CATEGORIES = [
 export const data = new SlashCommandBuilder()
   .setName('dye')
   .setDescription('FFXIV dye information and lookup')
+  .setDescriptionLocalizations({
+    ja: 'FFXIV染料の情報と検索',
+    de: 'FFXIV Farbstoff-Informationen und Suche',
+    fr: 'Informations et recherche de teintures FFXIV',
+  })
   .addSubcommand((subcommand) =>
     subcommand
       .setName('info')
       .setDescription('Get information about a specific dye')
+      .setDescriptionLocalizations({
+        ja: '特定の染料の情報を取得',
+        de: 'Informationen über einen bestimmten Farbstoff erhalten',
+        fr: 'Obtenir des informations sur une teinture spécifique',
+      })
       .addStringOption((option) =>
-        option.setName('name').setDescription('Dye name').setRequired(true).setAutocomplete(true)
+        option
+          .setName('name')
+          .setDescription('Dye name')
+          .setDescriptionLocalizations({
+            ja: '染料名',
+            de: 'Farbstoffname',
+            fr: 'Nom de la teinture',
+          })
+          .setRequired(true)
+          .setAutocomplete(true)
       )
   )
   .addSubcommand((subcommand) =>
     subcommand
       .setName('search')
       .setDescription('Search for dyes by name')
+      .setDescriptionLocalizations({
+        ja: '名前で染料を検索',
+        de: 'Farbstoffe nach Namen suchen',
+        fr: 'Rechercher des teintures par nom',
+      })
       .addStringOption((option) =>
         option
           .setName('query')
           .setDescription('Search term (partial name match)')
+          .setDescriptionLocalizations({
+            ja: '検索キーワード（部分一致）',
+            de: 'Suchbegriff (teilweise Übereinstimmung)',
+            fr: 'Terme de recherche (correspondance partielle)',
+          })
           .setRequired(true)
           .setMinLength(2)
       )
@@ -67,10 +97,20 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName('list')
       .setDescription('List dyes by category')
+      .setDescriptionLocalizations({
+        ja: 'カテゴリ別に染料を一覧表示',
+        de: 'Farbstoffe nach Kategorie auflisten',
+        fr: 'Lister les teintures par catégorie',
+      })
       .addStringOption((option) =>
         option
           .setName('category')
           .setDescription('Dye category')
+          .setDescriptionLocalizations({
+            ja: '染料カテゴリ',
+            de: 'Farbstoffkategorie',
+            fr: 'Catégorie de teinture',
+          })
           .setRequired(true)
           .addChoices(...CATEGORIES)
       )
@@ -79,13 +119,55 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName('random')
       .setDescription('Get random dye(s)')
+      .setDescriptionLocalizations({
+        ja: 'ランダムな染料を取得',
+        de: 'Zufällige Farbstoffe erhalten',
+        fr: 'Obtenir des teintures aléatoires',
+      })
       .addIntegerOption((option) =>
         option
           .setName('count')
           .setDescription('Number of random dyes (default: 1)')
+          .setDescriptionLocalizations({
+            ja: 'ランダムな染料の数（デフォルト：1）',
+            de: 'Anzahl der zufälligen Farbstoffe (Standard: 1)',
+            fr: 'Nombre de teintures aléatoires (par défaut : 1)',
+          })
           .setRequired(false)
           .setMinValue(1)
           .setMaxValue(5)
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName('exclude_metallic')
+          .setDescription('Exclude dyes that begin with "Metallic" in their name')
+          .setRequired(false)
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName('exclude_pastel')
+          .setDescription('Exclude dyes that begin with "Pastel" in their name')
+          .setRequired(false)
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName('exclude_dark')
+          .setDescription('Exclude dyes that begin with "Dark" in their name')
+          .setRequired(false)
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName('exclude_cosmic')
+          .setDescription(
+            'Exclude dyes where Acquisition is "Cosmic Exploration" or "Cosmic Fortunes"'
+          )
+          .setRequired(false)
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName('exclude_expensive')
+          .setDescription('Exclude Pure White (itemID 13114) and Jet Black (itemID 13115)')
+          .setRequired(false)
       )
   );
 
@@ -109,15 +191,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         await handleRandom(interaction);
         break;
       default: {
-        const errorEmbed = createErrorEmbed('Unknown Subcommand', 'Invalid subcommand');
+        const errorEmbed = createErrorEmbed(
+          t('errors.unknownSubcommand'),
+          t('errors.invalidSubcommand')
+        );
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       }
     }
   } catch (error) {
     logger.error('Error executing dye command:', error);
     const errorEmbed = createErrorEmbed(
-      'Command Error',
-      'An error occurred while processing your request. Please try again.'
+      t('errors.commandError'),
+      t('errors.errorProcessingRequest')
     );
 
     if (interaction.deferred) {
@@ -139,8 +224,8 @@ async function handleInfo(interaction: ChatInputCommandInteraction): Promise<voi
   const dyeResult = findDyeByName(dyeName);
   if (dyeResult.error) {
     const errorEmbed = createErrorEmbed(
-      'Dye Not Found',
-      `Could not find dye "${dyeName}".\n\nTry using autocomplete or \`/dye search\` to find similar names.`
+      t('errors.dyeNotFound'),
+      t('errors.couldNotFindDyeWithSuggestion', { name: dyeName })
     );
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
@@ -166,12 +251,18 @@ async function handleSearch(interaction: ChatInputCommandInteraction): Promise<v
   logger.info(`Dye search: ${query}`);
 
   const allDyes = dyeService.getAllDyes();
-  const matches = allDyes.filter((dye) => dye.name.toLowerCase().includes(query.toLowerCase()));
+  const matches = allDyes.filter((dye) => {
+    const localizedName = LocalizationService.getDyeName(dye.id);
+    return (
+      dye.name.toLowerCase().includes(query.toLowerCase()) ||
+      (localizedName && localizedName.toLowerCase().includes(query.toLowerCase()))
+    );
+  });
 
   if (matches.length === 0) {
     const errorEmbed = createErrorEmbed(
-      'No Results',
-      `No dyes found matching "${query}".\n\nTry a different search term or use \`/dye list\` to browse by category.`
+      t('errors.noResults'),
+      t('errors.noDyesFoundWithSuggestion', { query })
     );
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
@@ -183,19 +274,19 @@ async function handleSearch(interaction: ChatInputCommandInteraction): Promise<v
 
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
-    .setTitle(`🔍 Dye Search: "${query}"`)
+    .setTitle(`🔍 ${t('embeds.dyeSearch')}: "${query}"`)
     .setDescription(
-      `Found **${matches.length}** ${matches.length === 1 ? 'dye' : 'dyes'}${hasMore ? ` (showing first 15)` : ''}:\n\n` +
+      `${t('labels.found')} **${matches.length}** ${matches.length === 1 ? t('labels.dye') : t('labels.dyes')}${hasMore ? ` (${t('labels.showingFirst', { count: 15 })})` : ''}:\n\n` +
         displayMatches
-          .map(
-            (dye) => `${emojiService.getDyeEmojiOrSwatch(dye, 3)} **${dye.name}** (${dye.category})`
-          )
+          .map((dye) => {
+            const localizedName = LocalizationService.getDyeName(dye.id) || dye.name;
+            const localizedCategory = LocalizationService.getCategory(dye.category) || dye.category;
+            return `${emojiService.getDyeEmojiOrSwatch(dye, 3)} **${localizedName}** (${localizedCategory})`;
+          })
           .join('\n')
     )
     .setFooter({
-      text: hasMore
-        ? 'Too many results! Use a more specific search or /dye info <name>'
-        : 'Use /dye info <name> to see details',
+      text: hasMore ? t('embeds.tooManyResults') : t('embeds.useDyeInfoForDetails'),
     })
     .setTimestamp();
 
@@ -216,26 +307,28 @@ async function handleList(interaction: ChatInputCommandInteraction): Promise<voi
 
   if (categoryDyes.length === 0) {
     const errorEmbed = createErrorEmbed(
-      'Empty Category',
-      `No dyes found in category "${category}".`
+      t('errors.emptyCategory'),
+      t('errors.noDyesInCategory', { category })
     );
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
   }
 
+  const localizedCategory = LocalizationService.getCategory(category) || category;
+
   // Show all dyes in category (most categories have 10-20 dyes)
   const dyeList = categoryDyes
-    .map(
-      (dye, index) =>
-        `${index + 1}. ${emojiService.getDyeEmojiOrSwatch(dye, 3)} **${dye.name}** (${dye.hex.toUpperCase()})`
-    )
+    .map((dye, index) => {
+      const localizedName = LocalizationService.getDyeName(dye.id) || dye.name;
+      return `${index + 1}. ${emojiService.getDyeEmojiOrSwatch(dye, 3)} **${localizedName}** (${dye.hex.toUpperCase()})`;
+    })
     .join('\n');
 
   const embed = new EmbedBuilder()
     .setColor(parseInt(categoryDyes[0].hex.replace('#', ''), 16) as ColorResolvable)
-    .setTitle(`📋 ${category} Dyes`)
-    .setDescription(`**${categoryDyes.length}** dyes in this category:\n\n${dyeList}`)
-    .setFooter({ text: 'Use /dye info <name> to see full details' })
+    .setTitle(`📋 ${localizedCategory} ${t('labels.dyes')}`)
+    .setDescription(`**${categoryDyes.length}** ${t('labels.dyesInCategory')}:\n\n${dyeList}`)
+    .setFooter({ text: t('embeds.useDyeInfoForFullDetails') })
     .setTimestamp();
 
   await sendPublicSuccess(interaction, { embeds: [embed] });
@@ -247,19 +340,58 @@ async function handleList(interaction: ChatInputCommandInteraction): Promise<voi
  */
 async function handleRandom(interaction: ChatInputCommandInteraction): Promise<void> {
   const count = interaction.options.getInteger('count') || 1;
+  const excludeMetallic = interaction.options.getBoolean('exclude_metallic') ?? false;
+  const excludePastel = interaction.options.getBoolean('exclude_pastel') ?? false;
+  const excludeDark = interaction.options.getBoolean('exclude_dark') ?? false;
+  const excludeCosmic = interaction.options.getBoolean('exclude_cosmic') ?? false;
+  const excludeExpensive = interaction.options.getBoolean('exclude_expensive') ?? false;
 
-  logger.info(`Dye random: ${count}`);
+  // Build filter log message
+  const activeFilters: string[] = [];
+  if (excludeMetallic) activeFilters.push('metallic');
+  if (excludePastel) activeFilters.push('pastel');
+  if (excludeDark) activeFilters.push('dark');
+  if (excludeCosmic) activeFilters.push('cosmic');
+  if (excludeExpensive) activeFilters.push('expensive');
+  const filterLog = activeFilters.length > 0 ? ` (excludes: ${activeFilters.join(', ')})` : '';
+  logger.info(`Dye random: ${count}${filterLog}`);
 
   // Validate count
-  const countValidation = validateIntRange(count, 1, 5, 'Count');
+  const countValidation = validateIntRange(count, 1, 5, t('labels.count'));
   if (!countValidation.valid) {
-    const errorEmbed = createErrorEmbed('Invalid Count', countValidation.error!);
+    const errorEmbed = createErrorEmbed(t('errors.invalidCount'), countValidation.error!);
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
     return;
   }
 
-  // Get all dyes except Facewear
-  const allDyes = dyeService.getAllDyes().filter((dye) => dye.category !== 'Facewear');
+  // Get all dyes and apply filters
+  const allDyes = dyeService.getAllDyes().filter((dye) => {
+    // Exclude Facewear category
+    if (dye.category === 'Facewear') return false;
+
+    // Apply exclusion filters
+    if (excludeMetallic && dye.name.startsWith('Metallic')) return false;
+    if (excludePastel && dye.name.startsWith('Pastel')) return false;
+    if (excludeDark && dye.name.startsWith('Dark')) return false;
+    if (
+      excludeCosmic &&
+      (dye.acquisition === 'Cosmic Exploration' || dye.acquisition === 'Cosmic Fortunes')
+    )
+      return false;
+    if (excludeExpensive && (dye.itemID === 13114 || dye.itemID === 13115)) return false;
+
+    return true;
+  });
+
+  // Check if any dyes remain after filtering
+  if (allDyes.length === 0) {
+    const errorEmbed = createErrorEmbed(
+      t('errors.noDyesAvailable'),
+      t('errors.noMatchingFilterCriteria')
+    );
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+    return;
+  }
 
   // Get random dyes (no duplicates)
   const randomDyes: Dye[] = [];
@@ -288,23 +420,28 @@ async function handleRandom(interaction: ChatInputCommandInteraction): Promise<v
   } else {
     // Multiple dyes - use compact list
     const dyeList = randomDyes
-      .map((dye, index) =>
-        [
-          `**${index + 1}. ${dye.name}**`,
+      .map((dye, index) => {
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        const localizedCategory = LocalizationService.getCategory(dye.category);
+        const localizedAcquisition = dye.acquisition
+          ? LocalizationService.getAcquisition(dye.acquisition) || dye.acquisition
+          : null;
+        return [
+          `**${index + 1}. ${localizedName}**`,
           `${emojiService.getDyeEmojiOrSwatch(dye, 6)} ${dye.hex.toUpperCase()}`,
-          `Category: ${dye.category}`,
-          dye.acquisition ? `Acquisition: ${dye.acquisition}` : '',
+          `${t('embeds.category')}: ${localizedCategory}`,
+          localizedAcquisition ? `${t('embeds.acquisition')}: ${localizedAcquisition}` : '',
         ]
           .filter(Boolean)
-          .join('\n')
-      )
+          .join('\n');
+      })
       .join('\n\n');
 
     const embed = new EmbedBuilder()
       .setColor(parseInt(randomDyes[0].hex.replace('#', ''), 16) as ColorResolvable)
-      .setTitle(`🎲 Random Dyes (${count})`)
+      .setTitle(`🎲 ${t('embeds.randomDyes')} (${count})`)
       .setDescription(dyeList)
-      .setFooter({ text: 'Use /dye info <name> for more details' })
+      .setFooter({ text: t('embeds.useDyeInfoForMoreDetails') })
       .setTimestamp();
 
     await sendPublicSuccess(interaction, { embeds: [embed] });
@@ -327,14 +464,22 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
       .filter((dye) => {
         // Exclude Facewear for general searches
         if (dye.category === 'Facewear') return false;
-        // Match name (case-insensitive)
-        return dye.name.toLowerCase().includes(query);
+        // Match both localized and English names (case-insensitive)
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        return (
+          dye.name.toLowerCase().includes(query) ||
+          (localizedName && localizedName.toLowerCase().includes(query))
+        );
       })
       .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => ({
-        name: `${dye.name} (${dye.category})`,
-        value: dye.name,
-      }));
+      .map((dye) => {
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        const localizedCategory = LocalizationService.getCategory(dye.category);
+        return {
+          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+          value: dye.name,
+        };
+      });
 
     await interaction.respond(matches);
   }

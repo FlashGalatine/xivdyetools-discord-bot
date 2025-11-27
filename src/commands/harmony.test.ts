@@ -206,7 +206,9 @@ describe('Harmony Command - Harmony Types', () => {
 
     const editCall = vi.mocked(interaction.editReply).mock.calls[0][0];
     const embed = (editCall as any).embeds[0];
-    expect(embed.data.title).toContain('Split-Complementary');
+    // Check for harmony type in either format (localized or key format)
+    expect(embed.data.title.toLowerCase()).toContain('split');
+    expect(embed.data.title.toLowerCase()).toContain('complementary');
   });
 
   it('should generate tetradic harmony', async () => {

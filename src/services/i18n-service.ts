@@ -11,14 +11,27 @@
 
 import { ChatInputCommandInteraction, AutocompleteInteraction, Locale } from 'discord.js';
 import { LocalizationService } from 'xivdyetools-core';
-import { getRedis } from './redis.js';
+import { getRedisClient } from './redis.js';
 import { logger } from '../utils/logger.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Import translation files
-import enTranslations from '../i18n/translations/en.json' with { type: 'json' };
-import jaTranslations from '../i18n/translations/ja.json' with { type: 'json' };
-import deTranslations from '../i18n/translations/de.json' with { type: 'json' };
-import frTranslations from '../i18n/translations/fr.json' with { type: 'json' };
+// Get directory path for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load translation files using fs (avoids Node.js v23 import assertion requirements)
+function loadTranslations(locale: string): Record<string, unknown> {
+  const filePath = join(__dirname, '..', 'i18n', 'translations', `${locale}.json`);
+  const content = readFileSync(filePath, 'utf-8');
+  return JSON.parse(content) as Record<string, unknown>;
+}
+
+const enTranslations = loadTranslations('en');
+const jaTranslations = loadTranslations('ja');
+const deTranslations = loadTranslations('de');
+const frTranslations = loadTranslations('fr');
 
 /**
  * Supported locale codes (matching xivdyetools-core)
@@ -33,7 +46,7 @@ const SUPPORTED_LOCALES: readonly LocaleCode[] = ['en', 'ja', 'de', 'fr'] as con
 /**
  * Type for translation data structure
  */
-type TranslationData = typeof enTranslations;
+type TranslationData = Record<string, unknown>;
 
 /**
  * Map of locale codes to translation data
@@ -49,6 +62,12 @@ const translations: Record<LocaleCode, TranslationData> = {
  * Redis key prefix for user language preferences
  */
 const REDIS_PREFIX = 'i18n:user:';
+
+/**
+ * In-memory cache for user preferences (fallback when Redis unavailable)
+ * Note: Preferences stored here won't persist across bot restarts
+ */
+const memoryCache = new Map<string, LocaleCode>();
 
 /**
  * Current active locale (thread-local concept - set per request)
@@ -86,17 +105,26 @@ function discordLocaleToLocaleCode(discordLocale: Locale | string): LocaleCode |
 }
 
 /**
- * Get user language preference from Redis
+ * Get user language preference from Redis (with in-memory fallback)
  */
 async function getUserPreference(userId: string): Promise<LocaleCode | null> {
+  // First check in-memory cache (always available)
+  const cachedPreference = memoryCache.get(userId);
+  if (cachedPreference) {
+    return cachedPreference;
+  }
+
+  // Try Redis if available
   try {
-    const redis = getRedis();
+    const redis = getRedisClient();
     if (!redis) {
       return null;
     }
 
     const preference = await redis.get(`${REDIS_PREFIX}${userId}`);
     if (preference && SUPPORTED_LOCALES.includes(preference as LocaleCode)) {
+      // Also cache in memory for faster subsequent lookups
+      memoryCache.set(userId, preference as LocaleCode);
       return preference as LocaleCode;
     }
 
@@ -108,38 +136,52 @@ async function getUserPreference(userId: string): Promise<LocaleCode | null> {
 }
 
 /**
- * Set user language preference in Redis
+ * Set user language preference in Redis (with in-memory fallback)
  */
 async function setUserPreference(userId: string, locale: LocaleCode): Promise<boolean> {
+  // Always store in memory cache (works even without Redis)
+  memoryCache.set(userId, locale);
+
+  // Try to persist to Redis if available
   try {
-    const redis = getRedis();
+    const redis = getRedisClient();
     if (!redis) {
-      return false;
+      // Redis not available, but in-memory cache was updated
+      logger.info(`User ${userId} language preference set to ${locale} (in-memory only)`);
+      return true;
     }
 
     await redis.set(`${REDIS_PREFIX}${userId}`, locale);
     return true;
   } catch (error) {
-    logger.error('Failed to set user language preference in Redis:', error);
-    return false;
+    logger.warn('Failed to persist user language preference to Redis (using in-memory):', error);
+    // Return true since in-memory cache was updated successfully
+    return true;
   }
 }
 
 /**
- * Clear user language preference from Redis
+ * Clear user language preference from Redis (with in-memory fallback)
  */
 async function clearUserPreference(userId: string): Promise<boolean> {
+  // Always clear from memory cache
+  memoryCache.delete(userId);
+
+  // Try to clear from Redis if available
   try {
-    const redis = getRedis();
+    const redis = getRedisClient();
     if (!redis) {
-      return false;
+      // Redis not available, but in-memory cache was cleared
+      logger.info(`User ${userId} language preference cleared (in-memory only)`);
+      return true;
     }
 
     await redis.del(`${REDIS_PREFIX}${userId}`);
     return true;
   } catch (error) {
-    logger.error('Failed to clear user language preference from Redis:', error);
-    return false;
+    logger.warn('Failed to clear user language preference from Redis (using in-memory):', error);
+    // Return true since in-memory cache was cleared successfully
+    return true;
   }
 }
 
@@ -240,14 +282,17 @@ function t(key: string, params?: Record<string, string | number>): string {
       .trim();
   }
 
+  // At this point, value is guaranteed to be a string
+  let result = value;
+
   // Interpolate parameters
   if (params) {
     for (const [paramKey, paramValue] of Object.entries(params)) {
-      value = value.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+      result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
     }
   }
 
-  return value;
+  return result;
 }
 
 /**

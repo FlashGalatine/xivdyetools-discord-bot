@@ -201,7 +201,7 @@ describe('Match Command - Match Quality Levels', () => {
     const embed = (editCall as any).embeds[0];
 
     // Should have one of the quality emojis
-    expect(embed.data.title).toMatch(/🎯|✨|👍|👌|🔍/);
+    expect(embed.data.title).toMatch(/🎯|✨|👍|⚠️|🔍/);
   });
 
   it('should calculate and display distance in match quality', async () => {

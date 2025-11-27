@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2025-11-27
+
+### Fixed
+- **Localization Fixes**:
+  - German: Fixed "Cosmic Exploration" and "Cosmic Fortunes" translations to use correct game terminology ("Kosmo-Erkundung" and "Kosmo-Glück")
+  - Japanese: Fixed cosmic terms to use katakana versions (「コスモエクスプローラー」and「コスモフォーチュン」)
+  - French: Fixed "Dark" dye term from "Sombre" to "foncé" to match in-game terminology
+  - French: Replaced 👌 emoji (culturally offensive) with ⚠️ for "fair" match quality
+
+- **i18n Implementation**:
+  - `/about` command now uses i18n translation keys instead of hardcoded English
+  - `/manual` command now uses i18n translation keys instead of hardcoded English
+  - `/match_image_help` command now uses i18n translation keys instead of hardcoded English
+  - `/accessibility` command: Added localized percentage text for vision type affects ("~1% of males", "<0.01% of people")
+
+- **Acquisition Data Localization**:
+  - All commands now display localized acquisition methods using `LocalizationService.getAcquisition()`
+  - Fixed in: `/match`, `/match_image`, `/dye random`, `/harmony`, and embed builder utilities
+
+### Added
+- New translation keys for accessibility percentages:
+  - `embeds.protanopiaAffects`
+  - `embeds.deuteranopiaAffects`
+  - `embeds.tritanopiaAffects`
+  - Added translations for all 4 supported languages (en, de, fr, ja)
+
 ## [1.0.2] - 2025-11-24
 
 ### Fixed

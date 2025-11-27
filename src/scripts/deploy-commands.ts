@@ -17,6 +17,7 @@ import { accessibilityCommand } from '../commands/accessibility.js';
 import { statsCommand } from '../commands/stats.js';
 import { manualCommand } from '../commands/manual.js';
 import { aboutCommand } from '../commands/about.js';
+import { languageCommand } from '../commands/language.js';
 
 // Collect all commands
 const commands = [
@@ -31,6 +32,7 @@ const commands = [
   statsCommand.data.toJSON(),
   manualCommand.data.toJSON(),
   aboutCommand.data.toJSON(),
+  languageCommand.data.toJSON(),
 ];
 
 const rest = new REST().setToken(config.token);

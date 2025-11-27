@@ -102,16 +102,19 @@ class MatchCommand extends CommandBase {
       matchEmoji = '👍';
     } else if (distance < 50) {
       matchQuality = t('matchQuality.fair');
-      matchEmoji = '👌';
+      matchEmoji = '⚠️';
     } else {
       matchQuality = t('matchQuality.approximate');
       matchEmoji = '🔍';
     }
 
-    // Get localized dye name and category
-    const localizedDyeName = LocalizationService.getDyeName(closestDye.id);
-    const localizedCategory = LocalizationService.getDyeCategory(closestDye.id);
-    const localizedInputDyeName = inputDye ? LocalizationService.getDyeName(inputDye.id) : null;
+    // Get localized dye name and category (with fallbacks)
+    const localizedDyeName = LocalizationService.getDyeName(closestDye.id) || closestDye.name;
+    const localizedCategory =
+      LocalizationService.getCategory(closestDye.category) || closestDye.category;
+    const localizedInputDyeName = inputDye
+      ? LocalizationService.getDyeName(inputDye.id) || inputDye.name
+      : null;
 
     // Create embed
     const embed = new EmbedBuilder()
@@ -157,9 +160,11 @@ class MatchCommand extends CommandBase {
 
     // Add acquisition info if available
     if (closestDye.acquisition) {
+      const localizedAcquisition =
+        LocalizationService.getAcquisition(closestDye.acquisition) || closestDye.acquisition;
       embed.addFields({
         name: t('embeds.acquisition'),
-        value: closestDye.acquisition,
+        value: localizedAcquisition,
         inline: false,
       });
     }
@@ -196,15 +201,16 @@ class MatchCommand extends CommandBase {
           // Match both localized and English names (case-insensitive)
           const localizedName = LocalizationService.getDyeName(dye.id);
           return (
-            dye.name.toLowerCase().includes(query) || localizedName.toLowerCase().includes(query)
+            dye.name.toLowerCase().includes(query) ||
+            (localizedName && localizedName.toLowerCase().includes(query))
           );
         })
         .slice(0, 25) // Discord limits to 25 choices
         .map((dye) => {
           const localizedName = LocalizationService.getDyeName(dye.id);
-          const localizedCategory = LocalizationService.getDyeCategory(dye.id);
+          const localizedCategory = LocalizationService.getCategory(dye.category);
           return {
-            name: `${localizedName} (${localizedCategory})`,
+            name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
             value: dye.name, // Keep English name as value for lookup
           };
         });

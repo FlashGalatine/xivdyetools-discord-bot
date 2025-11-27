@@ -50,7 +50,7 @@
             "excludeMetallic": "「メタリック」で始まるカララントを除外",
             "excludePastel": "「パステル」で始まるカララントを除外",
             "excludeDark": "「ダーク」で始まるカララントを除外",
-            "excludeCosmic": "入手方法が「宇宙探索」または「宇宙くじ」のカララントを除外",
+            "excludeCosmic": "入手方法が「コスモエクスプローラー」または「コスモフォーチュン」のカララントを除外",
             "excludeExpensive": "ピュアホワイト（itemID 13114）とジェットブラック（itemID 13115）を除外"
           }
         }
@@ -152,7 +152,10 @@
     "target": "ターゲット",
     "match": "マッチ",
     "tip": "ヒント",
-    "tipMatchAcquisition": "個々のカララントの入手方法を確認するには `/match <color>` を使用してください。",
+    "useMatchForAcquisition": "個々のカララントの入手方法を確認するには `/match <color>` を使用してください。",
+    "useDyeInfoForDetails": "詳細を見るには /dye info <名前> を使用",
+    "useDyeInfoForFullDetails": "完全な詳細を見るには /dye info <名前> を使用",
+    "useDyeInfoForMoreDetails": "詳細は /dye info <名前> を参照",
     "dyeComparison": "カララント比較",
     "dye": "カララント",
     "dyes": "カララント",
@@ -174,6 +177,9 @@
     "deuteranopiaImpact": "緑がベージュ/タンに見える",
     "tritanopia": "3型色覚（青色盲）",
     "tritanopiaImpact": "青が緑っぽく見える",
+    "protanopiaAffects": "男性の約1%",
+    "deuteranopiaAffects": "男性の約1%",
+    "tritanopiaAffects": "人口の0.01%未満",
     "aboutCVD": "色覚特性について",
     "cvdDescription": "色覚特性（色覚異常）は男性の約8%、女性の約0.5%に影響します。これらのシミュレーションはBrettel 1997アルゴリズムを使用して、さまざまなタイプの色覚特性を持つ人々に色がどのように見えるかを近似しています。",
     "botStatistics": "ボット統計",
@@ -254,6 +260,9 @@
     "noDyesInCategory": "カテゴリ「{category}」にカララントが見つかりませんでした。",
     "noMatchingDyesQuery": "「{query}」にマッチするカララントが見つかりませんでした。\n\n別の検索語を試すか、`/dye list` でカテゴリ別に閲覧してください。",
     "noDyesMatchFilter": "フィルター条件にマッチするカララントがありません。別の除外設定でもう一度お試しください。",
+    "noMatchingFilterCriteria": "フィルター条件にマッチするカララントがありません。別の除外設定でもう一度お試しください。",
+    "noDyesFoundWithSuggestion": "「{query}」にマッチするカララントが見つかりませんでした。\n\n別の検索語を試すか、`/dye list` でカテゴリ別に閲覧してください。",
+    "invalidColorOrDyeNameWithExamples": "「{input}」は有効な16進数カラーまたはカララント名ではありません。\n\n**例：**\n- 16進数：`#FF0000`、`#8A2BE2`\n- カララント：`ダラガブレッド`、`ピュアホワイト`",
     "invalidHexFormat": "無効な16進数カラー形式：「{hex}」。#RRGGBB形式（例：#FF0000）またはRRGGBB形式（例：FF0000）が必要です。",
     "dyeNameEmpty": "カララント名は空にできません。",
     "dyeNotFoundSearch": "カララントが見つかりません：「{name}」。自動補完または検索を使用して利用可能なカララントを見つけてください。",
@@ -279,7 +288,15 @@
   },
   "labels": {
     "examples": "例",
-    "unknown": "不明"
+    "unknown": "不明",
+    "steps": "ステップ",
+    "step": "ステップ",
+    "count": "数量",
+    "dye": "染料",
+    "dyes": "染料",
+    "found": "見つかりました",
+    "dyesInCategory": "染料がこのカテゴリにあります",
+    "showingFirst": "最初の{count}件を表示"
   },
   "language": {
     "currentLanguage": "現在の言語",

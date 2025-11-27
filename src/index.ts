@@ -173,7 +173,7 @@ client.on(Events.InteractionCreate, (interaction) => {
         await securityLogger.rateLimitExceeded(userId, commandName, 'per_minute', guildId);
         await interaction.reply({
           content:
-            `⏱️ ${t('rateLimit.tooQuickly', { seconds: userLimit.retryAfter })}\n\n` +
+            `⏱️ ${t('rateLimit.tooQuickly', { seconds: userLimit.retryAfter ?? 0 })}\n\n` +
             `**${t('rateLimit.limit')}:** ${userLimit.limit} ${t('rateLimit.commandsPerMinute')}\n` +
             `**${t('rateLimit.tryAgain')}:** <t:${Math.floor(userLimit.resetAt.getTime() / 1000)}:R>`,
           flags: MessageFlags.Ephemeral,

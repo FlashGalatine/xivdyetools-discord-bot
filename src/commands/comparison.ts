@@ -10,13 +10,20 @@ import {
   EmbedBuilder,
   ColorResolvable,
 } from 'discord.js';
-import { DyeService, ColorService, dyeDatabase, type Dye } from 'xivdyetools-core';
+import {
+  DyeService,
+  ColorService,
+  dyeDatabase,
+  LocalizationService,
+  type Dye,
+} from 'xivdyetools-core';
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
 import { createErrorEmbed, formatRGB, formatHSV } from '../utils/embed-builder.js';
 import { renderSwatchGrid } from '../renderers/swatch-grid.js';
 import { logger } from '../utils/logger.js';
 import { emojiService } from '../services/emoji-service.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -30,10 +37,20 @@ interface DyePair {
 export const data = new SlashCommandBuilder()
   .setName('comparison')
   .setDescription('Compare multiple FFXIV dyes side-by-side')
+  .setDescriptionLocalizations({
+    ja: '複数のFFXIV染料を並べて比較',
+    de: 'Mehrere FFXIV-Farbstoffe nebeneinander vergleichen',
+    fr: 'Comparer plusieurs teintures FFXIV côte à côte',
+  })
   .addStringOption((option) =>
     option
       .setName('dye1')
       .setDescription('First dye: hex (e.g., #FF0000) or dye name')
+      .setDescriptionLocalizations({
+        ja: '1番目の染料：16進数（例：#FF0000）または染料名',
+        de: 'Erster Farbstoff: Hex (z.B. #FF0000) oder Farbstoffname',
+        fr: 'Première teinture : hex (ex. #FF0000) ou nom de teinture',
+      })
       .setRequired(true)
       .setAutocomplete(true)
   )
@@ -41,6 +58,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('dye2')
       .setDescription('Second dye: hex (e.g., #00FF00) or dye name')
+      .setDescriptionLocalizations({
+        ja: '2番目の染料：16進数（例：#00FF00）または染料名',
+        de: 'Zweiter Farbstoff: Hex (z.B. #00FF00) oder Farbstoffname',
+        fr: 'Deuxième teinture : hex (ex. #00FF00) ou nom de teinture',
+      })
       .setRequired(true)
       .setAutocomplete(true)
   )
@@ -48,6 +70,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('dye3')
       .setDescription('Third dye (optional): hex or dye name')
+      .setDescriptionLocalizations({
+        ja: '3番目の染料（任意）：16進数または染料名',
+        de: 'Dritter Farbstoff (optional): Hex oder Farbstoffname',
+        fr: 'Troisième teinture (optionnel) : hex ou nom de teinture',
+      })
       .setRequired(false)
       .setAutocomplete(true)
   )
@@ -55,6 +82,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('dye4')
       .setDescription('Fourth dye (optional): hex or dye name')
+      .setDescriptionLocalizations({
+        ja: '4番目の染料（任意）：16進数または染料名',
+        de: 'Vierter Farbstoff (optional): Hex oder Farbstoffname',
+        fr: 'Quatrième teinture (optionnel) : hex ou nom de teinture',
+      })
       .setRequired(false)
       .setAutocomplete(true)
   );
@@ -84,8 +116,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         const closestDye = dyeService.findClosestDye(normalizedHex);
         if (!closestDye) {
           const errorEmbed = createErrorEmbed(
-            'Error',
-            `Could not find matching dye for ${normalizedHex}.`
+            t('errors.error'),
+            t('errors.couldNotFindMatchingDyeForHex', { hex: normalizedHex })
           );
           await sendEphemeralError(interaction, { embeds: [errorEmbed] });
           return;
@@ -97,11 +129,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         const dyeResult = findDyeByName(input);
         if (dyeResult.error) {
           const errorEmbed = createErrorEmbed(
-            'Invalid Input',
-            `"${input}" is not a valid hex color or dye name.\n\n` +
-              `**Examples:**\n` +
-              `• Hex: \`#FF0000\`, \`#8A2BE2\`\n` +
-              `• Dye: \`Dalamud Red\`, \`Snow White\``
+            t('errors.invalidInput'),
+            t('errors.invalidColorOrDyeNameWithExamples', { input })
           );
           await sendEphemeralError(interaction, { embeds: [errorEmbed] });
           return;
@@ -130,21 +159,25 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     // Create embed
     const embed = new EmbedBuilder()
       .setColor(parseInt(dyes[0].hex.replace('#', ''), 16) as ColorResolvable)
-      .setTitle(`🔍 Dye Comparison (${dyes.length} ${dyes.length === 1 ? 'dye' : 'dyes'})`)
+      .setTitle(
+        `🔍 ${t('embeds.dyeComparison')} (${dyes.length} ${dyes.length === 1 ? t('labels.dye') : t('labels.dyes')})`
+      )
       .setImage(`attachment://comparison_${dyes.length}dyes.png`)
       .setTimestamp();
 
     // Add field for each dye
     dyes.forEach((dye, index) => {
       const emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣'][index] || `${index + 1}.`;
+      const localizedName = LocalizationService.getDyeName(dye.id) || dye.name;
+      const localizedCategory = LocalizationService.getCategory(dye.category) || dye.category;
       embed.addFields({
-        name: `${emoji} ${dye.name}`,
+        name: `${emoji} ${localizedName}`,
         value: [
           emojiService.getDyeEmojiOrSwatch(dye, 6),
-          `**Hex:** ${dye.hex.toUpperCase()}`,
-          `**RGB:** ${formatRGB(dye.hex)}`,
-          `**HSV:** ${formatHSV(dye.hex)}`,
-          `**Category:** ${dye.category}`,
+          `**${t('embeds.hex')}:** ${dye.hex.toUpperCase()}`,
+          `**${t('embeds.rgb')}:** ${formatRGB(dye.hex)}`,
+          `**${t('embeds.hsv')}:** ${formatHSV(dye.hex)}`,
+          `**${t('embeds.category')}:** ${localizedCategory}`,
         ].join('\n'),
         inline: true,
       });
@@ -152,16 +185,25 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     // Add comparison analysis (only if 2+ dyes)
     if (dyes.length >= 2) {
+      const closestDye1Name =
+        LocalizationService.getDyeName(closestPair.dye1.id) || closestPair.dye1.name;
+      const closestDye2Name =
+        LocalizationService.getDyeName(closestPair.dye2.id) || closestPair.dye2.name;
+      const furthestDye1Name =
+        LocalizationService.getDyeName(furthestPair.dye1.id) || furthestPair.dye1.name;
+      const furthestDye2Name =
+        LocalizationService.getDyeName(furthestPair.dye2.id) || furthestPair.dye2.name;
+
       embed.addFields({
-        name: '📊 Comparison Analysis',
+        name: `📊 ${t('embeds.comparisonAnalysis')}`,
         value: [
-          `**Most Similar:** ${closestPair.dye1.name} ↔ ${closestPair.dye2.name}`,
-          `Distance: ${closestPair.distance.toFixed(1)} (${getQualityLabel(closestPair.distance)})`,
+          `**${t('embeds.mostSimilar')}:** ${closestDye1Name} ↔ ${closestDye2Name}`,
+          `${t('embeds.distance')}: ${closestPair.distance.toFixed(1)} (${getQualityLabel(closestPair.distance)})`,
           '',
-          `**Most Different:** ${furthestPair.dye1.name} ↔ ${furthestPair.dye2.name}`,
-          `Distance: ${furthestPair.distance.toFixed(1)} (${getQualityLabel(furthestPair.distance)})`,
+          `**${t('embeds.mostDifferent')}:** ${furthestDye1Name} ↔ ${furthestDye2Name}`,
+          `${t('embeds.distance')}: ${furthestPair.distance.toFixed(1)} (${getQualityLabel(furthestPair.distance)})`,
           '',
-          `**Average Distance:** ${averageDistance.toFixed(1)}`,
+          `**${t('embeds.averageDistance')}:** ${averageDistance.toFixed(1)}`,
         ].join('\n'),
         inline: false,
       });
@@ -176,10 +218,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     logger.info(`Comparison completed: ${dyes.length} dyes`);
   } catch (error) {
     logger.error('Error executing comparison command:', error);
-    const errorEmbed = createErrorEmbed(
-      'Command Error',
-      'An error occurred while comparing dyes. Please try again.'
-    );
+    const errorEmbed = createErrorEmbed(t('errors.commandError'), t('errors.errorComparingDyes'));
 
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
@@ -209,12 +248,12 @@ function calculatePairwiseDistances(dyes: Dye[]): DyePair[] {
  * Get quality label for color distance
  */
 function getQualityLabel(distance: number): string {
-  if (distance === 0) return 'Identical';
-  if (distance < 10) return 'Very Similar';
-  if (distance < 25) return 'Similar';
-  if (distance < 50) return 'Somewhat Different';
-  if (distance < 100) return 'Different';
-  return 'Very Different';
+  if (distance === 0) return t('comparisonQuality.identical');
+  if (distance < 10) return t('comparisonQuality.verySimilar');
+  if (distance < 25) return t('comparisonQuality.similar');
+  if (distance < 50) return t('comparisonQuality.somewhatDifferent');
+  if (distance < 100) return t('comparisonQuality.different');
+  return t('comparisonQuality.veryDifferent');
 }
 
 /**
@@ -239,14 +278,22 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
         // Exclude Facewear category
         if (dye.category === 'Facewear') return false;
 
-        // Match name (case-insensitive)
-        return dye.name.toLowerCase().includes(query);
+        // Match both localized and English names (case-insensitive)
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        return (
+          dye.name.toLowerCase().includes(query) ||
+          (localizedName && localizedName.toLowerCase().includes(query))
+        );
       })
       .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => ({
-        name: `${dye.name} (${dye.category})`,
-        value: dye.name,
-      }));
+      .map((dye) => {
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        const localizedCategory = LocalizationService.getCategory(dye.category);
+        return {
+          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+          value: dye.name,
+        };
+      });
 
     await interaction.respond(matches);
   }

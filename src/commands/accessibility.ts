@@ -10,7 +10,13 @@ import {
   EmbedBuilder,
   ColorResolvable,
 } from 'discord.js';
-import { DyeService, ColorService, dyeDatabase, type Dye } from 'xivdyetools-core';
+import {
+  DyeService,
+  ColorService,
+  dyeDatabase,
+  LocalizationService,
+  type Dye,
+} from 'xivdyetools-core';
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
 import {
   createErrorEmbed,
@@ -23,6 +29,7 @@ import {
 } from '../renderers/accessibility-comparison.js';
 import { logger } from '../utils/logger.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -30,10 +37,20 @@ const dyeService = new DyeService(dyeDatabase);
 export const data = new SlashCommandBuilder()
   .setName('accessibility')
   .setDescription('Simulate how a dye appears with colorblindness')
+  .setDescriptionLocalizations({
+    ja: '色覚特性による染料の見え方をシミュレート',
+    de: 'Simulieren, wie ein Färbemittel bei Farbenblindheit erscheint',
+    fr: "Simuler l'apparence d'une teinture avec daltonisme",
+  })
   .addStringOption((option) =>
     option
       .setName('dye')
       .setDescription('Dye name or hex color (e.g., "Dalamud Red" or "#FF0000")')
+      .setDescriptionLocalizations({
+        ja: '染料名または16進数カラー（例：「ダラガブレッド」または「#FF0000」）',
+        de: 'Färbemittelname oder Hex-Farbe (z.B. "Dalamud-Rot" oder "#FF0000")',
+        fr: 'Nom de teinture ou couleur hex (ex. "Rouge Dalamud" ou "#FF0000")',
+      })
       .setRequired(true)
       .setAutocomplete(true)
   )
@@ -41,6 +58,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('vision_type')
       .setDescription('Colorblind vision type (default: show all)')
+      .setDescriptionLocalizations({
+        ja: '色覚特性タイプ（デフォルト：全て表示）',
+        de: 'Farbenblind-Typ (Standard: alle anzeigen)',
+        fr: 'Type de daltonisme (par défaut : afficher tous)',
+      })
       .setRequired(false)
       .addChoices(
         { name: 'All Types', value: 'all' },
@@ -70,8 +92,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       const closestDye = dyeService.findClosestDye(normalizedHex);
       if (!closestDye) {
         const errorEmbed = createErrorEmbed(
-          'Error',
-          `Could not find matching dye for ${normalizedHex}.`
+          t('errors.error'),
+          t('errors.couldNotFindMatchingDyeForHex', { hex: normalizedHex })
         );
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
@@ -83,11 +105,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       const dyeResult = findDyeByName(dyeInput);
       if (dyeResult.error) {
         const errorEmbed = createErrorEmbed(
-          'Invalid Input',
-          `"${dyeInput}" is not a valid hex color or dye name.\n\n` +
-            `**Examples:**\n` +
-            `• Hex: \`#FF0000\`, \`#8A2BE2\`\n` +
-            `• Dye: \`Dalamud Red\`, \`Snow White\``
+          t('errors.invalidInput'),
+          t('errors.invalidColorOrDyeNameWithExamples', { input: dyeInput })
         );
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
@@ -128,11 +147,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const tritanopiaHex = ColorService.rgbToHex(tritanopiaRgb.r, tritanopiaRgb.g, tritanopiaRgb.b);
 
     // Create embed
+    const localizedDyeName = LocalizationService.getDyeName(dye.id) || dye.name;
+    const localizedCategory = LocalizationService.getCategory(dye.category) || dye.category;
+
     const embed = new EmbedBuilder()
       .setColor(parseInt(inputHex.replace('#', ''), 16) as ColorResolvable)
-      .setTitle(`♿ Accessibility: ${dye.name}`)
+      .setTitle(`♿ ${t('embeds.accessibilityTitle')}: ${localizedDyeName}`)
       .setDescription(
-        `**Category:** ${dye.category}\n` + `**Original Hex:** ${inputHex.toUpperCase()}`
+        `**${t('embeds.category')}:** ${localizedCategory}\n` +
+          `**${t('embeds.originalHex')}:** ${inputHex.toUpperCase()}`
       )
       .setImage(`attachment://accessibility_${dye.name.replace(/\s/g, '_')}.png`)
       .setTimestamp();
@@ -140,12 +163,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     // Add vision type comparisons
     if (visionTypeInput === 'all' || visionTypeInput === 'protanopia') {
       embed.addFields({
-        name: '🔴 Protanopia (Red-blind)',
+        name: `🔴 ${t('embeds.protanopia')}`,
         value: [
           `${formatColorSwatch(protanopiaHex, 6)}`,
-          `**Hex:** ${protanopiaHex.toUpperCase()}`,
-          `**Affects:** ~1% of males`,
-          `**Impact:** Reds appear darker/brownish`,
+          `**${t('embeds.hex')}:** ${protanopiaHex.toUpperCase()}`,
+          `**${t('embeds.affects')}:** ${t('embeds.protanopiaAffects')}`,
+          `**${t('embeds.impact')}:** ${t('embeds.protanopiaImpact')}`,
         ].join('\n'),
         inline: true,
       });
@@ -153,12 +176,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     if (visionTypeInput === 'all' || visionTypeInput === 'deuteranopia') {
       embed.addFields({
-        name: '🟢 Deuteranopia (Green-blind)',
+        name: `🟢 ${t('embeds.deuteranopia')}`,
         value: [
           `${formatColorSwatch(deuteranopiaHex, 6)}`,
-          `**Hex:** ${deuteranopiaHex.toUpperCase()}`,
-          `**Affects:** ~1% of males`,
-          `**Impact:** Greens appear beige/tan`,
+          `**${t('embeds.hex')}:** ${deuteranopiaHex.toUpperCase()}`,
+          `**${t('embeds.affects')}:** ${t('embeds.deuteranopiaAffects')}`,
+          `**${t('embeds.impact')}:** ${t('embeds.deuteranopiaImpact')}`,
         ].join('\n'),
         inline: true,
       });
@@ -166,12 +189,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     if (visionTypeInput === 'all' || visionTypeInput === 'tritanopia') {
       embed.addFields({
-        name: '🔵 Tritanopia (Blue-blind)',
+        name: `🔵 ${t('embeds.tritanopia')}`,
         value: [
           `${formatColorSwatch(tritanopiaHex, 6)}`,
-          `**Hex:** ${tritanopiaHex.toUpperCase()}`,
-          `**Affects:** <0.01% of people`,
-          `**Impact:** Blues appear greenish`,
+          `**${t('embeds.hex')}:** ${tritanopiaHex.toUpperCase()}`,
+          `**${t('embeds.affects')}:** ${t('embeds.tritanopiaAffects')}`,
+          `**${t('embeds.impact')}:** ${t('embeds.tritanopiaImpact')}`,
         ].join('\n'),
         inline: true,
       });
@@ -179,10 +202,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     // Add footer with info
     embed.addFields({
-      name: 'ℹ️ About Color Vision Deficiency',
-      value:
-        'Color vision deficiency (colorblindness) affects approximately 8% of males and 0.5% of females. ' +
-        'These simulations use the Brettel 1997 algorithm to approximate how colors appear to individuals with different types of color vision deficiency.',
+      name: `ℹ️ ${t('embeds.aboutCVD')}`,
+      value: t('embeds.cvdDescription'),
       inline: false,
     });
 
@@ -204,8 +225,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   } catch (error) {
     logger.error('Error executing accessibility command:', error);
     const errorEmbed = createErrorEmbed(
-      'Command Error',
-      'An error occurred while generating accessibility comparison. Please try again.'
+      t('errors.commandError'),
+      t('errors.errorGeneratingAccessibility')
     );
 
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
@@ -234,14 +255,22 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
         // Exclude Facewear category
         if (dye.category === 'Facewear') return false;
 
-        // Match name (case-insensitive)
-        return dye.name.toLowerCase().includes(query);
+        // Match both localized and English names (case-insensitive)
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        return (
+          dye.name.toLowerCase().includes(query) ||
+          (localizedName && localizedName.toLowerCase().includes(query))
+        );
       })
       .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => ({
-        name: `${dye.name} (${dye.category})`,
-        value: dye.name,
-      }));
+      .map((dye) => {
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        const localizedCategory = LocalizationService.getCategory(dye.category);
+        return {
+          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+          value: dye.name,
+        };
+      });
 
     await interaction.respond(matches);
   }

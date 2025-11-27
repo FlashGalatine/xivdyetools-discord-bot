@@ -49,7 +49,7 @@
             "count": "Nombre de teintures aléatoires (défaut : 1)",
             "excludeMetallic": "Exclure les teintures commençant par \"Métallique\"",
             "excludePastel": "Exclure les teintures commençant par \"Pastel\"",
-            "excludeDark": "Exclure les teintures commençant par \"Sombre\"",
+            "excludeDark": "Exclure les teintures commençant par \"foncé\"",
             "excludeCosmic": "Exclure les teintures dont l'acquisition est \"Exploration cosmique\" ou \"Fortunes cosmiques\"",
             "excludeExpensive": "Exclure Blanc pur (itemID 13114) et Noir de jais (itemID 13115)"
           }
@@ -152,7 +152,10 @@
     "target": "Cible",
     "match": "Correspondance",
     "tip": "Astuce",
-    "tipMatchAcquisition": "Utilisez `/match <couleur>` pour voir les détails d'acquisition des teintures individuelles.",
+    "useMatchForAcquisition": "Utilisez `/match <couleur>` pour voir les détails d'acquisition des teintures individuelles.",
+    "useDyeInfoForDetails": "Utilisez /dye info <nom> pour voir les détails",
+    "useDyeInfoForFullDetails": "Utilisez /dye info <nom> pour voir tous les détails",
+    "useDyeInfoForMoreDetails": "Plus de détails avec /dye info <nom>",
     "dyeComparison": "Comparaison de teintures",
     "dye": "teinture",
     "dyes": "teintures",
@@ -174,6 +177,9 @@
     "deuteranopiaImpact": "Les verts apparaissent beiges/fauves",
     "tritanopia": "Tritanopie (daltonisme bleu)",
     "tritanopiaImpact": "Les bleus apparaissent verdâtres",
+    "protanopiaAffects": "~1% des hommes",
+    "deuteranopiaAffects": "~1% des hommes",
+    "tritanopiaAffects": "<0,01% des personnes",
     "aboutCVD": "À propos de la déficience de la vision des couleurs",
     "cvdDescription": "La déficience de la vision des couleurs (daltonisme) affecte environ 8% des hommes et 0,5% des femmes. Ces simulations utilisent l'algorithme Brettel 1997 pour approximer l'apparence des couleurs pour les personnes atteintes de différents types de déficience de la vision des couleurs.",
     "botStatistics": "Statistiques du bot",
@@ -254,6 +260,9 @@
     "noDyesInCategory": "Aucune teinture trouvée dans la catégorie « {category} ».",
     "noMatchingDyesQuery": "Aucune teinture trouvée correspondant à « {query} ».\n\nEssayez un autre terme de recherche ou utilisez `/dye list` pour parcourir par catégorie.",
     "noDyesMatchFilter": "Aucune teinture ne correspond à vos critères de filtre. Veuillez réessayer avec différents paramètres d'exclusion.",
+    "noMatchingFilterCriteria": "Aucune teinture ne correspond à vos critères de filtre. Veuillez réessayer avec différents paramètres d'exclusion.",
+    "noDyesFoundWithSuggestion": "Aucune teinture trouvée correspondant à « {query} ».\n\nEssayez un autre terme de recherche ou utilisez `/dye list` pour parcourir par catégorie.",
+    "invalidColorOrDyeNameWithExamples": "« {input} » n'est pas une couleur hex ou un nom de teinture valide.\n\n**Exemples :**\n- Hex : `#FF0000`, `#8A2BE2`\n- Teinture : `Rouge Dalamud`, `Blanc pur`",
     "invalidHexFormat": "Format de couleur hex invalide : « {hex} ». Format attendu #RRGGBB (ex. #FF0000) ou RRGGBB (ex. FF0000).",
     "dyeNameEmpty": "Le nom de la teinture ne peut pas être vide.",
     "dyeNotFoundSearch": "Teinture non trouvée : « {name} ». Utilisez l'autocomplétion ou la recherche pour trouver les teintures disponibles.",
@@ -279,7 +288,15 @@
   },
   "labels": {
     "examples": "Exemples",
-    "unknown": "Inconnu"
+    "unknown": "Inconnu",
+    "steps": "Étapes",
+    "step": "Étape",
+    "count": "Nombre",
+    "dye": "teinture",
+    "dyes": "teintures",
+    "found": "Trouvé",
+    "dyesInCategory": "teintures dans cette catégorie",
+    "showingFirst": "affichage des {count} premiers"
   },
   "language": {
     "currentLanguage": "Langue actuelle",

@@ -6,16 +6,24 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { getAnalytics } from '../services/analytics.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 export const statsCommand: BotCommand = {
-  data: new SlashCommandBuilder().setName('stats').setDescription('Display bot usage statistics'),
+  data: new SlashCommandBuilder()
+    .setName('stats')
+    .setDescription('Display bot usage statistics')
+    .setDescriptionLocalizations({
+      ja: 'ボット使用統計を表示',
+      de: 'Bot-Nutzungsstatistiken anzeigen',
+      fr: "Afficher les statistiques d'utilisation du bot",
+    }),
 
   async execute(interaction: ChatInputCommandInteraction) {
     // Restrict to specific user
     if (interaction.user.id !== '110457699291906048') {
       await interaction.reply({
-        content: '⛔ You do not have permission to use this command.',
+        content: `⛔ ${t('errors.noPermission')}`,
         ephemeral: true,
       });
       return;
@@ -60,29 +68,29 @@ export const statsCommand: BotCommand = {
 
       // Build embed
       const embed = new EmbedBuilder()
-        .setTitle('📊 Bot Statistics')
+        .setTitle(`📊 ${t('embeds.botStatistics')}`)
         .setColor(0x5865f2)
         .addFields([
           {
-            name: '📈 Usage',
+            name: `📈 ${t('embeds.usage')}`,
             value: [
-              `**Total Commands**: ${stats.totalCommands.toLocaleString()}`,
-              `**Unique Users**: ${stats.uniqueUsers.toLocaleString()}`,
-              `**Success Rate**: ${stats.successRate.toFixed(1)}%`,
+              `**${t('embeds.totalCommands')}**: ${stats.totalCommands.toLocaleString()}`,
+              `**${t('embeds.uniqueUsers')}**: ${stats.uniqueUsers.toLocaleString()}`,
+              `**${t('embeds.successRate')}**: ${stats.successRate.toFixed(1)}%`,
             ].join('\n'),
             inline: true,
           },
           {
-            name: '🤖 Bot Info',
+            name: `🤖 ${t('embeds.botInfo')}`,
             value: [
-              `**Servers**: ${guildCount}`,
-              `**Uptime**: ${uptimeStr}`,
-              `**Commands**: ${commandCount}`,
+              `**${t('embeds.servers')}**: ${guildCount}`,
+              `**${t('embeds.uptime')}**: ${uptimeStr}`,
+              `**${t('embeds.commands')}**: ${commandCount}`,
             ].join('\n'),
             inline: true,
           },
           {
-            name: '⭐ Top Commands',
+            name: `⭐ ${t('embeds.topCommands')}`,
             value: topCommands,
             inline: false,
           },
@@ -93,7 +101,7 @@ export const statsCommand: BotCommand = {
       if (recentErrors.length > 0) {
         embed.addFields([
           {
-            name: '⚠️ Recent Errors',
+            name: `⚠️ ${t('embeds.recentErrors')}`,
             value: errorList,
             inline: false,
           },
@@ -104,7 +112,7 @@ export const statsCommand: BotCommand = {
     } catch (error) {
       console.error('Error in stats command:', error);
       await sendEphemeralError(interaction, {
-        content: '❌ Failed to retrieve statistics. Please try again later.',
+        content: `❌ ${t('errors.failedToRetrieveStats')}`,
       });
     }
   },

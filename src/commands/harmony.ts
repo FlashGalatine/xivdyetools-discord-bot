@@ -279,15 +279,16 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
         // Match both localized and English names (case-insensitive)
         const localizedName = LocalizationService.getDyeName(dye.id);
         return (
-          dye.name.toLowerCase().includes(query) || localizedName.toLowerCase().includes(query)
+          dye.name.toLowerCase().includes(query) ||
+          (localizedName && localizedName.toLowerCase().includes(query))
         );
       })
       .slice(0, 25) // Discord limits to 25 choices
       .map((dye) => {
         const localizedName = LocalizationService.getDyeName(dye.id);
-        const localizedCategory = LocalizationService.getDyeCategory(dye.id);
+        const localizedCategory = LocalizationService.getCategory(dye.category);
         return {
-          name: `${localizedName} (${localizedCategory})`,
+          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
           value: dye.name, // Keep English name as value for lookup
         };
       });

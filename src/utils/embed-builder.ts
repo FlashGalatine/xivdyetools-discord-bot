@@ -95,9 +95,9 @@ export function createDyeEmbed(
   useEmoji: boolean = true,
   useFileAttachment: boolean = false
 ): EmbedBuilder {
-  // Get localized dye name and category from core library
-  const localizedDyeName = LocalizationService.getDyeName(dye.id);
-  const localizedCategory = LocalizationService.getDyeCategory(dye.id);
+  // Get localized dye name and category from core library (with fallbacks)
+  const localizedDyeName = LocalizationService.getDyeName(dye.id) || dye.name;
+  const localizedCategory = LocalizationService.getCategory(dye.category) || dye.category;
 
   const embed = new EmbedBuilder()
     .setColor(parseInt(dye.hex.replace('#', ''), 16) as ColorResolvable)
@@ -127,14 +127,26 @@ export function createDyeEmbed(
   }
 
   if (showExtended && dye.acquisition) {
+    const localizedAcquisition =
+      LocalizationService.getAcquisition(dye.acquisition) || dye.acquisition;
     embed.addFields({
       name: t('embeds.acquisition'),
-      value: dye.acquisition,
+      value: localizedAcquisition,
       inline: false,
     });
   }
 
   return embed;
+}
+
+/**
+ * Format harmony type for display (Title Case with proper formatting)
+ */
+function formatHarmonyType(harmonyType: string): string {
+  return harmonyType
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('-');
 }
 
 /**
@@ -146,9 +158,12 @@ export function createHarmonyEmbed(
   harmonyType: string,
   companions: Array<{ dye: Dye; angle: number; deviation: number }>
 ): EmbedBuilder {
-  // Get localized harmony type from core library
-  const localizedHarmonyType = LocalizationService.getHarmonyType(harmonyType);
-  const localizedBaseDyeName = LocalizationService.getDyeName(baseDye.id);
+  // Get localized harmony type from core library (with fallback)
+  const localizedHarmonyType =
+    LocalizationService.getHarmonyType(
+      harmonyType as Parameters<typeof LocalizationService.getHarmonyType>[0]
+    ) || formatHarmonyType(harmonyType);
+  const localizedBaseDyeName = LocalizationService.getDyeName(baseDye.id) || baseDye.name;
 
   const embed = new EmbedBuilder()
     .setColor(parseInt(baseColor.replace('#', ''), 16) as ColorResolvable)
@@ -164,12 +179,15 @@ export function createHarmonyEmbed(
     .setTimestamp();
 
   // Add base dye
+  const localizedBaseAcquisition = baseDye.acquisition
+    ? LocalizationService.getAcquisition(baseDye.acquisition) || baseDye.acquisition
+    : t('labels.unknown');
   embed.addFields({
     name: `1️⃣ ${localizedBaseDyeName} [${t('embeds.base')}]`,
     value: [
       emojiService.getDyeEmojiOrSwatch(baseDye, 4),
       formatHSV(baseDye.hex),
-      `**${t('embeds.acquisition')}:** ${baseDye.acquisition || t('labels.unknown')}`,
+      `**${t('embeds.acquisition')}:** ${localizedBaseAcquisition}`,
     ].join('\n'),
     inline: false,
   });
@@ -177,7 +195,10 @@ export function createHarmonyEmbed(
   // Add companion dyes
   companions.forEach((comp, index) => {
     const number = ['2️⃣', '3️⃣', '4️⃣', '5️⃣'][index] || `${index + 2}️⃣`;
-    const localizedCompDyeName = LocalizationService.getDyeName(comp.dye.id);
+    const localizedCompDyeName = LocalizationService.getDyeName(comp.dye.id) || comp.dye.name;
+    const localizedCompAcquisition = comp.dye.acquisition
+      ? LocalizationService.getAcquisition(comp.dye.acquisition) || comp.dye.acquisition
+      : t('labels.unknown');
     const deviationText =
       comp.deviation < 5
         ? t('matchQuality.excellent')
@@ -191,7 +212,7 @@ export function createHarmonyEmbed(
         emojiService.getDyeEmojiOrSwatch(comp.dye, 4),
         `${t('embeds.angle')}: ${Math.round(comp.angle)}° ${t('embeds.fromBase')}`,
         `${t('embeds.deviation')}: ${comp.deviation.toFixed(1)}° (${deviationText})`,
-        `**${t('embeds.acquisition')}:** ${comp.dye.acquisition || t('labels.unknown')}`,
+        `**${t('embeds.acquisition')}:** ${localizedCompAcquisition}`,
       ].join('\n'),
       inline: false,
     });

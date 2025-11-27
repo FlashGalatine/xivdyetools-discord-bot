@@ -9,7 +9,7 @@ import {
   ColorResolvable,
 } from 'discord.js';
 import sharp from 'sharp';
-import { DyeService, ColorService, dyeDatabase } from 'xivdyetools-core';
+import { DyeService, ColorService, dyeDatabase, LocalizationService } from 'xivdyetools-core';
 import { config } from '../config.js';
 import {
   createErrorEmbed,
@@ -22,6 +22,7 @@ import { logger } from '../utils/logger.js';
 import { WorkerPool } from '../utils/worker-pool.js';
 import { emojiService } from '../services/emoji-service.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -66,10 +67,20 @@ export async function cleanupWorkerPool(): Promise<void> {
 export const data = new SlashCommandBuilder()
   .setName('match_image')
   .setDescription('Extract the dominant color from an image and find matching FFXIV dye')
+  .setDescriptionLocalizations({
+    ja: '画像から主要色を抽出し、最も近いFFXIV染料を検索',
+    de: 'Dominante Farbe aus einem Bild extrahieren und passenden FFXIV-Farbstoff finden',
+    fr: "Extraire la couleur dominante d'une image et trouver la teinture FFXIV correspondante",
+  })
   .addAttachmentOption((option) =>
     option
       .setName('image')
       .setDescription('Image file to analyze (PNG, JPG, GIF, BMP, WebP)')
+      .setDescriptionLocalizations({
+        ja: '分析する画像ファイル（PNG、JPG、GIF、BMP、WebP）',
+        de: 'Bilddatei zur Analyse (PNG, JPG, GIF, BMP, WebP)',
+        fr: 'Fichier image à analyser (PNG, JPG, GIF, BMP, WebP)',
+      })
       .setRequired(true)
   );
 
@@ -113,8 +124,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
         if (!workerValidation.success) {
           const errorEmbed = createErrorEmbed(
-            'Image Validation Failed',
-            workerValidation.error || 'Image validation failed.'
+            t('errors.imageValidationFailed'),
+            workerValidation.error || t('errors.imageValidationFailedGeneric')
           );
           await sendEphemeralError(interaction, { embeds: [errorEmbed] });
           return;
@@ -161,8 +172,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
         if (!validationResult.success) {
           const errorEmbed = createErrorEmbed(
-            'Image Validation Failed',
-            validationResult.error || 'Image validation failed.'
+            t('errors.imageValidationFailed'),
+            validationResult.error || t('errors.imageValidationFailedGeneric')
           );
           await sendEphemeralError(interaction, { embeds: [errorEmbed] });
           return;
@@ -176,8 +187,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
       if (!validationResult.success) {
         const errorEmbed = createErrorEmbed(
-          'Image Validation Failed',
-          validationResult.error || 'Image validation failed.'
+          t('errors.imageValidationFailed'),
+          validationResult.error || t('errors.imageValidationFailedGeneric')
         );
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
@@ -200,7 +211,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     // Find closest dye
     const closestDye = dyeService.findClosestDye(dominantHex);
     if (!closestDye) {
-      const errorEmbed = createErrorEmbed('Error', 'Could not find matching dye.');
+      const errorEmbed = createErrorEmbed(t('errors.error'), t('errors.couldNotFindMatchingDye'));
       await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
@@ -212,67 +223,74 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     let matchQuality: string;
     let matchEmoji: string;
     if (distance === 0) {
-      matchQuality = 'Perfect match';
+      matchQuality = t('matchQuality.perfect');
       matchEmoji = '🎯';
     } else if (distance < 10) {
-      matchQuality = 'Excellent match';
+      matchQuality = t('matchQuality.excellent');
       matchEmoji = '✨';
     } else if (distance < 25) {
-      matchQuality = 'Good match';
+      matchQuality = t('matchQuality.good');
       matchEmoji = '👍';
     } else if (distance < 50) {
-      matchQuality = 'Fair match';
-      matchEmoji = '👌';
+      matchQuality = t('matchQuality.fair');
+      matchEmoji = '⚠️';
     } else {
-      matchQuality = 'Approximate match';
+      matchQuality = t('matchQuality.approximate');
       matchEmoji = '🔍';
     }
+
+    // Get localized names (with fallbacks)
+    const localizedDyeName = LocalizationService.getDyeName(closestDye.id) || closestDye.name;
+    const localizedCategory =
+      LocalizationService.getCategory(closestDye.category) || closestDye.category;
 
     // Create embed with image attachment
     const embed = new EmbedBuilder()
       .setColor(parseInt(closestDye.hex.replace('#', ''), 16) as ColorResolvable)
-      .setTitle(`${matchEmoji} Color Match: ${closestDye.name}`)
-      .setDescription(`Analyzed image: **${attachment.name}**`)
+      .setTitle(`${matchEmoji} ${t('embeds.colorMatch')}: ${localizedDyeName}`)
+      .setDescription(`${t('embeds.analyzedImage')}: **${attachment.name}**`)
       .setImage(attachment.url)
       .addFields(
         {
-          name: 'Extracted Dominant Color',
+          name: t('embeds.extractedDominantColor'),
           value: [
             formatColorSwatch(dominantHex, 6),
-            `**Hex:** ${dominantHex.toUpperCase()}`,
-            `**RGB:** ${formatRGB(dominantHex)}`,
-            `**HSV:** ${formatHSV(dominantHex)}`,
+            `**${t('embeds.hex')}:** ${dominantHex.toUpperCase()}`,
+            `**${t('embeds.rgb')}:** ${formatRGB(dominantHex)}`,
+            `**${t('embeds.hsv')}:** ${formatHSV(dominantHex)}`,
           ].join('\n'),
           inline: false,
         },
         {
-          name: `Closest Dye: ${closestDye.name}`,
+          name: `${t('embeds.closestDye')}: ${localizedDyeName}`,
           value: [
             emojiService.getDyeEmojiOrSwatch(closestDye, 6),
-            `**Hex:** ${closestDye.hex.toUpperCase()}`,
-            `**RGB:** ${formatRGB(closestDye.hex)}`,
-            `**HSV:** ${formatHSV(closestDye.hex)}`,
-            `**Category:** ${closestDye.category}`,
+            `**${t('embeds.hex')}:** ${closestDye.hex.toUpperCase()}`,
+            `**${t('embeds.rgb')}:** ${formatRGB(closestDye.hex)}`,
+            `**${t('embeds.hsv')}:** ${formatHSV(closestDye.hex)}`,
+            `**${t('embeds.category')}:** ${localizedCategory}`,
           ].join('\n'),
           inline: false,
         },
         {
-          name: 'Match Quality',
+          name: t('embeds.matchQuality'),
           value: [
-            `**Distance:** ${distance.toFixed(2)} (Euclidean)`,
-            `**Quality:** ${matchQuality}`,
+            `**${t('embeds.distance')}:** ${distance.toFixed(2)} (${t('embeds.euclidean')})`,
+            `**${t('embeds.quality')}:** ${matchQuality}`,
           ].join('\n'),
           inline: false,
         }
       )
-      .setFooter({ text: 'Extracted using histogram analysis of dominant color' })
+      .setFooter({ text: t('embeds.extractedUsingHistogram') })
       .setTimestamp();
 
     // Add acquisition info if available
     if (closestDye.acquisition) {
+      const localizedAcquisition =
+        LocalizationService.getAcquisition(closestDye.acquisition) || closestDye.acquisition;
       embed.addFields({
-        name: 'Acquisition',
-        value: closestDye.acquisition,
+        name: t('embeds.acquisition'),
+        value: localizedAcquisition,
         inline: false,
       });
     }
@@ -290,19 +308,17 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     logger.error('Error executing match_image command:', error);
 
     // Provide more specific error messages
-    let errorMessage =
-      "Failed to analyze the image. Please ensure it's a valid image file and try again.";
+    let errorMessage = t('errors.failedToAnalyzeImage');
 
     if (error instanceof Error) {
       if (error.message.includes('fetch')) {
-        errorMessage = 'Failed to download the image from Discord. Please try uploading again.';
+        errorMessage = t('errors.failedToDownloadImage');
       } else if (error.message.includes('Input buffer')) {
-        errorMessage =
-          'Invalid or corrupted image file. Please upload a valid PNG, JPG, GIF, BMP, or WebP image.';
+        errorMessage = t('errors.invalidOrCorruptedImage');
       }
     }
 
-    const errorEmbed = createErrorEmbed('Processing Error', errorMessage);
+    const errorEmbed = createErrorEmbed(t('errors.processingError'), errorMessage);
 
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }

@@ -10,13 +10,20 @@ import {
   EmbedBuilder,
   ColorResolvable,
 } from 'discord.js';
-import { DyeService, ColorService, dyeDatabase, type Dye } from 'xivdyetools-core';
+import {
+  DyeService,
+  ColorService,
+  dyeDatabase,
+  LocalizationService,
+  type Dye,
+} from 'xivdyetools-core';
 import { validateHexColor, findDyeByName, validateIntRange } from '../utils/validators.js';
 import { createErrorEmbed, formatColorSwatch } from '../utils/embed-builder.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { renderGradient } from '../renderers/gradient.js';
 import { logger } from '../utils/logger.js';
 import { emojiService } from '../services/emoji-service.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -52,10 +59,20 @@ function generateGradientColors(startColor: string, endColor: string, steps: num
 export const data = new SlashCommandBuilder()
   .setName('mixer')
   .setDescription('Generate a color gradient between two colors with intermediate dyes')
+  .setDescriptionLocalizations({
+    ja: '2色間のカラーグラデーションを生成し、中間の染料を提案',
+    de: 'Farbverlauf zwischen zwei Farben mit passenden Farbstoffen generieren',
+    fr: 'Générer un dégradé de couleurs entre deux couleurs avec des teintures intermédiaires',
+  })
   .addStringOption((option) =>
     option
       .setName('start_color')
       .setDescription('Starting color: hex (e.g., #FF0000) or dye name')
+      .setDescriptionLocalizations({
+        ja: '開始色：16進数（例：#FF0000）または染料名',
+        de: 'Startfarbe: Hex (z.B. #FF0000) oder Farbstoffname',
+        fr: 'Couleur de départ : hex (ex. #FF0000) ou nom de teinture',
+      })
       .setRequired(true)
       .setAutocomplete(true)
   )
@@ -63,6 +80,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('end_color')
       .setDescription('Ending color: hex (e.g., #0000FF) or dye name')
+      .setDescriptionLocalizations({
+        ja: '終了色：16進数（例：#0000FF）または染料名',
+        de: 'Endfarbe: Hex (z.B. #0000FF) oder Farbstoffname',
+        fr: 'Couleur de fin : hex (ex. #0000FF) ou nom de teinture',
+      })
       .setRequired(true)
       .setAutocomplete(true)
   )
@@ -70,6 +92,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('steps')
       .setDescription('Number of color steps (default: 6)')
+      .setDescriptionLocalizations({
+        ja: 'グラデーションのステップ数（デフォルト：6）',
+        de: 'Anzahl der Farbschritte (Standard: 6)',
+        fr: 'Nombre de paliers de couleur (par défaut : 6)',
+      })
       .setRequired(false)
       .setMinValue(2)
       .setMaxValue(10)
@@ -86,9 +113,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     logger.info(`Mixer command: ${startColorInput} → ${endColorInput} (${steps} steps)`);
 
     // Validate steps
-    const stepsValidation = validateIntRange(steps, 2, 10, 'Steps');
+    const stepsValidation = validateIntRange(steps, 2, 10, t('labels.steps'));
     if (!stepsValidation.valid) {
-      const errorEmbed = createErrorEmbed('Invalid Steps', stepsValidation.error!);
+      const errorEmbed = createErrorEmbed(t('errors.invalidSteps'), stepsValidation.error!);
       await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
@@ -104,11 +131,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       const startDyeResult = findDyeByName(startColorInput);
       if (startDyeResult.error) {
         const errorEmbed = createErrorEmbed(
-          'Invalid Start Color',
-          `"${startColorInput}" is not a valid hex color or dye name.\n\n` +
-            `**Examples:**\n` +
-            `• Hex: \`#FF0000\`, \`#8A2BE2\`\n` +
-            `• Dye: \`Dalamud Red\`, \`Snow White\``
+          t('errors.invalidStartColor'),
+          t('errors.invalidColorOrDyeNameWithExamples', { input: startColorInput })
         );
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
@@ -128,11 +152,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       const endDyeResult = findDyeByName(endColorInput);
       if (endDyeResult.error) {
         const errorEmbed = createErrorEmbed(
-          'Invalid End Color',
-          `"${endColorInput}" is not a valid hex color or dye name.\n\n` +
-            `**Examples:**\n` +
-            `• Hex: \`#FF0000\`, \`#8A2BE2\`\n` +
-            `• Dye: \`Dalamud Red\`, \`Snow White\``
+          t('errors.invalidEndColor'),
+          t('errors.invalidColorOrDyeNameWithExamples', { input: endColorInput })
         );
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
@@ -155,7 +176,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     });
 
     if (dyeMatches.length === 0) {
-      const errorEmbed = createErrorEmbed('Error', 'Could not find matching dyes.');
+      const errorEmbed = createErrorEmbed(t('errors.error'), t('errors.couldNotFindMatchingDyes'));
       await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
@@ -176,17 +197,23 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     // Create embed
     const embedColor = parseInt(startColor.replace('#', ''), 16) as ColorResolvable;
+    const localizedStartDyeName = startDye
+      ? LocalizationService.getDyeName(startDye.id) || startDye.name
+      : null;
+    const localizedEndDyeName = endDye
+      ? LocalizationService.getDyeName(endDye.id) || endDye.name
+      : null;
 
     const embed = new EmbedBuilder()
       .setColor(embedColor)
-      .setTitle('🎨 Color Gradient Mixer')
+      .setTitle(`🎨 ${t('embeds.colorGradientMixer')}`)
       .setDescription(
         [
-          `**Start:** ${startDye ? emojiService.getDyeEmojiOrSwatch(startDye, 4) : formatColorSwatch(startColor, 4)} ${startDye ? startDye.name : startColor.toUpperCase()}`,
-          `**End:** ${endDye ? emojiService.getDyeEmojiOrSwatch(endDye, 4) : formatColorSwatch(endColor, 4)} ${endDye ? endDye.name : endColor.toUpperCase()}`,
-          `**Steps:** ${steps}`,
+          `**${t('embeds.start')}:** ${startDye ? emojiService.getDyeEmojiOrSwatch(startDye, 4) : formatColorSwatch(startColor, 4)} ${localizedStartDyeName || startColor.toUpperCase()}`,
+          `**${t('embeds.end')}:** ${endDye ? emojiService.getDyeEmojiOrSwatch(endDye, 4) : formatColorSwatch(endColor, 4)} ${localizedEndDyeName || endColor.toUpperCase()}`,
+          `**${t('labels.steps')}:** ${steps}`,
           '',
-          '**🎯 Intermediate Dyes:**',
+          `**🎯 ${t('embeds.intermediateDyes')}:**`,
         ].join('\n')
       )
       .setImage(`attachment://gradient_${steps}steps.png`)
@@ -200,22 +227,26 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
       const matchQuality =
         match.distance === 0
-          ? 'Perfect'
+          ? t('matchQuality.perfect')
           : match.distance < 10
-            ? 'Excellent'
+            ? t('matchQuality.excellent')
             : match.distance < 25
-              ? 'Good'
+              ? t('matchQuality.good')
               : match.distance < 50
-                ? 'Fair'
-                : 'Approximate';
+                ? t('matchQuality.fair')
+                : t('matchQuality.approximate');
+
+      const localizedDyeName = LocalizationService.getDyeName(match.dye.id) || match.dye.name;
+      const localizedCategory =
+        LocalizationService.getCategory(match.dye.category) || match.dye.category;
 
       embed.addFields({
-        name: `${emoji} Step ${stepNumber}: ${match.dye.name}`,
+        name: `${emoji} ${t('labels.step')} ${stepNumber}: ${localizedDyeName}`,
         value: [
           emojiService.getDyeEmojiOrSwatch(match.dye, 4),
-          `**Target:** ${match.color.toUpperCase()}`,
-          `**Match:** ${match.dye.hex.toUpperCase()} (${matchQuality}, Δ=${match.distance.toFixed(1)})`,
-          `**Category:** ${match.dye.category}`,
+          `**${t('embeds.target')}:** ${match.color.toUpperCase()}`,
+          `**${t('embeds.match')}:** ${match.dye.hex.toUpperCase()} (${matchQuality}, Δ=${match.distance.toFixed(1)})`,
+          `**${t('embeds.category')}:** ${localizedCategory}`,
         ].join('\n'),
         inline: true,
       });
@@ -223,8 +254,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     // Add note about acquisition
     embed.addFields({
-      name: '💡 Tip',
-      value: 'Use `/match <color>` to see acquisition details for individual dyes.',
+      name: `💡 ${t('embeds.tip')}`,
+      value: t('embeds.useMatchForAcquisition'),
       inline: false,
     });
 
@@ -238,8 +269,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   } catch (error) {
     logger.error('Error executing mixer command:', error);
     const errorEmbed = createErrorEmbed(
-      'Command Error',
-      'An error occurred while generating the gradient. Please try again.'
+      t('errors.commandError'),
+      t('errors.errorGeneratingGradient')
     );
 
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
@@ -268,14 +299,22 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
         // Exclude Facewear category
         if (dye.category === 'Facewear') return false;
 
-        // Match name (case-insensitive)
-        return dye.name.toLowerCase().includes(query);
+        // Match both localized and English names (case-insensitive)
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        return (
+          dye.name.toLowerCase().includes(query) ||
+          (localizedName && localizedName.toLowerCase().includes(query))
+        );
       })
       .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => ({
-        name: `${dye.name} (${dye.category})`,
-        value: dye.name,
-      }));
+      .map((dye) => {
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        const localizedCategory = LocalizationService.getCategory(dye.category);
+        return {
+          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+          value: dye.name,
+        };
+      });
 
     await interaction.respond(matches);
   }
