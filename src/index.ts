@@ -18,10 +18,12 @@ import { accessibilityCommand } from './commands/accessibility.js';
 import { statsCommand } from './commands/stats.js';
 import { manualCommand } from './commands/manual.js';
 import { aboutCommand } from './commands/about.js';
+import { languageCommand } from './commands/language.js';
 import { getRateLimiter } from './services/rate-limiter.js';
 import { getAnalytics } from './services/analytics.js';
 import { closeRedis } from './services/redis.js';
 import { emojiService } from './services/emoji-service.js';
+import { i18nService, t } from './services/i18n-service.js';
 import { initErrorWebhook, notifyError, closeErrorWebhook } from './utils/error-webhook.js';
 import { validateCommandInputs } from './utils/validators.js';
 import { securityLogger } from './utils/security-logger.js';
@@ -71,12 +73,16 @@ client.commands.set(accessibilityCommand.data.name, accessibilityCommand);
 client.commands.set(statsCommand.data.name, statsCommand);
 client.commands.set(manualCommand.data.name, manualCommand);
 client.commands.set(aboutCommand.data.name, aboutCommand);
+client.commands.set(languageCommand.data.name, languageCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {
   void (async (): Promise<void> => {
     logger.info(`Discord bot ready! Logged in as ${readyClient.user.tag}`);
     logger.info(`Serving ${readyClient.guilds.cache.size} guild(s)`);
+
+    // Initialize localization service
+    await i18nService.initialize();
 
     // Initialize EmojiService
     await emojiService.initialize(client);
@@ -97,6 +103,8 @@ client.on(Events.InteractionCreate, (interaction) => {
       }
 
       try {
+        // Set locale for autocomplete (for localized dye names)
+        await i18nService.setLocaleFromInteraction(interaction);
         await command.autocomplete(interaction);
       } catch (error) {
         logger.error(`Error in autocomplete for ${interaction.commandName}:`, error);
@@ -120,6 +128,9 @@ client.on(Events.InteractionCreate, (interaction) => {
     const guildId = interaction.guildId || undefined;
 
     try {
+      // Set locale from interaction (hybrid detection: user preference -> Discord locale -> fallback)
+      await i18nService.setLocaleFromInteraction(interaction);
+
       // Validate all inputs before command execution (S-1: Input Validation)
       const validationResult = validateCommandInputs(interaction);
       if (!validationResult.success) {
@@ -132,7 +143,7 @@ client.on(Events.InteractionCreate, (interaction) => {
           guildId
         );
         await interaction.reply({
-          content: `❌ Invalid input: ${validationResult.error}`,
+          content: `❌ ${t('errors.invalidInput')}: ${validationResult.error}`,
           flags: MessageFlags.Ephemeral,
         });
 
@@ -162,9 +173,9 @@ client.on(Events.InteractionCreate, (interaction) => {
         await securityLogger.rateLimitExceeded(userId, commandName, 'per_minute', guildId);
         await interaction.reply({
           content:
-            `⏱️ You're sending commands too quickly! Please wait ${userLimit.retryAfter} seconds.\n\n` +
-            `**Limit:** ${userLimit.limit} commands per minute\n` +
-            `**Try again:** <t:${Math.floor(userLimit.resetAt.getTime() / 1000)}:R>`,
+            `⏱️ ${t('rateLimit.tooQuickly', { seconds: userLimit.retryAfter })}\n\n` +
+            `**${t('rateLimit.limit')}:** ${userLimit.limit} ${t('rateLimit.commandsPerMinute')}\n` +
+            `**${t('rateLimit.tryAgain')}:** <t:${Math.floor(userLimit.resetAt.getTime() / 1000)}:R>`,
           flags: MessageFlags.Ephemeral,
         });
 
@@ -186,9 +197,9 @@ client.on(Events.InteractionCreate, (interaction) => {
         await securityLogger.rateLimitExceeded(userId, commandName, 'per_hour', guildId);
         await interaction.reply({
           content:
-            `⏱️ You've reached your hourly command limit! Please wait ${Math.ceil(userHourlyLimit.retryAfter! / 60)} minutes.\n\n` +
-            `**Limit:** ${userHourlyLimit.limit} commands per hour\n` +
-            `**Try again:** <t:${Math.floor(userHourlyLimit.resetAt.getTime() / 1000)}:R>`,
+            `⏱️ ${t('rateLimit.hourlyLimit', { minutes: Math.ceil(userHourlyLimit.retryAfter! / 60) })}\n\n` +
+            `**${t('rateLimit.limit')}:** ${userHourlyLimit.limit} ${t('rateLimit.commandsPerHour')}\n` +
+            `**${t('rateLimit.tryAgain')}:** <t:${Math.floor(userHourlyLimit.resetAt.getTime() / 1000)}:R>`,
           flags: MessageFlags.Ephemeral,
         });
 
@@ -209,7 +220,7 @@ client.on(Events.InteractionCreate, (interaction) => {
         // Per S-7: Log global rate limit (no specific user)
         await securityLogger.rateLimitExceeded('global', commandName, 'global', guildId);
         await interaction.reply({
-          content: '⏱️ The bot is currently experiencing high load. Please try again in a moment.',
+          content: `⏱️ ${t('rateLimit.highLoad')}`,
           flags: MessageFlags.Ephemeral,
         });
 
@@ -241,20 +252,21 @@ client.on(Events.InteractionCreate, (interaction) => {
       logger.error(`Error executing ${interaction.commandName}:`, error);
 
       try {
+        const errorMessage = `❌ ${t('errors.errorExecutingCommand')}`;
         if (interaction.deferred) {
           // Use followUp with ephemeral flag for errors after defer
           await interaction.followUp({
-            content: '❌ There was an error executing this command!',
+            content: errorMessage,
             flags: MessageFlags.Ephemeral,
           });
         } else if (interaction.replied) {
           await interaction.followUp({
-            content: '❌ There was an error executing this command!',
+            content: errorMessage,
             flags: MessageFlags.Ephemeral,
           });
         } else {
           await interaction.reply({
-            content: '❌ There was an error executing this command!',
+            content: errorMessage,
             flags: MessageFlags.Ephemeral,
           });
         }
