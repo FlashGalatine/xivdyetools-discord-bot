@@ -5,13 +5,17 @@
 import { describe, it, expect } from 'vitest';
 import {
     validateHexColor,
+    validateHexColorLegacy,
     validateDyeId,
     sanitizeSearchQuery,
     validateHarmonyType,
     validateDataCenter,
     validateIntRange,
+    validateCommandInputs,
     findDyeByName,
 } from './validators.js';
+import type { ChatInputCommandInteraction, CommandInteractionOption } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 
 describe('validateHexColor', () => {
     it('should accept valid hex colors with #', () => {
@@ -294,5 +298,224 @@ describe('sanitizeSearchQuery', () => {
     it('should preserve valid characters', () => {
         expect(sanitizeSearchQuery('Dalamud Red')).toBe('Dalamud Red');
         expect(sanitizeSearchQuery('Snow White-123')).toBe('Snow White-123');
+    });
+});
+
+describe('validateHexColorLegacy', () => {
+    it('should return valid: true for valid hex colors', () => {
+        expect(validateHexColorLegacy('#FF0000')).toEqual({ valid: true });
+        expect(validateHexColorLegacy('#00FF00')).toEqual({ valid: true });
+        expect(validateHexColorLegacy('ABCDEF')).toEqual({ valid: true });
+    });
+
+    it('should return valid: false with error for invalid hex colors', () => {
+        const result = validateHexColorLegacy('#GG0000');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBeDefined();
+    });
+
+    it('should handle lowercase hex colors', () => {
+        expect(validateHexColorLegacy('#ff0000')).toEqual({ valid: true });
+    });
+});
+
+describe('validateIntRange - non-integer values', () => {
+    it('should reject floating point values', () => {
+        const result = validateIntRange(5.5, 1, 10, 'Count');
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('Count');
+    });
+
+    it('should reject NaN', () => {
+        const result = validateIntRange(NaN, 1, 10, 'Test');
+        expect(result.valid).toBe(false);
+    });
+
+    it('should reject Infinity', () => {
+        const result = validateIntRange(Infinity, 1, 10, 'Test');
+        expect(result.valid).toBe(false);
+    });
+});
+
+/**
+ * Create mock interaction for testing validateCommandInputs
+ */
+function createMockInteraction(options: {
+    commandName: string;
+    subcommand?: string;
+    stringOptions?: Record<string, string | null>;
+    integerOptions?: { name: string; value: number }[];
+}): ChatInputCommandInteraction {
+    const stringOptionsMap = options.stringOptions || {};
+    const integerOptions = options.integerOptions || [];
+
+    return {
+        commandName: options.commandName,
+        options: {
+            getString: (name: string) => stringOptionsMap[name] ?? null,
+            getSubcommand: () => options.subcommand || null,
+            data: integerOptions.map((opt) => ({
+                name: opt.name,
+                type: ApplicationCommandOptionType.Integer,
+                value: opt.value,
+            })) as CommandInteractionOption[],
+        },
+    } as unknown as ChatInputCommandInteraction;
+}
+
+describe('validateCommandInputs', () => {
+    describe('match command', () => {
+        it('should accept valid hex color', () => {
+            const interaction = createMockInteraction({
+                commandName: 'match',
+                stringOptions: { color: '#FF0000' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+
+        it('should accept valid dye name', () => {
+            const interaction = createMockInteraction({
+                commandName: 'match',
+                stringOptions: { color: 'Dalamud Red' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+
+        it('should reject invalid hex color starting with #', () => {
+            const interaction = createMockInteraction({
+                commandName: 'match',
+                stringOptions: { color: '#GGGGGG' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(false);
+        });
+
+        it('should reject empty color input', () => {
+            const interaction = createMockInteraction({
+                commandName: 'match',
+                stringOptions: { color: '   ' }, // whitespace only
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(false);
+        });
+    });
+
+    describe('harmony command', () => {
+        it('should accept valid base_color option', () => {
+            const interaction = createMockInteraction({
+                commandName: 'harmony',
+                stringOptions: { base_color: '#00FF00' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+    });
+
+    describe('comparison command', () => {
+        it('should validate dye1 and dye2 options', () => {
+            const interaction = createMockInteraction({
+                commandName: 'comparison',
+                stringOptions: { dye1: '#FF0000', dye2: '#00FF00' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+    });
+
+    describe('mixer command', () => {
+        it('should validate start_color and end_color options', () => {
+            const interaction = createMockInteraction({
+                commandName: 'mixer',
+                stringOptions: { start_color: '#FF0000', end_color: '#0000FF' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+    });
+
+    describe('accessibility command', () => {
+        it('should validate color option', () => {
+            const interaction = createMockInteraction({
+                commandName: 'accessibility',
+                stringOptions: { color: '#AABBCC' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+    });
+
+    describe('dye command', () => {
+        it('should validate dye info subcommand with name', () => {
+            const interaction = createMockInteraction({
+                commandName: 'dye',
+                subcommand: 'info',
+                stringOptions: { name: 'Snow White' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+
+        it('should validate dye search subcommand with query', () => {
+            const interaction = createMockInteraction({
+                commandName: 'dye',
+                subcommand: 'search',
+                stringOptions: { query: 'red' },
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+
+        it('should reject empty search query', () => {
+            const interaction = createMockInteraction({
+                commandName: 'dye',
+                subcommand: 'search',
+                stringOptions: { query: '  ' }, // whitespace only
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(false);
+        });
+    });
+
+    describe('integer options validation', () => {
+        it('should validate dye ID options', () => {
+            const interaction = createMockInteraction({
+                commandName: 'dye',
+                integerOptions: [{ name: 'dye_id', value: 50 }],
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+
+        it('should reject invalid dye ID (out of range)', () => {
+            const interaction = createMockInteraction({
+                commandName: 'dye',
+                integerOptions: [{ name: 'dye_id', value: 999 }],
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(false);
+        });
+    });
+
+    describe('unknown commands', () => {
+        it('should pass validation for unknown commands without color inputs', () => {
+            const interaction = createMockInteraction({
+                commandName: 'unknown',
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
+    });
+
+    describe('error handling', () => {
+        it('should handle commands without options gracefully', () => {
+            const interaction = createMockInteraction({
+                commandName: 'match',
+                stringOptions: {},
+            });
+            const result = validateCommandInputs(interaction);
+            expect(result.success).toBe(true);
+        });
     });
 });

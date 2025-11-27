@@ -80,4 +80,76 @@ describe('Security Logger', () => {
     const stats = await securityLogger.getStats(1);
     expect(stats.byType[SecurityEventType.DATA_ACCESS]).toBeGreaterThan(0);
   });
+
+  it('should log auth failure events', async () => {
+    await securityLogger.authFailure('user123', 'Invalid token', {
+      attemptCount: 3,
+    }, 'guild456');
+
+    const stats = await securityLogger.getStats(1);
+    expect(stats.byType[SecurityEventType.AUTH_FAILURE]).toBeGreaterThan(0);
+    expect(stats.bySeverity.high).toBeGreaterThan(0);
+  });
+
+  it('should track events by severity', async () => {
+    await securityLogger.validationFailure('user1', 'match', 'Error');
+    await securityLogger.rateLimitExceeded('user1', 'match', 'per_minute');
+    await securityLogger.suspiciousActivity('user1', 'Suspicious');
+    await securityLogger.abuseDetected('user1', 'abuse');
+
+    const stats = await securityLogger.getStats(1);
+    expect(stats.bySeverity.low).toBeGreaterThan(0);
+    expect(stats.bySeverity.medium).toBeGreaterThan(0);
+    expect(stats.bySeverity.high).toBeGreaterThan(0);
+    expect(stats.bySeverity.critical).toBeGreaterThan(0);
+  });
+
+  it('should track events by type', async () => {
+    await securityLogger.validationFailure('user1', 'cmd', 'Error');
+    await securityLogger.rateLimitExceeded('user1', 'cmd', 'per_minute');
+    await securityLogger.authFailure('user1', 'Invalid');
+
+    const stats = await securityLogger.getStats(1);
+    expect(Object.keys(stats.byType).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('should return empty stats when no events exist for timeframe', async () => {
+    const stats = await securityLogger.getStats(0);
+    expect(stats.total).toBe(0);
+    expect(Object.keys(stats.bySeverity).length).toBe(0);
+    expect(Object.keys(stats.byType).length).toBe(0);
+  });
+
+  it('should handle getUserEvents for non-existent user', async () => {
+    const userEvents = await securityLogger.getUserEvents('nonexistent-user-xyz', 10);
+    expect(userEvents).toEqual([]);
+  });
+
+  it('should limit getUserEvents results', async () => {
+    // Log multiple events for a user
+    for (let i = 0; i < 10; i++) {
+      await securityLogger.validationFailure('user-limit-test', 'cmd', `Error ${i}`);
+    }
+
+    const userEvents = await securityLogger.getUserEvents('user-limit-test', 5);
+    expect(userEvents.length).toBeLessThanOrEqual(5);
+  });
+
+  it('should log data access with write action', async () => {
+    await securityLogger.dataAccess('user123', 'user_preferences', 'write', {
+      field: 'language',
+    });
+
+    const stats = await securityLogger.getStats(1);
+    expect(stats.byType[SecurityEventType.DATA_ACCESS]).toBeGreaterThan(0);
+  });
+
+  it('should log data access with delete action', async () => {
+    await securityLogger.dataAccess('user123', 'user_preferences', 'delete', {
+      field: 'all',
+    });
+
+    const stats = await securityLogger.getStats(1);
+    expect(stats.byType[SecurityEventType.DATA_ACCESS]).toBeGreaterThan(0);
+  });
 });

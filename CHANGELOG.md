@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-11-27
+
+### Added
+- **Comprehensive Test Coverage**: Achieved 92.73% code coverage (exceeding 90% target)
+  - Added 624 tests total (from previous ~580)
+  - Added tests for `validateCommandInputs` function with 17 test cases
+  - Added tests for `validateHexColorLegacy` and non-integer validation
+  - Added tests for `sanitizeImage` and `validateAndSanitizeImage` functions
+  - Added tests for security logger (`authFailure`, severity tracking, stats)
+  - Added emoji-service.test.ts with 10 tests for EmojiService singleton
+
+### Fixed
+- **TypeScript Compilation Errors**: Fixed type errors in test helper files
+  - Fixed mock-interaction.ts: Updated mock creation functions to use proper type casting
+  - Fixed mock-redis.ts: Corrected spies return type signature
+  - Fixed swatch-grid.test.ts: Added required `acquisition` and `cost` properties to mock Dye
+  - Fixed redis-cache.test.ts: Added `ttl` and `timestamp` to CachedData test objects
+
+### Changed
+- **Coverage Improvements by Module**:
+  - `validators.ts`: 68.72% → 98.37% (+29.65%)
+  - `image-validator.ts`: 63.31% → 96.48% (+33.17%)
+  - `security-logger.ts`: 75.82% → 80.49% (+4.67%)
+  - `src/utils` overall: 87.69% → 93.02% (+5.33%)
+
 ## [1.0.3] - 2025-11-27
 
 ### Fixed
