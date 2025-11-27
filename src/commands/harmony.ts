@@ -8,12 +8,19 @@ import {
   AttachmentBuilder,
   AutocompleteInteraction,
 } from 'discord.js';
-import { DyeService, ColorService, dyeDatabase, type Dye } from 'xivdyetools-core';
+import {
+  DyeService,
+  ColorService,
+  dyeDatabase,
+  LocalizationService,
+  type Dye,
+} from 'xivdyetools-core';
 import { validateHexColor, validateHarmonyType, findDyeByName } from '../utils/validators.js';
 import { createErrorEmbed, createHarmonyEmbed } from '../utils/embed-builder.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { renderColorWheel } from '../renderers/color-wheel.js';
 import { logger } from '../utils/logger.js';
+import { t } from '../services/i18n-service.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -36,11 +43,21 @@ const harmonyTypes = [
 export const data = new SlashCommandBuilder()
   .setName('harmony')
   .setDescription('Generate color harmony suggestions based on color theory')
+  .setDescriptionLocalizations({
+    ja: '色彩理論に基づいた配色提案を生成',
+    de: 'Farbharmonie-Vorschläge basierend auf Farbtheorie generieren',
+    fr: "Générer des suggestions d'harmonie de couleurs basées sur la théorie des couleurs",
+  })
   .addStringOption(
     (option) =>
       option
         .setName('base_color')
         .setDescription('Base color: hex (e.g., #FF0000) or dye name (e.g., Dalamud Red)')
+        .setDescriptionLocalizations({
+          ja: '基本色：16進数（例：#FF0000）または染料名（例：ダラガブレッド）',
+          de: 'Grundfarbe: Hex (z.B. #FF0000) oder Farbstoffname (z.B. Dalamud-Rot)',
+          fr: 'Couleur de base : hex (ex. #FF0000) ou nom de teinture (ex. Rouge Dalamud)',
+        })
         .setRequired(true)
         .setAutocomplete(true) // Enable autocomplete
   )
@@ -48,6 +65,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('type')
       .setDescription('Harmony type')
+      .setDescriptionLocalizations({
+        ja: 'ハーモニータイプ',
+        de: 'Harmonie-Typ',
+        fr: "Type d'harmonie",
+      })
       .setRequired(true)
       .addChoices(...harmonyTypes)
   )
@@ -55,6 +77,11 @@ export const data = new SlashCommandBuilder()
     option
       .setName('companion_count')
       .setDescription('Limit number of companions (optional - shows all by default)')
+      .setDescriptionLocalizations({
+        ja: 'コンパニオンの数を制限（オプション）',
+        de: 'Anzahl der Begleitfarben begrenzen (optional)',
+        fr: 'Limiter le nombre de compagnons (optionnel)',
+      })
       .setRequired(false)
       .setMinValue(1)
       .setMaxValue(3)
@@ -83,7 +110,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       baseColor = hexValidation.value;
       const foundDye = dyeService.findClosestDye(baseColor);
       if (!foundDye) {
-        const errorEmbed = createErrorEmbed('Error', 'Could not find matching dye.');
+        const errorEmbed = createErrorEmbed(t('errors.error'), t('errors.couldNotFindMatchingDye'));
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
       }
@@ -93,11 +120,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       const dyeResult = findDyeByName(baseColorInput);
       if (dyeResult.error) {
         const errorEmbed = createErrorEmbed(
-          'Invalid Input',
-          `"${baseColorInput}" is not a valid hex color or dye name.\n\n` +
-            `**Examples:**\n` +
-            `• Hex: \`#FF0000\`, \`#8A2BE2\`\n` +
-            `• Dye: \`Dalamud Red\`, \`Snow White\``
+          t('errors.invalidInput'),
+          t('errors.invalidHexOrDyeNameWithExamples', { input: baseColorInput })
         );
         await sendEphemeralError(interaction, { embeds: [errorEmbed] });
         return;
@@ -109,7 +133,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     // Validate harmony type
     const typeValidation = validateHarmonyType(harmonyType);
     if (!typeValidation.valid) {
-      const errorEmbed = createErrorEmbed('Invalid Harmony Type', typeValidation.error!);
+      const errorEmbed = createErrorEmbed(t('errors.invalidHarmonyType'), typeValidation.error!);
       await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
@@ -155,7 +179,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     harmonyDyes = harmonyDyes.filter((dye) => dye.category !== 'Facewear');
 
     if (harmonyDyes.length === 0) {
-      const errorEmbed = createErrorEmbed('Error', 'Could not generate harmony.');
+      const errorEmbed = createErrorEmbed(t('errors.error'), t('errors.couldNotGenerateHarmony'));
       await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
     }
@@ -222,8 +246,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   } catch (error) {
     logger.error('Error executing harmony command:', error);
     const errorEmbed = createErrorEmbed(
-      'Command Error',
-      'An error occurred while generating the color harmony. Please try again.'
+      t('errors.commandError'),
+      t('errors.errorGeneratingHarmony')
     );
 
     await sendEphemeralError(interaction, { embeds: [errorEmbed] });
@@ -252,14 +276,21 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
         // Exclude Facewear category
         if (dye.category === 'Facewear') return false;
 
-        // Match name (case-insensitive)
-        return dye.name.toLowerCase().includes(query);
+        // Match both localized and English names (case-insensitive)
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        return (
+          dye.name.toLowerCase().includes(query) || localizedName.toLowerCase().includes(query)
+        );
       })
       .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => ({
-        name: `${dye.name} (${dye.category})`,
-        value: dye.name,
-      }));
+      .map((dye) => {
+        const localizedName = LocalizationService.getDyeName(dye.id);
+        const localizedCategory = LocalizationService.getDyeCategory(dye.id);
+        return {
+          name: `${localizedName} (${localizedCategory})`,
+          value: dye.name, // Keep English name as value for lookup
+        };
+      });
 
     await interaction.respond(matches);
   }
