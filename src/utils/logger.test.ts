@@ -194,7 +194,7 @@ describe('Logger Module', () => {
     let consoleSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {}) as typeof consoleSpy;
     });
 
     afterEach(() => {

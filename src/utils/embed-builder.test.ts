@@ -511,7 +511,7 @@ describe('createHarmonyEmbed', () => {
     const dyeWithoutAcquisition = {
       ...mockDye,
       acquisition: undefined,
-    };
+    } as unknown as Dye;
     const embed = createHarmonyEmbed('#FF0000', dyeWithoutAcquisition, 'triadic', companions);
     const fields = embed.data.fields || [];
 
@@ -522,7 +522,7 @@ describe('createHarmonyEmbed', () => {
   it('should show Unknown when companion dye has no acquisition (line 201)', () => {
     const companionsWithoutAcquisition = [
       {
-        dye: { ...mockDye, name: 'No Acquisition Dye', acquisition: undefined },
+        dye: { ...mockDye, name: 'No Acquisition Dye', acquisition: undefined } as unknown as Dye,
         angle: 120,
         deviation: 5,
       },

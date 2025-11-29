@@ -150,7 +150,9 @@ describe('Redis Service', () => {
 
         // Get the options passed to Redis constructor
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { retryStrategy: (times: number) => number };
+        const options = (constructorCall as unknown[])[1] as {
+          retryStrategy: (times: number) => number;
+        };
 
         expect(options.retryStrategy(1)).toBe(50); // 1 * 50 = 50
         expect(options.retryStrategy(10)).toBe(500); // 10 * 50 = 500
@@ -171,7 +173,9 @@ describe('Redis Service', () => {
         getRedisClient();
 
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { retryStrategy: (times: number) => number };
+        const options = (constructorCall as unknown[])[1] as {
+          retryStrategy: (times: number) => number;
+        };
 
         expect(options.retryStrategy(50)).toBe(2000); // 50 * 50 = 2500, capped at 2000
         expect(options.retryStrategy(100)).toBe(2000); // 100 * 50 = 5000, capped at 2000
@@ -193,7 +197,9 @@ describe('Redis Service', () => {
         getRedisClient();
 
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { retryStrategy: (times: number) => number };
+        const options = (constructorCall as unknown[])[1] as {
+          retryStrategy: (times: number) => number;
+        };
 
         options.retryStrategy(3);
 
@@ -219,7 +225,9 @@ describe('Redis Service', () => {
         getRedisClient();
 
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+        const options = (constructorCall as unknown[])[1] as {
+          reconnectOnError: (err: Error) => boolean;
+        };
 
         const result = options.reconnectOnError(new Error('READONLY You cannot write'));
         expect(result).toBe(true);
@@ -240,7 +248,9 @@ describe('Redis Service', () => {
         getRedisClient();
 
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+        const options = (constructorCall as unknown[])[1] as {
+          reconnectOnError: (err: Error) => boolean;
+        };
 
         const result = options.reconnectOnError(new Error('read ECONNRESET'));
         expect(result).toBe(true);
@@ -261,7 +271,9 @@ describe('Redis Service', () => {
         getRedisClient();
 
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+        const options = (constructorCall as unknown[])[1] as {
+          reconnectOnError: (err: Error) => boolean;
+        };
 
         const result = options.reconnectOnError(new Error('connect ETIMEDOUT'));
         expect(result).toBe(true);
@@ -282,7 +294,9 @@ describe('Redis Service', () => {
         getRedisClient();
 
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+        const options = (constructorCall as unknown[])[1] as {
+          reconnectOnError: (err: Error) => boolean;
+        };
 
         const result = options.reconnectOnError(new Error('Some other error'));
         expect(result).toBe(false);
@@ -304,7 +318,9 @@ describe('Redis Service', () => {
         getRedisClient();
 
         const constructorCall = vi.mocked(Redis).mock.calls[0];
-        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+        const options = (constructorCall as unknown[])[1] as {
+          reconnectOnError: (err: Error) => boolean;
+        };
 
         options.reconnectOnError(new Error('READONLY error occurred'));
 
