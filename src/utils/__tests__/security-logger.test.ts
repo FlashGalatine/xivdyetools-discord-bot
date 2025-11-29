@@ -82,9 +82,14 @@ describe('Security Logger', () => {
   });
 
   it('should log auth failure events', async () => {
-    await securityLogger.authFailure('user123', 'Invalid token', {
-      attemptCount: 3,
-    }, 'guild456');
+    await securityLogger.authFailure(
+      'user123',
+      'Invalid token',
+      {
+        attemptCount: 3,
+      },
+      'guild456'
+    );
 
     const stats = await securityLogger.getStats(1);
     expect(stats.byType[SecurityEventType.AUTH_FAILURE]).toBeGreaterThan(0);
@@ -151,5 +156,210 @@ describe('Security Logger', () => {
 
     const stats = await securityLogger.getStats(1);
     expect(stats.byType[SecurityEventType.DATA_ACCESS]).toBeGreaterThan(0);
+  });
+});
+
+describe('Security Logger - Redis Path', () => {
+  it('should store events in Redis when available (lines 85, 98-122)', async () => {
+    vi.resetModules();
+
+    // Create mock Redis client
+    const mockPipeline = {
+      lpush: vi.fn().mockReturnThis(),
+      ltrim: vi.fn().mockReturnThis(),
+      expire: vi.fn().mockReturnThis(),
+      incr: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue([]),
+    };
+
+    const mockRedis = {
+      pipeline: vi.fn(() => mockPipeline),
+      lrange: vi.fn().mockResolvedValue(['{"type":"rate_limit_exceeded","userId":"user123"}']),
+      get: vi.fn().mockResolvedValue('5'),
+    };
+
+    vi.doMock('../../services/redis.js', () => ({
+      getRedisClient: vi.fn(() => mockRedis),
+    }));
+
+    const { securityLogger: redisLogger } = await import('../security-logger.js');
+
+    await redisLogger.rateLimitExceeded('user123', 'match', 'per_minute', 'guild456');
+
+    expect(mockRedis.pipeline).toHaveBeenCalled();
+    expect(mockPipeline.lpush).toHaveBeenCalled();
+    expect(mockPipeline.ltrim).toHaveBeenCalled();
+    expect(mockPipeline.expire).toHaveBeenCalled();
+    expect(mockPipeline.incr).toHaveBeenCalled();
+    expect(mockPipeline.exec).toHaveBeenCalled();
+  });
+
+  it('should get user events from Redis (lines 281-283)', async () => {
+    vi.resetModules();
+
+    const mockEvent = JSON.stringify({
+      type: 'rate_limit_exceeded',
+      userId: 'user123',
+      timestamp: Date.now(),
+      severity: 'medium',
+    });
+
+    const mockRedis = {
+      pipeline: vi.fn(() => ({
+        lpush: vi.fn().mockReturnThis(),
+        ltrim: vi.fn().mockReturnThis(),
+        expire: vi.fn().mockReturnThis(),
+        incr: vi.fn().mockReturnThis(),
+        exec: vi.fn().mockResolvedValue([]),
+      })),
+      lrange: vi.fn().mockResolvedValue([mockEvent]),
+      get: vi.fn().mockResolvedValue('5'),
+    };
+
+    vi.doMock('../../services/redis.js', () => ({
+      getRedisClient: vi.fn(() => mockRedis),
+    }));
+
+    const { securityLogger: redisLogger } = await import('../security-logger.js');
+
+    const events = await redisLogger.getUserEvents('user123', 10);
+
+    expect(mockRedis.lrange).toHaveBeenCalledWith('security:user:user123', 0, 9);
+    expect(events.length).toBe(1);
+    expect(events[0].type).toBe('rate_limit_exceeded');
+  });
+
+  it('should get stats from Redis (lines 306-336)', async () => {
+    vi.resetModules();
+
+    const mockRedis = {
+      pipeline: vi.fn(() => ({
+        lpush: vi.fn().mockReturnThis(),
+        ltrim: vi.fn().mockReturnThis(),
+        expire: vi.fn().mockReturnThis(),
+        incr: vi.fn().mockReturnThis(),
+        exec: vi.fn().mockResolvedValue([]),
+      })),
+      lrange: vi.fn().mockResolvedValue([]),
+      get: vi.fn().mockImplementation((key: string) => {
+        if (key.includes('count:medium')) return Promise.resolve('3');
+        if (key.includes('count:high')) return Promise.resolve('2');
+        if (key.includes('type:rate_limit_exceeded')) return Promise.resolve('3');
+        return Promise.resolve(null);
+      }),
+    };
+
+    vi.doMock('../../services/redis.js', () => ({
+      getRedisClient: vi.fn(() => mockRedis),
+    }));
+
+    const { securityLogger: redisLogger } = await import('../security-logger.js');
+
+    const stats = await redisLogger.getStats(1);
+
+    expect(mockRedis.get).toHaveBeenCalled();
+    expect(stats.bySeverity.medium).toBe(3);
+    expect(stats.bySeverity.high).toBe(2);
+    expect(stats.byType.rate_limit_exceeded).toBe(3);
+    expect(stats.total).toBe(5);
+  });
+});
+
+describe('Security Logger - Error Handling', () => {
+  it('should handle getUserEvents errors (lines 291-293)', async () => {
+    vi.resetModules();
+
+    const mockRedis = {
+      pipeline: vi.fn(() => ({
+        lpush: vi.fn().mockReturnThis(),
+        ltrim: vi.fn().mockReturnThis(),
+        expire: vi.fn().mockReturnThis(),
+        incr: vi.fn().mockReturnThis(),
+        exec: vi.fn().mockResolvedValue([]),
+      })),
+      lrange: vi.fn().mockRejectedValue(new Error('Redis connection failed')),
+      get: vi.fn().mockResolvedValue(null),
+    };
+
+    vi.doMock('../../services/redis.js', () => ({
+      getRedisClient: vi.fn(() => mockRedis),
+    }));
+
+    const { securityLogger: errorLogger } = await import('../security-logger.js');
+
+    const events = await errorLogger.getUserEvents('user123', 10);
+
+    expect(events).toEqual([]);
+  });
+
+  it('should handle getStats errors (lines 357-359)', async () => {
+    vi.resetModules();
+
+    const mockRedis = {
+      pipeline: vi.fn(() => ({
+        lpush: vi.fn().mockReturnThis(),
+        ltrim: vi.fn().mockReturnThis(),
+        expire: vi.fn().mockReturnThis(),
+        incr: vi.fn().mockReturnThis(),
+        exec: vi.fn().mockResolvedValue([]),
+      })),
+      lrange: vi.fn().mockResolvedValue([]),
+      get: vi.fn().mockRejectedValue(new Error('Redis connection failed')),
+    };
+
+    vi.doMock('../../services/redis.js', () => ({
+      getRedisClient: vi.fn(() => mockRedis),
+    }));
+
+    const { securityLogger: errorLogger } = await import('../security-logger.js');
+
+    const stats = await errorLogger.getStats(1);
+
+    expect(stats).toEqual({ total: 0, bySeverity: {}, byType: {} });
+  });
+
+  it('should handle logEvent errors (lines 90-91)', async () => {
+    vi.resetModules();
+
+    const mockRedis = {
+      pipeline: vi.fn(() => {
+        throw new Error('Pipeline creation failed');
+      }),
+      lrange: vi.fn().mockResolvedValue([]),
+      get: vi.fn().mockResolvedValue(null),
+    };
+
+    vi.doMock('../../services/redis.js', () => ({
+      getRedisClient: vi.fn(() => mockRedis),
+    }));
+
+    const { securityLogger: errorLogger } = await import('../security-logger.js');
+
+    // Should not throw, just log the error
+    await expect(
+      errorLogger.rateLimitExceeded('user123', 'match', 'per_minute')
+    ).resolves.not.toThrow();
+  });
+});
+
+describe('Security Logger - Memory Store', () => {
+  it('should trim old events when max exceeded (lines 130-132)', async () => {
+    vi.resetModules();
+
+    vi.doMock('../../services/redis.js', () => ({
+      getRedisClient: vi.fn(() => null),
+    }));
+
+    const { securityLogger: memLogger } = await import('../security-logger.js');
+
+    // Log more than maxMemoryEvents (500) to trigger trimming
+    // We'll log 510 events to ensure trimming occurs
+    for (let i = 0; i < 510; i++) {
+      await memLogger.validationFailure(`user${i}`, 'cmd', `Error ${i}`);
+    }
+
+    // The stats should still work but older events are trimmed
+    const stats = await memLogger.getStats(1);
+    expect(stats.total).toBeLessThanOrEqual(500);
   });
 });

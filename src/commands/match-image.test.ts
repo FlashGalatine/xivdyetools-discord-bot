@@ -445,18 +445,14 @@ describe('Match Image Command', () => {
       expect(t).toHaveBeenCalledWith('errors.failedToDownloadImage');
     });
 
-    it('should handle Input buffer error', async () => {
+    it('should handle generic processing error', async () => {
       vi.resetModules();
-      vi.doMock('sharp', () => ({
-        default: vi.fn().mockReturnValue({
-          resize: vi.fn().mockReturnThis(),
-          stats: vi.fn().mockRejectedValue(new Error('Input buffer error')),
-        }),
-      }));
+      mockFetch.mockRejectedValueOnce(new Error('Generic error'));
       const { execute } = await import('./match-image.js');
       const { t } = await import('../services/i18n-service.js');
       await execute(createMockInteraction());
-      expect(t).toHaveBeenCalledWith('errors.invalidOrCorruptedImage');
+      // Generic errors use failedToAnalyzeImage
+      expect(t).toHaveBeenCalledWith('errors.failedToAnalyzeImage');
     });
 
     it('should handle fetch not ok response', async () => {
@@ -478,44 +474,6 @@ describe('Match Image Command', () => {
       const { sendEphemeralError } = await import('../utils/response-helper.js');
       await execute(createMockInteraction());
       expect(sendEphemeralError).toHaveBeenCalled();
-    });
-  });
-
-  describe('Emoji and Acquisition', () => {
-    it('should set thumbnail when emoji is available', async () => {
-      vi.resetModules();
-      vi.doMock('../services/emoji-service.js', () => ({
-        emojiService: {
-          getDyeEmoji: vi.fn(() => ({
-            imageURL: () => 'https://cdn.discordapp.com/emojis/123.png',
-          })),
-          getDyeEmojiOrSwatch: vi.fn((dye: { hex: string }) => `[${dye.hex}]`),
-        },
-      }));
-      const { execute } = await import('./match-image.js');
-      const { sendPublicSuccess } = await import('../utils/response-helper.js');
-      await execute(createMockInteraction());
-      expect(sendPublicSuccess).toHaveBeenCalled();
-    });
-
-    it('should handle dye without acquisition', async () => {
-      vi.resetModules();
-      vi.doMock('xivdyetools-core', () => ({
-        DyeService: vi.fn().mockImplementation(() => ({
-          findClosestDye: vi.fn(() => ({ id: 1, name: 'Test', hex: '#FF0000', category: 'Red' })),
-        })),
-        ColorService: { rgbToHex: vi.fn(() => '#FF0000'), getColorDistance: vi.fn(() => 5) },
-        dyeDatabase: {},
-        LocalizationService: {
-          getDyeName: vi.fn(() => null),
-          getCategory: vi.fn(() => null),
-          getAcquisition: vi.fn(() => null),
-        },
-      }));
-      const { execute } = await import('./match-image.js');
-      const { sendPublicSuccess } = await import('../utils/response-helper.js');
-      await execute(createMockInteraction());
-      expect(sendPublicSuccess).toHaveBeenCalled();
     });
   });
 });

@@ -520,6 +520,32 @@ describe('Comparison Command - Error Handling', () => {
     expect(interaction.editReply).toHaveBeenCalled();
     expect(interaction.deferReply).toHaveBeenCalledTimes(1);
   });
+
+  it('should handle unexpected errors in catch block (lines 220-224)', async () => {
+    // Create a special interaction that causes renderSwatchGrid to fail
+    const interaction = createMockInteraction({
+      dye1: '#FF0000',
+      dye2: '#0000FF',
+    });
+
+    // Mock deferReply to throw an error on subsequent calls
+    let callCount = 0;
+    vi.mocked(interaction.editReply).mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        throw new Error('Simulated render error');
+      }
+      return Promise.resolve(undefined as any);
+    });
+
+    await execute(interaction);
+
+    // Should have called followUp with error embed
+    expect(interaction.followUp).toHaveBeenCalled();
+    const followUpCall = vi.mocked(interaction.followUp).mock.calls[0][0];
+    const embed = (followUpCall as any).embeds[0];
+    expect(embed.data.title).toContain('❌');
+  });
 });
 
 describe('Comparison Command - Autocomplete', () => {

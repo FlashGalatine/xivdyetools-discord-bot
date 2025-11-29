@@ -307,6 +307,126 @@ describe('Analytics Service', () => {
         })
       ).resolves.not.toThrow();
     });
+
+    it('should track guild usage when guildId is provided (lines 97-98)', async () => {
+      const { Analytics } = await import('./analytics.js');
+      const analytics = new Analytics();
+
+      await analytics.trackCommand({
+        commandName: 'harmony',
+        userId: 'user-1',
+        guildId: 'guild-123',
+        timestamp: Date.now(),
+        success: true,
+      });
+
+      const guildCount = await mockRedisClient!.get('analytics:guild:guild-123');
+      expect(guildCount).toBe('1');
+    });
+
+    it('should get daily count from Redis (line 212)', async () => {
+      const { Analytics } = await import('./analytics.js');
+      const analytics = new Analytics();
+
+      const today = new Date();
+      await analytics.trackCommand({
+        commandName: 'harmony',
+        userId: 'user-1',
+        timestamp: today.getTime(),
+        success: true,
+      });
+
+      const count = await analytics.getDailyCount(today);
+      expect(count).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should clear Redis analytics keys (lines 235-238)', async () => {
+      const { Analytics } = await import('./analytics.js');
+      const analytics = new Analytics();
+
+      await analytics.trackCommand({
+        commandName: 'harmony',
+        userId: 'user-1',
+        timestamp: Date.now(),
+        success: true,
+      });
+
+      await analytics.clear();
+
+      const total = await mockRedisClient!.get('analytics:total');
+      expect(total).toBeNull();
+    });
+
+    it('should handle malformed JSON in errors list (lines 162-163)', async () => {
+      const { Analytics } = await import('./analytics.js');
+      const analytics = new Analytics();
+
+      // Manually push malformed JSON to errors list
+      await mockRedisClient!.lpush('analytics:errors', 'not-valid-json');
+      await mockRedisClient!.set('analytics:total', '1');
+
+      const stats = await analytics.getStats();
+      expect(stats.recentErrors).toContain('not-valid-json');
+    });
+  });
+
+  describe('Analytics Error Handling', () => {
+    beforeEach(() => {
+      vi.resetModules();
+    });
+
+    it('should handle getStats errors gracefully (lines 126-134)', async () => {
+      const errorMockRedis = new MockRedisClient();
+      vi.spyOn(errorMockRedis, 'get').mockRejectedValue(new Error('Redis error'));
+
+      vi.doMock('./redis.js', () => ({
+        getRedisClient: () => errorMockRedis,
+      }));
+
+      const { Analytics } = await import('./analytics.js');
+      const analytics = new Analytics();
+
+      const stats = await analytics.getStats();
+
+      expect(stats).toEqual({
+        totalCommands: 0,
+        commandBreakdown: {},
+        uniqueUsers: 0,
+        successRate: 0,
+        recentErrors: [],
+      });
+    });
+
+    it('should handle getDailyCount errors gracefully (lines 224-226)', async () => {
+      const errorMockRedis = new MockRedisClient();
+      vi.spyOn(errorMockRedis, 'get').mockRejectedValue(new Error('Redis error'));
+
+      vi.doMock('./redis.js', () => ({
+        getRedisClient: () => errorMockRedis,
+      }));
+
+      const { Analytics } = await import('./analytics.js');
+      const analytics = new Analytics();
+
+      const count = await analytics.getDailyCount(new Date());
+
+      expect(count).toBe(0);
+    });
+
+    it('should handle clear errors gracefully (lines 243-244)', async () => {
+      const errorMockRedis = new MockRedisClient();
+      vi.spyOn(errorMockRedis, 'keys').mockRejectedValue(new Error('Redis error'));
+
+      vi.doMock('./redis.js', () => ({
+        getRedisClient: () => errorMockRedis,
+      }));
+
+      const { Analytics } = await import('./analytics.js');
+      const analytics = new Analytics();
+
+      // Should not throw
+      await expect(analytics.clear()).resolves.not.toThrow();
+    });
   });
 
   describe('getAnalytics singleton', () => {

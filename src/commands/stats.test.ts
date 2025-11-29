@@ -65,7 +65,10 @@ function createMockInteraction(options: { userId?: string } = {}): ChatInputComm
       guilds: {
         cache: guildsCache,
       },
-      commands: new Map([['harmony', {}], ['match', {}]]),
+      commands: new Map([
+        ['harmony', {}],
+        ['match', {}],
+      ]),
       uptime: 86400000, // 1 day in ms
     },
   } as unknown as ChatInputCommandInteraction;
@@ -145,6 +148,73 @@ describe('Stats Command', () => {
       await statsCommand.execute(interaction);
 
       expect(interaction.deferReply).toHaveBeenCalled();
+    });
+  });
+
+  describe('Empty Data Cases', () => {
+    it('should handle empty command breakdown', async () => {
+      vi.resetModules();
+      vi.doMock('../services/analytics.js', () => ({
+        getAnalytics: vi.fn(() => ({
+          getStats: vi.fn().mockResolvedValue({
+            totalCommands: 0,
+            commandBreakdown: {},
+            uniqueUsers: 0,
+            successRate: 0,
+            recentErrors: [],
+          }),
+        })),
+      }));
+
+      const { statsCommand } = await import('./stats.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({ userId: BOT_OWNER_ID });
+      await statsCommand.execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+
+    it('should handle no recent errors', async () => {
+      vi.resetModules();
+      vi.doMock('../services/analytics.js', () => ({
+        getAnalytics: vi.fn(() => ({
+          getStats: vi.fn().mockResolvedValue({
+            totalCommands: 100,
+            commandBreakdown: { harmony: 50 },
+            uniqueUsers: 10,
+            successRate: 100,
+            recentErrors: [],
+          }),
+        })),
+      }));
+
+      const { statsCommand } = await import('./stats.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({ userId: BOT_OWNER_ID });
+      await statsCommand.execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle analytics error', async () => {
+      vi.resetModules();
+      vi.doMock('../services/analytics.js', () => ({
+        getAnalytics: vi.fn(() => ({
+          getStats: vi.fn().mockRejectedValue(new Error('Redis connection failed')),
+        })),
+      }));
+
+      const { statsCommand } = await import('./stats.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({ userId: BOT_OWNER_ID });
+      await statsCommand.execute(interaction);
+
+      expect(sendEphemeralError).toHaveBeenCalled();
     });
   });
 });
