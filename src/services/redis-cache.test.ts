@@ -299,6 +299,69 @@ describe('Redis Cache Service', () => {
     });
   });
 
+  describe('keys() method', () => {
+    describe('with Redis', () => {
+      beforeEach(() => {
+        mockRedisClient = new MockRedisClient();
+        (mockRedisClient as any).setex = vi.fn(async (key: string, ttl: number, value: string) => {
+          await mockRedisClient!.set(key, value, 'EX', ttl);
+          return 'OK';
+        });
+        vi.resetModules();
+      });
+
+      afterEach(() => {
+        mockRedisClient = null;
+      });
+
+      it('should return all keys from Redis', async () => {
+        const { RedisCacheBackend } = await import('./redis-cache.js');
+        const cache = new RedisCacheBackend();
+
+        await mockRedisClient!.set('key1', 'value1');
+        await mockRedisClient!.set('key2', 'value2');
+
+        const keys = await cache.keys();
+        expect(keys).toContain('key1');
+        expect(keys).toContain('key2');
+      });
+    });
+
+    describe('with memory fallback', () => {
+      beforeEach(() => {
+        mockRedisClient = null;
+        vi.resetModules();
+      });
+
+      it('should return empty array for memory cache (documented limitation)', async () => {
+        const { RedisCacheBackend } = await import('./redis-cache.js');
+        const cache = new RedisCacheBackend();
+
+        // Add some data to memory cache
+        await cache.set('key1', createTestData('value1'));
+        await cache.set('key2', createTestData('value2'));
+
+        // keys() returns [] for memory cache (limitation documented in source)
+        const keys = await cache.keys();
+        expect(keys).toEqual([]);
+      });
+    });
+
+    describe('error handling', () => {
+      it('should return empty array on Redis keys() error', async () => {
+        mockRedisClient = new MockRedisClient();
+        vi.spyOn(mockRedisClient, 'keys').mockRejectedValue(new Error('Redis error'));
+        vi.resetModules();
+
+        const { RedisCacheBackend } = await import('./redis-cache.js');
+        const cache = new RedisCacheBackend();
+
+        const keys = await cache.keys();
+        expect(keys).toEqual([]);
+      });
+    });
+  });
+
   describe('Error Handling', () => {
     it('should handle Redis get errors gracefully', async () => {
       mockRedisClient = new MockRedisClient();

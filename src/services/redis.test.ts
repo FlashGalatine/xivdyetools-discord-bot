@@ -3,7 +3,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MockRedisClient, shouldRunRedisIntegration, getRedisTestUrl } from '../__tests__/helpers/mock-redis.js';
+import {
+  MockRedisClient,
+  shouldRunRedisIntegration,
+  getRedisTestUrl,
+} from '../__tests__/helpers/mock-redis.js';
 
 // Mock ioredis module
 vi.mock('ioredis', () => {
@@ -128,6 +132,189 @@ describe('Redis Service', () => {
     });
   });
 
+  describe('Redis connection options callbacks', () => {
+    describe('retryStrategy callback', () => {
+      it('should return linear delay based on retry count', async () => {
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        // Get the options passed to Redis constructor
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { retryStrategy: (times: number) => number };
+
+        expect(options.retryStrategy(1)).toBe(50); // 1 * 50 = 50
+        expect(options.retryStrategy(10)).toBe(500); // 10 * 50 = 500
+      });
+
+      it('should cap delay at 2000ms', async () => {
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { retryStrategy: (times: number) => number };
+
+        expect(options.retryStrategy(50)).toBe(2000); // 50 * 50 = 2500, capped at 2000
+        expect(options.retryStrategy(100)).toBe(2000); // 100 * 50 = 5000, capped at 2000
+      });
+
+      it('should log retry attempt', async () => {
+        const { logger } = await import('../utils/logger.js');
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { retryStrategy: (times: number) => number };
+
+        options.retryStrategy(3);
+
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Redis connection retry attempt 3')
+        );
+      });
+    });
+
+    describe('reconnectOnError callback', () => {
+      it('should return true for READONLY errors', async () => {
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+
+        const result = options.reconnectOnError(new Error('READONLY You cannot write'));
+        expect(result).toBe(true);
+      });
+
+      it('should return true for ECONNRESET errors', async () => {
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+
+        const result = options.reconnectOnError(new Error('read ECONNRESET'));
+        expect(result).toBe(true);
+      });
+
+      it('should return true for ETIMEDOUT errors', async () => {
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+
+        const result = options.reconnectOnError(new Error('connect ETIMEDOUT'));
+        expect(result).toBe(true);
+      });
+
+      it('should return false for other errors', async () => {
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+
+        const result = options.reconnectOnError(new Error('Some other error'));
+        expect(result).toBe(false);
+      });
+
+      it('should log when reconnecting due to target error', async () => {
+        const { logger } = await import('../utils/logger.js');
+        const Redis = (await import('ioredis')).default;
+        vi.mocked(Redis).mockClear();
+
+        vi.doMock('../config.js', () => ({
+          config: {
+            redisUrl: 'redis://localhost:6379',
+          },
+        }));
+
+        vi.resetModules();
+        const { getRedisClient } = await import('./redis.js');
+        getRedisClient();
+
+        const constructorCall = vi.mocked(Redis).mock.calls[0];
+        const options = constructorCall[1] as { reconnectOnError: (err: Error) => boolean };
+
+        options.reconnectOnError(new Error('READONLY error occurred'));
+
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Redis reconnecting due to: READONLY error occurred')
+        );
+      });
+    });
+  });
+
   describe('closeRedis()', () => {
     it('should call quit() on the client', async () => {
       vi.doMock('../config.js', () => ({
@@ -220,7 +407,9 @@ describe('Redis Service', () => {
       const Redis = (await import('ioredis')).default;
       const mockClient = new MockRedisClient();
       vi.spyOn(mockClient, 'ping').mockRejectedValue(new Error('Connection lost'));
-      vi.mocked(Redis).mockImplementation(() => mockClient as unknown as InstanceType<typeof Redis>);
+      vi.mocked(Redis).mockImplementation(
+        () => mockClient as unknown as InstanceType<typeof Redis>
+      );
 
       vi.resetModules();
       const { isRedisAvailable } = await import('./redis.js');
@@ -264,7 +453,7 @@ describe.skipIf(!shouldRunRedisIntegration())('Redis Integration Tests', () => {
     // Try connecting to invalid port
     const client = new Redis('redis://localhost:99999', {
       maxRetriesPerRequest: 0,
-      retryStrategy: () => null,
+      retryStrategy: (): null => null,
     });
 
     try {

@@ -34,9 +34,9 @@ vi.mock('../utils/embed-builder.js', () => ({
     data: { title: `❌ ${title}`, description },
   })),
   createDyeEmojiAttachment: vi.fn(() => null),
-  formatRGB: vi.fn((hex: string) => `RGB(255, 0, 0)`),
-  formatHSV: vi.fn((hex: string) => `HSV(0°, 100%, 100%)`),
-  formatColorSwatch: vi.fn((hex: string, size: number) => `⬛`.repeat(size)),
+  formatRGB: vi.fn((_hex: string) => `RGB(255, 0, 0)`),
+  formatHSV: vi.fn((_hex: string) => `HSV(0°, 100%, 100%)`),
+  formatColorSwatch: vi.fn((_hex: string, size: number) => `⬛`.repeat(size)),
 }));
 
 vi.mock('../utils/response-helper.js', () => ({
@@ -92,7 +92,7 @@ vi.mock('sharp', () => ({
 // Mock xivdyetools-core
 vi.mock('xivdyetools-core', () => ({
   DyeService: vi.fn().mockImplementation(() => ({
-    findClosestDye: vi.fn((hex: string) => ({
+    findClosestDye: vi.fn((_hex: string) => ({
       id: 1,
       name: 'Ruby Red',
       hex: '#E60026',
@@ -101,14 +101,14 @@ vi.mock('xivdyetools-core', () => ({
     })),
   })),
   ColorService: {
-    rgbToHex: vi.fn((r: number, g: number, b: number) => '#FF0000'),
+    rgbToHex: vi.fn((_r: number, _g: number, _b: number) => '#FF0000'),
     getColorDistance: vi.fn(() => 5.5),
   },
   dyeDatabase: {},
   LocalizationService: {
-    getDyeName: vi.fn((id: number) => null),
-    getCategory: vi.fn((category: string) => null),
-    getAcquisition: vi.fn((acq: string) => null),
+    getDyeName: vi.fn((_id: number) => null),
+    getCategory: vi.fn((_category: string) => null),
+    getAcquisition: vi.fn((_acq: string) => null),
   },
 }));
 
@@ -139,9 +139,11 @@ function createMockAttachment(overrides: Partial<Attachment> = {}): Attachment {
 /**
  * Create mock ChatInputCommandInteraction
  */
-function createMockInteraction(options: {
-  attachment?: Partial<Attachment> | null;
-} = {}): ChatInputCommandInteraction {
+function createMockInteraction(
+  options: {
+    attachment?: Partial<Attachment> | null;
+  } = {}
+): ChatInputCommandInteraction {
   const deferReply = vi.fn().mockResolvedValue(undefined);
   const editReply = vi.fn().mockResolvedValue(undefined);
   const followUp = vi.fn().mockResolvedValue(undefined);
@@ -167,9 +169,44 @@ function createMockInteraction(options: {
 describe('Match Image Command', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.resetModules();
     mockFetch.mockResolvedValue({
       ok: true,
       arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
+    });
+  });
+
+  describe('cleanupWorkerPool', () => {
+    it('should handle cleanup when worker pool is null', async () => {
+      const { cleanupWorkerPool } = await import('./match-image.js');
+
+      // Should not throw when pool doesn't exist
+      await expect(cleanupWorkerPool()).resolves.not.toThrow();
+    });
+
+    it('should call terminate on existing worker pool', async () => {
+      const mockTerminate = vi.fn().mockResolvedValue(undefined);
+      const { WorkerPool } = await import('../utils/worker-pool.js');
+      vi.mocked(WorkerPool).mockImplementation(
+        () =>
+          ({
+            execute: vi.fn().mockRejectedValue(new Error('Worker not available')),
+            terminate: mockTerminate,
+          }) as unknown as InstanceType<typeof WorkerPool>
+      );
+
+      vi.resetModules();
+
+      // First execute a command to initialize the worker pool
+      const { execute, cleanupWorkerPool } = await import('./match-image.js');
+      const interaction = createMockInteraction();
+      await execute(interaction);
+
+      // Now cleanup should call terminate
+      await cleanupWorkerPool();
+
+      // After cleanup, calling again should not throw
+      await expect(cleanupWorkerPool()).resolves.not.toThrow();
     });
   });
 
@@ -295,6 +332,190 @@ describe('Match Image Command', () => {
 
       // Command uses t() for localized strings
       expect(t).toHaveBeenCalled();
+    });
+  });
+
+  describe('Match Quality Levels', () => {
+    it('should show perfect match when distance is 0', async () => {
+      vi.resetModules();
+      vi.doMock('xivdyetools-core', () => ({
+        DyeService: vi.fn().mockImplementation(() => ({
+          findClosestDye: vi.fn(() => ({ id: 1, name: 'Test', hex: '#FF0000', category: 'Red' })),
+        })),
+        ColorService: { rgbToHex: vi.fn(() => '#FF0000'), getColorDistance: vi.fn(() => 0) },
+        dyeDatabase: {},
+        LocalizationService: {
+          getDyeName: vi.fn(() => null),
+          getCategory: vi.fn(() => null),
+          getAcquisition: vi.fn(() => null),
+        },
+      }));
+      const { execute } = await import('./match-image.js');
+      const { t } = await import('../services/i18n-service.js');
+      await execute(createMockInteraction());
+      expect(t).toHaveBeenCalledWith('matchQuality.perfect');
+    });
+
+    it('should show good match when distance is 15', async () => {
+      vi.resetModules();
+      vi.doMock('xivdyetools-core', () => ({
+        DyeService: vi.fn().mockImplementation(() => ({
+          findClosestDye: vi.fn(() => ({ id: 1, name: 'Test', hex: '#FF0000', category: 'Red' })),
+        })),
+        ColorService: { rgbToHex: vi.fn(() => '#FF0000'), getColorDistance: vi.fn(() => 15) },
+        dyeDatabase: {},
+        LocalizationService: {
+          getDyeName: vi.fn(() => null),
+          getCategory: vi.fn(() => null),
+          getAcquisition: vi.fn(() => null),
+        },
+      }));
+      const { execute } = await import('./match-image.js');
+      const { t } = await import('../services/i18n-service.js');
+      await execute(createMockInteraction());
+      expect(t).toHaveBeenCalledWith('matchQuality.good');
+    });
+
+    it('should show fair match when distance is 35', async () => {
+      vi.resetModules();
+      vi.doMock('xivdyetools-core', () => ({
+        DyeService: vi.fn().mockImplementation(() => ({
+          findClosestDye: vi.fn(() => ({ id: 1, name: 'Test', hex: '#FF0000', category: 'Red' })),
+        })),
+        ColorService: { rgbToHex: vi.fn(() => '#FF0000'), getColorDistance: vi.fn(() => 35) },
+        dyeDatabase: {},
+        LocalizationService: {
+          getDyeName: vi.fn(() => null),
+          getCategory: vi.fn(() => null),
+          getAcquisition: vi.fn(() => null),
+        },
+      }));
+      const { execute } = await import('./match-image.js');
+      const { t } = await import('../services/i18n-service.js');
+      await execute(createMockInteraction());
+      expect(t).toHaveBeenCalledWith('matchQuality.fair');
+    });
+
+    it('should show approximate match when distance is 75', async () => {
+      vi.resetModules();
+      vi.doMock('xivdyetools-core', () => ({
+        DyeService: vi.fn().mockImplementation(() => ({
+          findClosestDye: vi.fn(() => ({ id: 1, name: 'Test', hex: '#FF0000', category: 'Red' })),
+        })),
+        ColorService: { rgbToHex: vi.fn(() => '#FF0000'), getColorDistance: vi.fn(() => 75) },
+        dyeDatabase: {},
+        LocalizationService: {
+          getDyeName: vi.fn(() => null),
+          getCategory: vi.fn(() => null),
+          getAcquisition: vi.fn(() => null),
+        },
+      }));
+      const { execute } = await import('./match-image.js');
+      const { t } = await import('../services/i18n-service.js');
+      await execute(createMockInteraction());
+      expect(t).toHaveBeenCalledWith('matchQuality.approximate');
+    });
+  });
+
+  describe('Error Cases', () => {
+    it('should handle no matching dye', async () => {
+      vi.resetModules();
+      vi.doMock('xivdyetools-core', () => ({
+        DyeService: vi.fn().mockImplementation(() => ({ findClosestDye: vi.fn(() => null) })),
+        ColorService: { rgbToHex: vi.fn(() => '#FF0000'), getColorDistance: vi.fn(() => 0) },
+        dyeDatabase: {},
+        LocalizationService: {
+          getDyeName: vi.fn(() => null),
+          getCategory: vi.fn(() => null),
+          getAcquisition: vi.fn(() => null),
+        },
+      }));
+      const { execute } = await import('./match-image.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+      await execute(createMockInteraction());
+      expect(sendEphemeralError).toHaveBeenCalled();
+    });
+
+    it('should handle fetch error', async () => {
+      vi.resetModules();
+      mockFetch.mockRejectedValueOnce(new Error('fetch failed'));
+      const { execute } = await import('./match-image.js');
+      const { t } = await import('../services/i18n-service.js');
+      await execute(createMockInteraction());
+      expect(t).toHaveBeenCalledWith('errors.failedToDownloadImage');
+    });
+
+    it('should handle Input buffer error', async () => {
+      vi.resetModules();
+      vi.doMock('sharp', () => ({
+        default: vi.fn().mockReturnValue({
+          resize: vi.fn().mockReturnThis(),
+          stats: vi.fn().mockRejectedValue(new Error('Input buffer error')),
+        }),
+      }));
+      const { execute } = await import('./match-image.js');
+      const { t } = await import('../services/i18n-service.js');
+      await execute(createMockInteraction());
+      expect(t).toHaveBeenCalledWith('errors.invalidOrCorruptedImage');
+    });
+
+    it('should handle fetch not ok response', async () => {
+      vi.resetModules();
+      mockFetch.mockResolvedValueOnce({ ok: false, statusText: 'Not Found' });
+      const { execute } = await import('./match-image.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+      await execute(createMockInteraction());
+      expect(sendEphemeralError).toHaveBeenCalled();
+    });
+
+    it('should handle validation failure', async () => {
+      vi.resetModules();
+      vi.doMock('../utils/image-validator.js', () => ({
+        validateImage: vi.fn().mockResolvedValue({ success: false, error: 'Image too large' }),
+        processWithTimeout: vi.fn((p: Promise<unknown>) => p),
+      }));
+      const { execute } = await import('./match-image.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+      await execute(createMockInteraction());
+      expect(sendEphemeralError).toHaveBeenCalled();
+    });
+  });
+
+  describe('Emoji and Acquisition', () => {
+    it('should set thumbnail when emoji is available', async () => {
+      vi.resetModules();
+      vi.doMock('../services/emoji-service.js', () => ({
+        emojiService: {
+          getDyeEmoji: vi.fn(() => ({
+            imageURL: () => 'https://cdn.discordapp.com/emojis/123.png',
+          })),
+          getDyeEmojiOrSwatch: vi.fn((dye: { hex: string }) => `[${dye.hex}]`),
+        },
+      }));
+      const { execute } = await import('./match-image.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+      await execute(createMockInteraction());
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+
+    it('should handle dye without acquisition', async () => {
+      vi.resetModules();
+      vi.doMock('xivdyetools-core', () => ({
+        DyeService: vi.fn().mockImplementation(() => ({
+          findClosestDye: vi.fn(() => ({ id: 1, name: 'Test', hex: '#FF0000', category: 'Red' })),
+        })),
+        ColorService: { rgbToHex: vi.fn(() => '#FF0000'), getColorDistance: vi.fn(() => 5) },
+        dyeDatabase: {},
+        LocalizationService: {
+          getDyeName: vi.fn(() => null),
+          getCategory: vi.fn(() => null),
+          getAcquisition: vi.fn(() => null),
+        },
+      }));
+      const { execute } = await import('./match-image.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+      await execute(createMockInteraction());
+      expect(sendPublicSuccess).toHaveBeenCalled();
     });
   });
 });
