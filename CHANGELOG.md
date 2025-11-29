@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2025-11-28
+
+### Fixed
+- **German Localization (Major)**:
+  - Replaced ~100+ occurrences of "Färbemittel" with official FFXIV term "Farbstoff"
+  - Fixed grammatical gender throughout (masculine "Farbstoff" vs neuter "Färbemittel")
+  - Corrected Pure White/Jet Black dye names from "Reinweiß/Tiefschwarz" to official names "Wolkenweißer Farbstoff/Rabenschwarzer Farbstoff"
+
+- **French Localization**:
+  - Corrected Pure White dye name from "Blanc pur" to official FFXIV term "blanc immaculé"
+
+### Verified
+- **Korean Localization**: Confirmed 순백색 (Pure White) and 칠흑색 (Jet Black) match official Korean FFXIV terminology
+- **Chinese Localization**: Confirmed 无瑕白 (Pure White) and 煤玉黑 (Jet Black) match official Chinese FFXIV terminology
+
 ## [1.0.5] - 2025-11-27
 
 ### Added
