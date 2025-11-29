@@ -57,12 +57,16 @@ function getFilesRecursively(dir: string, baseDir: string): string[] {
 
 async function deploy(): Promise<void> {
   try {
-    // Check for --full flag
+    // Check for flags
     const isFullDeploy = process.argv.includes('--full');
+    const excludeEmoji = process.argv.includes('--no-emoji');
 
     console.log('🚀 Starting deployment...');
     if (isFullDeploy) {
       console.log('📦 Full deployment mode: All files will be uploaded');
+    }
+    if (excludeEmoji) {
+      console.log('🎭 Excluding emoji directory from deployment');
     }
 
     // 1. Build project
@@ -85,7 +89,7 @@ async function deploy(): Promise<void> {
     // Define directories/files to sync
     const syncConfig = [
       { local: 'dist', remote: 'dist' },
-      { local: 'emoji', remote: 'emoji' },
+      ...(excludeEmoji ? [] : [{ local: 'emoji', remote: 'emoji' }]),
       { local: 'package.json', remote: 'package.json' },
       { local: 'package-lock.json', remote: 'package-lock.json' },
       { local: 'start.js', remote: 'start.js' },
