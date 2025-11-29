@@ -51,7 +51,7 @@
             "excludePastel": "Exclure les teintures commençant par \"Pastel\"",
             "excludeDark": "Exclure les teintures commençant par \"foncé\"",
             "excludeCosmic": "Exclure les teintures dont l'acquisition est \"Exploration cosmique\" ou \"Fortunes cosmiques\"",
-            "excludeExpensive": "Exclure Blanc pur (itemID 13114) et Noir de jais (itemID 13115)"
+            "excludeExpensive": "Exclure blanc immaculé (itemID 13114) et noir de jais (itemID 13115)"
           }
         }
       }
@@ -262,7 +262,7 @@
     "noDyesMatchFilter": "Aucune teinture ne correspond à vos critères de filtre. Veuillez réessayer avec différents paramètres d'exclusion.",
     "noMatchingFilterCriteria": "Aucune teinture ne correspond à vos critères de filtre. Veuillez réessayer avec différents paramètres d'exclusion.",
     "noDyesFoundWithSuggestion": "Aucune teinture trouvée correspondant à « {query} ».\n\nEssayez un autre terme de recherche ou utilisez `/dye list` pour parcourir par catégorie.",
-    "invalidColorOrDyeNameWithExamples": "« {input} » n'est pas une couleur hex ou un nom de teinture valide.\n\n**Exemples :**\n- Hex : `#FF0000`, `#8A2BE2`\n- Teinture : `Rouge Dalamud`, `Blanc pur`",
+    "invalidColorOrDyeNameWithExamples": "« {input} » n'est pas une couleur hex ou un nom de teinture valide.\n\n**Exemples :**\n- Hex : `#FF0000`, `#8A2BE2`\n- Teinture : `Rouge Dalamud`, `blanc immaculé`",
     "invalidHexFormat": "Format de couleur hex invalide : « {hex} ». Format attendu #RRGGBB (ex. #FF0000) ou RRGGBB (ex. FF0000).",
     "dyeNameEmpty": "Le nom de la teinture ne peut pas être vide.",
     "dyeNotFoundSearch": "Teinture non trouvée : « {name} ». Utilisez l'autocomplétion ou la recherche pour trouver les teintures disponibles.",

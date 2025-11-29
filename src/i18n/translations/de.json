@@ -3,72 +3,72 @@
     "harmony": {
       "description": "Generiere Farbharmonie-Vorschläge basierend auf Farbtheorie",
       "options": {
-        "baseColor": "Grundfarbe: Hex (z.B. #FF0000) oder Färbemittelname (z.B. Dalamud-Rot)",
+        "baseColor": "Grundfarbe: Hex (z.B. #FF0000) oder Farbstoffname (z.B. Dalamud-Rot)",
         "type": "Harmonietyp",
         "companionCount": "Anzahl der Begleitfarben begrenzen (optional - zeigt standardmäßig alle)"
       }
     },
     "match": {
-      "description": "Finde das nächste FFXIV-Färbemittel zu einer gegebenen Farbe",
+      "description": "Finde den nächsten FFXIV-Farbstoff zu einer gegebenen Farbe",
       "options": {
-        "color": "Farbe: Hex (z.B. #FF0000) oder Färbemittelname (z.B. Dalamud-Rot)"
+        "color": "Farbe: Hex (z.B. #FF0000) oder Farbstoffname (z.B. Dalamud-Rot)"
       }
     },
     "mixer": {
-      "description": "Generiere einen Farbverlauf zwischen zwei Farben mit Zwischenfärbemitteln",
+      "description": "Generiere einen Farbverlauf zwischen zwei Farben mit Zwischenfarbstoffen",
       "options": {
-        "startColor": "Startfarbe: Hex (z.B. #FF0000) oder Färbemittelname",
-        "endColor": "Endfarbe: Hex (z.B. #0000FF) oder Färbemittelname",
+        "startColor": "Startfarbe: Hex (z.B. #FF0000) oder Farbstoffname",
+        "endColor": "Endfarbe: Hex (z.B. #0000FF) oder Farbstoffname",
         "steps": "Anzahl der Farbstufen (Standard: 6)"
       }
     },
     "dye": {
-      "description": "FFXIV-Färbemittel-Informationen und -Suche",
+      "description": "FFXIV-Farbstoff-Informationen und -Suche",
       "subcommands": {
         "info": {
-          "description": "Erhalte Informationen über ein bestimmtes Färbemittel",
+          "description": "Erhalte Informationen über einen bestimmten Farbstoff",
           "options": {
-            "name": "Färbemittelname"
+            "name": "Farbstoffname"
           }
         },
         "search": {
-          "description": "Suche nach Färbemitteln nach Name",
+          "description": "Suche nach Farbstoffen nach Name",
           "options": {
             "query": "Suchbegriff (Teilübereinstimmung)"
           }
         },
         "list": {
-          "description": "Liste Färbemittel nach Kategorie auf",
+          "description": "Liste Farbstoffe nach Kategorie auf",
           "options": {
-            "category": "Färbemittelkategorie"
+            "category": "Farbstoffkategorie"
           }
         },
         "random": {
-          "description": "Erhalte zufällige(s) Färbemittel",
+          "description": "Erhalte zufällige Farbstoffe",
           "options": {
-            "count": "Anzahl der zufälligen Färbemittel (Standard: 1)",
-            "excludeMetallic": "Färbemittel ausschließen, die mit \"Metallic\" beginnen",
-            "excludePastel": "Färbemittel ausschließen, die mit \"Pastell\" beginnen",
-            "excludeDark": "Färbemittel ausschließen, die mit \"Dunkel\" beginnen",
-            "excludeCosmic": "Färbemittel ausschließen, bei denen die Beschaffung \"Kosmo-Erkundung\" oder \"Kosmo-Glück\" ist",
-            "excludeExpensive": "Reinweiß (itemID 13114) und Tiefschwarz (itemID 13115) ausschließen"
+            "count": "Anzahl der zufälligen Farbstoffe (Standard: 1)",
+            "excludeMetallic": "Farbstoffe ausschließen, die mit \"Metallic\" beginnen",
+            "excludePastel": "Farbstoffe ausschließen, die mit \"Pastell\" beginnen",
+            "excludeDark": "Farbstoffe ausschließen, die mit \"Dunkel\" beginnen",
+            "excludeCosmic": "Farbstoffe ausschließen, bei denen die Beschaffung \"Kosmo-Erkundung\" oder \"Kosmo-Glück\" ist",
+            "excludeExpensive": "Wolkenweißer Farbstoff (itemID 13114) und Rabenschwarzer Farbstoff (itemID 13115) ausschließen"
           }
         }
       }
     },
     "comparison": {
-      "description": "Vergleiche mehrere FFXIV-Färbemittel nebeneinander",
+      "description": "Vergleiche mehrere FFXIV-Farbstoffe nebeneinander",
       "options": {
-        "dye1": "Erstes Färbemittel: Hex (z.B. #FF0000) oder Färbemittelname",
-        "dye2": "Zweites Färbemittel: Hex (z.B. #00FF00) oder Färbemittelname",
-        "dye3": "Drittes Färbemittel (optional): Hex oder Färbemittelname",
-        "dye4": "Viertes Färbemittel (optional): Hex oder Färbemittelname"
+        "dye1": "Erster Farbstoff: Hex (z.B. #FF0000) oder Farbstoffname",
+        "dye2": "Zweiter Farbstoff: Hex (z.B. #00FF00) oder Farbstoffname",
+        "dye3": "Dritter Farbstoff (optional): Hex oder Farbstoffname",
+        "dye4": "Vierter Farbstoff (optional): Hex oder Farbstoffname"
       }
     },
     "accessibility": {
-      "description": "Simuliere, wie ein Färbemittel bei Farbenblindheit erscheint",
+      "description": "Simuliere, wie ein Farbstoff bei Farbenblindheit erscheint",
       "options": {
-        "dye": "Färbemittelname oder Hex-Farbe (z.B. \"Dalamud-Rot\" oder \"#FF0000\")",
+        "dye": "Farbstoffname oder Hex-Farbe (z.B. \"Dalamud-Rot\" oder \"#FF0000\")",
         "visionType": "Farbblindheitstyp (Standard: alle anzeigen)"
       },
       "visionTypes": {
@@ -79,7 +79,7 @@
       }
     },
     "matchImage": {
-      "description": "Extrahiere die dominante Farbe aus einem Bild und finde passendes FFXIV-Färbemittel",
+      "description": "Extrahiere die dominante Farbe aus einem Bild und finde passenden FFXIV-Farbstoff",
       "options": {
         "image": "Zu analysierende Bilddatei (PNG, JPG, GIF, BMP, WebP)"
       }
@@ -132,12 +132,12 @@
     "harmonySuggestions": "Harmonie-Vorschläge",
     "base": "Basis",
     "inputColor": "Eingabefarbe",
-    "closestDye": "Nächstes Färbemittel",
+    "closestDye": "Nächster Farbstoff",
     "matchQuality": "Übereinstimmungsqualität",
     "distance": "Abstand",
     "euclidean": "Euklidisch",
     "quality": "Qualität",
-    "dyeMatch": "Färbemittel-Übereinstimmung",
+    "dyeMatch": "Farbstoff-Übereinstimmung",
     "findingClosestMatchFor": "Finde nächste Übereinstimmung für",
     "colorMatch": "Farbübereinstimmung",
     "analyzedImage": "Analysiertes Bild",
@@ -147,18 +147,18 @@
     "start": "Start",
     "end": "Ende",
     "steps": "Stufen",
-    "intermediateDyes": "Zwischenfärbemittel",
+    "intermediateDyes": "Zwischenfarbstoffe",
     "step": "Stufe",
     "target": "Ziel",
     "match": "Übereinstimmung",
     "tip": "Tipp",
-    "useMatchForAcquisition": "Verwende `/match <Farbe>`, um Beschaffungsdetails für einzelne Färbemittel zu sehen.",
+    "useMatchForAcquisition": "Verwende `/match <Farbe>`, um Beschaffungsdetails für einzelne Farbstoffe zu sehen.",
     "useDyeInfoForDetails": "Verwende /dye info <Name> für Details",
     "useDyeInfoForFullDetails": "Verwende /dye info <Name> für vollständige Details",
     "useDyeInfoForMoreDetails": "Weitere Details unter /dye info <Name>",
-    "dyeComparison": "Färbemittel-Vergleich",
-    "dye": "Färbemittel",
-    "dyes": "Färbemittel",
+    "dyeComparison": "Farbstoff-Vergleich",
+    "dye": "Farbstoff",
+    "dyes": "Farbstoffe",
     "comparisonAnalysis": "Vergleichsanalyse",
     "mostSimilar": "Am ähnlichsten",
     "mostDifferent": "Am unterschiedlichsten",
@@ -195,15 +195,15 @@
     "noCommandsYet": "Noch keine Befehle ausgeführt",
     "recentErrors": "Letzte Fehler",
     "noRecentErrors": "Keine aktuellen Fehler",
-    "dyeSearch": "Färbemittel-Suche",
+    "dyeSearch": "Farbstoff-Suche",
     "found": "gefunden",
     "showingFirst15": "zeige die ersten 15",
     "tooManyResults": "Zu viele Ergebnisse! Verwende eine spezifischere Suche oder /dye info <Name>",
     "useDyeInfo": "Verwende /dye info <Name> für Details",
-    "categoryDyes": "{category}-Färbemittel",
-    "dyesInCategory": "Färbemittel in dieser Kategorie",
+    "categoryDyes": "{category}-Farbstoffe",
+    "dyesInCategory": "Farbstoffe in dieser Kategorie",
     "useDyeInfoDetails": "Verwende /dye info <Name> für vollständige Details",
-    "randomDyes": "Zufällige Färbemittel"
+    "randomDyes": "Zufällige Farbstoffe"
   },
   "matchQuality": {
     "perfect": "Perfekte Übereinstimmung",
@@ -225,50 +225,50 @@
     "invalidInput": "Ungültige Eingabe",
     "commandError": "Befehlsfehler",
     "processingError": "Verarbeitungsfehler",
-    "dyeNotFound": "Färbemittel nicht gefunden",
+    "dyeNotFound": "Farbstoff nicht gefunden",
     "noResults": "Keine Ergebnisse",
     "emptyCategory": "Leere Kategorie",
     "unknownSubcommand": "Unbekannter Unterbefehl",
     "invalidSubcommand": "Ungültiger Unterbefehl",
-    "noDyesAvailable": "Keine Färbemittel verfügbar",
+    "noDyesAvailable": "Keine Farbstoffe verfügbar",
     "noPermission": "Du hast keine Berechtigung, diesen Befehl zu verwenden.",
     "failedToRetrieveStats": "Statistiken konnten nicht abgerufen werden. Bitte versuche es später erneut.",
-    "couldNotFindMatchingDye": "Kein passendes Färbemittel gefunden.",
+    "couldNotFindMatchingDye": "Keinen passenden Farbstoff gefunden.",
     "couldNotGenerateHarmony": "Harmonie konnte nicht generiert werden.",
-    "couldNotFindMatchingDyes": "Keine passenden Färbemittel gefunden.",
+    "couldNotFindMatchingDyes": "Keine passenden Farbstoffe gefunden.",
     "errorExecutingCommand": "Bei der Ausführung dieses Befehls ist ein Fehler aufgetreten!",
     "errorProcessingRequest": "Bei der Verarbeitung deiner Anfrage ist ein Fehler aufgetreten. Bitte versuche es erneut.",
     "errorGeneratingHarmony": "Bei der Generierung der Farbharmonie ist ein Fehler aufgetreten. Bitte versuche es erneut.",
     "errorGeneratingGradient": "Bei der Generierung des Farbverlaufs ist ein Fehler aufgetreten. Bitte versuche es erneut.",
-    "errorComparingDyes": "Beim Vergleichen der Färbemittel ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+    "errorComparingDyes": "Beim Vergleichen der Farbstoffe ist ein Fehler aufgetreten. Bitte versuche es erneut.",
     "errorGeneratingAccessibility": "Bei der Generierung des Barrierefreiheits-Vergleichs ist ein Fehler aufgetreten. Bitte versuche es erneut.",
     "imageValidationFailed": "Bildvalidierung fehlgeschlagen",
     "imageValidationFailedGeneric": "Bildvalidierung fehlgeschlagen.",
     "failedToAnalyzeImage": "Das Bild konnte nicht analysiert werden. Bitte stelle sicher, dass es eine gültige Bilddatei ist und versuche es erneut.",
     "failedToDownloadImage": "Das Bild konnte nicht von Discord heruntergeladen werden. Bitte versuche es erneut hochzuladen.",
     "invalidOrCorruptedImage": "Ungültige oder beschädigte Bilddatei. Bitte lade ein gültiges PNG-, JPG-, GIF-, BMP- oder WebP-Bild hoch.",
-    "invalidHexOrDyeName": "\"{input}\" ist keine gültige Hex-Farbe oder kein gültiger Färbemittelname.",
-    "invalidHexOrDyeNameWithExamples": "\"{input}\" ist keine gültige Hex-Farbe oder kein gültiger Färbemittelname.\n\n**Beispiele:**\n- Hex: `#FF0000`, `#8A2BE2`\n- Färbemittel: `Dalamud-Rot`, `Schneeweiß`",
+    "invalidHexOrDyeName": "\"{input}\" ist keine gültige Hex-Farbe oder kein gültiger Farbstoffname.",
+    "invalidHexOrDyeNameWithExamples": "\"{input}\" ist keine gültige Hex-Farbe oder kein gültiger Farbstoffname.\n\n**Beispiele:**\n- Hex: `#FF0000`, `#8A2BE2`\n- Farbstoff: `Dalamud-Rot`, `Schneeweiß`",
     "invalidStartColor": "Ungültige Startfarbe",
     "invalidEndColor": "Ungültige Endfarbe",
     "invalidSteps": "Ungültige Stufenzahl",
     "invalidCount": "Ungültige Anzahl",
     "invalidHarmonyType": "Ungültiger Harmonietyp",
-    "couldNotFindDye": "Färbemittel \"{name}\" konnte nicht gefunden werden.",
-    "couldNotFindDyeWithSuggestion": "Färbemittel \"{name}\" konnte nicht gefunden werden.\n\nVersuche die Autovervollständigung oder `/dye search`, um ähnliche Namen zu finden.",
-    "couldNotFindMatchingDyeForHex": "Kein passendes Färbemittel für {hex} gefunden.",
-    "noDyesInCategory": "Keine Färbemittel in Kategorie \"{category}\" gefunden.",
-    "noMatchingDyesQuery": "Keine Färbemittel passend zu \"{query}\" gefunden.\n\nVersuche einen anderen Suchbegriff oder verwende `/dye list`, um nach Kategorie zu durchsuchen.",
-    "noDyesMatchFilter": "Keine Färbemittel entsprechen deinen Filterkriterien. Bitte versuche es mit anderen Ausschlusseinstellungen erneut.",
-    "noMatchingFilterCriteria": "Keine Färbemittel entsprechen deinen Filterkriterien. Bitte versuche es mit anderen Ausschlusseinstellungen erneut.",
-    "noDyesFoundWithSuggestion": "Keine Färbemittel passend zu \"{query}\" gefunden.\n\nVersuche einen anderen Suchbegriff oder verwende `/dye list`, um nach Kategorie zu durchsuchen.",
-    "invalidColorOrDyeNameWithExamples": "\"{input}\" ist keine gültige Hex-Farbe oder Färbemittelname.\n\n**Beispiele:**\n- Hex: `#FF0000`, `#8A2BE2`\n- Färbemittel: `Dalamud-Rot`, `Schneeweiß`",
+    "couldNotFindDye": "Farbstoff \"{name}\" konnte nicht gefunden werden.",
+    "couldNotFindDyeWithSuggestion": "Farbstoff \"{name}\" konnte nicht gefunden werden.\n\nVersuche die Autovervollständigung oder `/dye search`, um ähnliche Namen zu finden.",
+    "couldNotFindMatchingDyeForHex": "Keinen passenden Farbstoff für {hex} gefunden.",
+    "noDyesInCategory": "Keine Farbstoffe in Kategorie \"{category}\" gefunden.",
+    "noMatchingDyesQuery": "Keine Farbstoffe passend zu \"{query}\" gefunden.\n\nVersuche einen anderen Suchbegriff oder verwende `/dye list`, um nach Kategorie zu durchsuchen.",
+    "noDyesMatchFilter": "Keine Farbstoffe entsprechen deinen Filterkriterien. Bitte versuche es mit anderen Ausschlusseinstellungen erneut.",
+    "noMatchingFilterCriteria": "Keine Farbstoffe entsprechen deinen Filterkriterien. Bitte versuche es mit anderen Ausschlusseinstellungen erneut.",
+    "noDyesFoundWithSuggestion": "Keine Farbstoffe passend zu \"{query}\" gefunden.\n\nVersuche einen anderen Suchbegriff oder verwende `/dye list`, um nach Kategorie zu durchsuchen.",
+    "invalidColorOrDyeNameWithExamples": "\"{input}\" ist keine gültige Hex-Farbe oder Farbstoffname.\n\n**Beispiele:**\n- Hex: `#FF0000`, `#8A2BE2`\n- Farbstoff: `Dalamud-Rot`, `Schneeweiß`",
     "invalidHexFormat": "Ungültiges Hex-Farbformat: \"{hex}\". Erwartet wird das Format #RRGGBB (z.B. #FF0000) oder RRGGBB (z.B. FF0000).",
-    "dyeNameEmpty": "Färbemittelname darf nicht leer sein.",
-    "dyeNotFoundSearch": "Färbemittel nicht gefunden: \"{name}\". Verwende Autovervollständigung oder Suche, um verfügbare Färbemittel zu finden.",
-    "dyeIdMustBeInteger": "Färbemittel-ID muss eine Ganzzahl sein.",
-    "dyeIdMustBePositive": "Färbemittel-ID muss eine positive Ganzzahl sein.",
-    "dyeIdOutOfRange": "Färbemittel-ID liegt außerhalb des bekannten Bereichs (1-200).",
+    "dyeNameEmpty": "Farbstoffname darf nicht leer sein.",
+    "dyeNotFoundSearch": "Farbstoff nicht gefunden: \"{name}\". Verwende Autovervollständigung oder Suche, um verfügbare Farbstoffe zu finden.",
+    "dyeIdMustBeInteger": "Farbstoff-ID muss eine Ganzzahl sein.",
+    "dyeIdMustBePositive": "Farbstoff-ID muss eine positive Ganzzahl sein.",
+    "dyeIdOutOfRange": "Farbstoff-ID liegt außerhalb des bekannten Bereichs (1-200).",
     "colorInputEmpty": "Farbeingabe darf nicht leer sein.",
     "searchQueryEmpty": "Suchanfrage darf nicht leer sein.",
     "validationError": "Validierungsfehler aufgetreten.",
@@ -292,10 +292,10 @@
     "steps": "Stufen",
     "step": "Stufe",
     "count": "Anzahl",
-    "dye": "Färbemittel",
-    "dyes": "Färbemittel",
+    "dye": "Farbstoff",
+    "dyes": "Farbstoffe",
     "found": "Gefunden",
-    "dyesInCategory": "Färbemittel in dieser Kategorie",
+    "dyesInCategory": "Farbstoffe in dieser Kategorie",
     "showingFirst": "zeige erste {count}"
   },
   "language": {
@@ -309,17 +309,17 @@
   },
   "manual": {
     "title": "XIV Dye Tools Bot - Befehlshandbuch",
-    "welcome": "Willkommen beim **XIV Dye Tools Discord Bot**! Dieser Bot bringt leistungsstarke Farbanalyse- und Färbemittel-Matching-Tools direkt in Discord.\n\nAlle Befehle unterstützen **Autovervollständigung** für Färbemittelnamen und Parameter. Beginne mit der Eingabe, um Vorschläge zu sehen!",
+    "welcome": "Willkommen beim **XIV Dye Tools Discord Bot**! Dieser Bot bringt leistungsstarke Farbanalyse- und Farbstoff-Matching-Tools direkt in Discord.\n\nAlle Befehle unterstützen **Autovervollständigung** für Farbstoffnamen und Parameter. Beginne mit der Eingabe, um Vorschläge zu sehen!",
     "colorTools": "Farbwerkzeuge",
-    "dyeInformation": "Färbemittel-Informationen",
+    "dyeInformation": "Farbstoff-Informationen",
     "analysisTools": "Analysewerkzeuge",
     "botInformation": "Bot-Informationen",
     "quickTips": "Schnelle Tipps",
     "tips": {
-      "autocomplete": "**Autovervollständigung:** Beginne mit der Eingabe von Färbemittelnamen, um Vorschläge zu sehen",
+      "autocomplete": "**Autovervollständigung:** Beginne mit der Eingabe von Farbstoffnamen, um Vorschläge zu sehen",
       "hexColors": "**Hex-Farben:** Sowohl `#FF0000` als auch `FF0000` Formate funktionieren",
-      "dyeNames": "**Färbemittelnamen:** Groß-/Kleinschreibung wird nicht beachtet (z.B. \"dalamud rot\" funktioniert)",
-      "categoryExclusions": "**Kategorieausschlüsse:** Gesichtszubehör-Färbemittel werden bei den meisten Suchen automatisch ausgeblendet",
+      "dyeNames": "**Farbstoffnamen:** Groß-/Kleinschreibung wird nicht beachtet (z.B. \"dalamud rot\" funktioniert)",
+      "categoryExclusions": "**Kategorieausschlüsse:** Gesichtszubehör-Farbstoffe werden bei den meisten Suchen automatisch ausgeblendet",
       "needHelp": "**Brauchst du Hilfe?** Verwende `/match_image_help` für Tipps zur Bildübereinstimmung"
     },
     "website": "Webseite",
@@ -329,11 +329,11 @@
     "commands": {
       "match": {
         "title": "/match",
-        "description": "**Finde das nächste FFXIV-Färbemittel zu einer gegebenen Farbe**\n- **Parameter:**\n  - `color` - Hex-Code (z.B. `#FF0000` oder `FF0000`) oder Färbemittelname\n- **Beispiel:** `/match color:#8B4513` oder `/match color:Dalamud-Rot`\n- Zeigt Übereinstimmungsqualität, Farbabstand und Beschaffungsinfo"
+        "description": "**Finde den nächsten FFXIV-Farbstoff zu einer gegebenen Farbe**\n- **Parameter:**\n  - `color` - Hex-Code (z.B. `#FF0000` oder `FF0000`) oder Farbstoffname\n- **Beispiel:** `/match color:#8B4513` oder `/match color:Dalamud-Rot`\n- Zeigt Übereinstimmungsqualität, Farbabstand und Beschaffungsinfo"
       },
       "matchImage": {
         "title": "/match_image",
-        "description": "**Extrahiere die dominante Farbe aus einem Bild und finde passendes Färbemittel**\n- **Parameter:**\n  - `image` - Bilddatei (PNG, JPG, GIF, BMP, WebP)\n- **Beispiel:** `/match_image image:[Datei anhängen]`\n- Unterstützt Bilder bis zu 8MB\n- **Tipp:** Siehe `/match_image_help` für Best Practices!"
+        "description": "**Extrahiere die dominante Farbe aus einem Bild und finde passenden Farbstoff**\n- **Parameter:**\n  - `image` - Bilddatei (PNG, JPG, GIF, BMP, WebP)\n- **Beispiel:** `/match_image image:[Datei anhängen]`\n- Unterstützt Bilder bis zu 8MB\n- **Tipp:** Siehe `/match_image_help` für Best Practices!"
       },
       "matchImageHelp": {
         "title": "/match_image_help",
@@ -341,23 +341,23 @@
       },
       "harmony": {
         "title": "/harmony",
-        "description": "**Generiere Farbharmonie-Vorschläge basierend auf Farbtheorie**\n- **Parameter:**\n  - `base_color` - Hex-Code oder Färbemittelname\n  - `harmony_type` - Komplementär, Triadisch, Split-Komplementär usw.\n  - `companion_count` (optional) - Begleitfarben begrenzen (1-3)\n- **Beispiel:** `/harmony base_color:Dalamud-Rot harmony_type:triadic`\n- Zeigt Farbkreis-Visualisierung und Begleit-Färbemittel mit Abweichungsbewertungen"
+        "description": "**Generiere Farbharmonie-Vorschläge basierend auf Farbtheorie**\n- **Parameter:**\n  - `base_color` - Hex-Code oder Farbstoffname\n  - `harmony_type` - Komplementär, Triadisch, Split-Komplementär usw.\n  - `companion_count` (optional) - Begleitfarben begrenzen (1-3)\n- **Beispiel:** `/harmony base_color:Dalamud-Rot harmony_type:triadic`\n- Zeigt Farbkreis-Visualisierung und Begleit-Farbstoffe mit Abweichungsbewertungen"
       },
       "mixer": {
         "title": "/mixer",
-        "description": "**Generiere einen Farbverlauf zwischen zwei Farben**\n- **Parameter:**\n  - `start_color` - Hex-Code oder Färbemittelname\n  - `end_color` - Hex-Code oder Färbemittelname\n  - `steps` (optional) - Anzahl der Stufen (2-10, Standard: 6)\n- **Beispiel:** `/mixer start_color:Schneeweiß end_color:Rußschwarz steps:8`\n- Zeigt Farbverlauf-Visualisierung mit Zwischen-Färbemitteln"
+        "description": "**Generiere einen Farbverlauf zwischen zwei Farben**\n- **Parameter:**\n  - `start_color` - Hex-Code oder Farbstoffname\n  - `end_color` - Hex-Code oder Farbstoffname\n  - `steps` (optional) - Anzahl der Stufen (2-10, Standard: 6)\n- **Beispiel:** `/mixer start_color:Schneeweiß end_color:Rußschwarz steps:8`\n- Zeigt Farbverlauf-Visualisierung mit Zwischen-Farbstoffen"
       },
       "dye": {
         "title": "/dye",
-        "description": "**Färbemittel-Suche und -Informationen (hat 4 Unterbefehle)**\n\n**`/dye info`** - Erhalte detaillierte Informationen über ein bestimmtes Färbemittel\n  - `dye_name` - Name des Färbemittels\n  - Zeigt Farbinfo, Beschaffung und mehr\n\n**`/dye search`** - Suche nach Färbemitteln nach Name\n  - `query` - Suchbegriff\n  - Gibt passende Färbemittel zurück\n\n**`/dye list`** - Liste alle Färbemittel in einer Kategorie auf\n  - `category` - Rot, Blau, Grün usw.\n  - Zeigt alle Färbemittel in dieser Kategorie\n\n**`/dye random`** - Erhalte zufällige Färbemittel-Vorschläge\n  - `count` (optional) - Anzahl der Färbemittel (1-5, Standard: 1)\n  - Toll für Inspiration!"
+        "description": "**Farbstoff-Suche und -Informationen (hat 4 Unterbefehle)**\n\n**`/dye info`** - Erhalte detaillierte Informationen über einen bestimmten Farbstoff\n  - `dye_name` - Name des Farbstoffs\n  - Zeigt Farbinfo, Beschaffung und mehr\n\n**`/dye search`** - Suche nach Farbstoffen nach Name\n  - `query` - Suchbegriff\n  - Gibt passende Farbstoffe zurück\n\n**`/dye list`** - Liste alle Farbstoffe in einer Kategorie auf\n  - `category` - Rot, Blau, Grün usw.\n  - Zeigt alle Farbstoffe in dieser Kategorie\n\n**`/dye random`** - Erhalte zufällige Farbstoff-Vorschläge\n  - `count` (optional) - Anzahl der Farbstoffe (1-5, Standard: 1)\n  - Toll für Inspiration!"
       },
       "comparison": {
         "title": "/comparison",
-        "description": "**Vergleiche mehrere Färbemittel nebeneinander**\n- **Parameter:**\n  - `dye1`, `dye2` (erforderlich) - Hex-Codes oder Färbemittelnamen\n  - `dye3`, `dye4` (optional) - Zusätzliche Färbemittel\n- **Beispiel:** `/comparison dye1:Dalamud-Rot dye2:Rolanberry-Rot`\n- Zeigt Vergleichsraster und paarweise Farbabstände"
+        "description": "**Vergleiche mehrere Farbstoffe nebeneinander**\n- **Parameter:**\n  - `dye1`, `dye2` (erforderlich) - Hex-Codes oder Farbstoffnamen\n  - `dye3`, `dye4` (optional) - Zusätzliche Farbstoffe\n- **Beispiel:** `/comparison dye1:Dalamud-Rot dye2:Rolanberry-Rot`\n- Zeigt Vergleichsraster und paarweise Farbabstände"
       },
       "accessibility": {
         "title": "/accessibility",
-        "description": "**Simuliere, wie ein Färbemittel bei Farbenblindheit erscheint**\n- **Parameter:**\n  - `dye` - Hex-Code oder Färbemittelname\n  - `vision_type` - Protanopie, Deuteranopie oder Tritanopie\n- **Beispiel:** `/accessibility dye:Dalamud-Rot vision_type:protanopia`\n- Zeigt Original- vs. simulierte Farbe mit alternativen Vorschlägen"
+        "description": "**Simuliere, wie ein Farbstoff bei Farbenblindheit erscheint**\n- **Parameter:**\n  - `dye` - Hex-Code oder Farbstoffname\n  - `vision_type` - Protanopie, Deuteranopie oder Tritanopie\n- **Beispiel:** `/accessibility dye:Dalamud-Rot vision_type:protanopia`\n- Zeigt Original- vs. simulierte Farbe mit alternativen Vorschlägen"
       },
       "about": {
         "title": "/about",
@@ -375,7 +375,7 @@
   },
   "about": {
     "title": "Über XIV Dye Tools Discord Bot",
-    "description": "Leistungsstarke Farbanalyse- und Färbemittel-Matching-Tools für FFXIV, die die Funktionen der XIV Dye Tools Webanwendung direkt in Discord bringen!",
+    "description": "Leistungsstarke Farbanalyse- und Farbstoff-Matching-Tools für FFXIV, die die Funktionen der XIV Dye Tools Webanwendung direkt in Discord bringen!",
     "botInformation": "Bot-Informationen",
     "version": "Version",
     "author": "Autor",
@@ -393,9 +393,9 @@
   },
   "matchImageHelp": {
     "title": "So verwendest du /match_image",
-    "description": "Der `/match_image`-Befehl analysiert dein hochgeladenes Bild, um die dominante Farbe zu finden und sie dem nächsten FFXIV-Färbemittel zuzuordnen. Hier sind einige Tipps für die besten Ergebnisse!",
+    "description": "Der `/match_image`-Befehl analysiert dein hochgeladenes Bild, um die dominante Farbe zu finden und sie dem nächsten FFXIV-Farbstoff zuzuordnen. Hier sind einige Tipps für die besten Ergebnisse!",
     "howItWorks": "So funktioniert es",
-    "howItWorksContent": "**1. Bildanalyse**\n- Das gesamte Bild wird auf 256×256 Pixel skaliert\n- Ein 4096-Bin 3D-Farbhistogramm wird erstellt\n- Die am häufigsten vorkommende Farbe wird extrahiert\n\n**2. Färbemittel-Matching**\n- Die dominante Farbe wird mit allen FFXIV-Färbemitteln verglichen\n- Verwendet euklidischen Abstand im RGB-Farbraum\n- Gibt das nächste passende Färbemittel zurück",
+    "howItWorksContent": "**1. Bildanalyse**\n- Das gesamte Bild wird auf 256×256 Pixel skaliert\n- Ein 4096-Bin 3D-Farbhistogramm wird erstellt\n- Die am häufigsten vorkommende Farbe wird extrahiert\n\n**2. Farbstoff-Matching**\n- Die dominante Farbe wird mit allen FFXIV-Farbstoffen verglichen\n- Verwendet euklidischen Abstand im RGB-Farbraum\n- Gibt den nächsten passenden Farbstoff zurück",
     "tipsForBestResults": "Tipps für beste Ergebnisse",
     "tipsContent": "**Schneide deine Bilder zu**\n- Konzentriere dich auf das spezifische Rüstungsteil oder den Bereich, den du abgleichen möchtest\n- Entferne unnötige UI-Elemente und Hintergründe\n- Je kleiner der Bereich, desto genauer das Ergebnis\n\n**Wähle gute Beleuchtung**\n- Mache Screenshots in gut beleuchteten Bereichen\n- Vermeide dunkle Schatten oder extreme Highlights\n- Mittagsbeleuchtung im Spiel funktioniert am besten\n\n**Vermeide dunkle Hintergründe**\n- Schwarze oder sehr dunkle Hintergründe können Ergebnisse verfälschen\n- Verwende wenn möglich neutrale, hellere Hintergründe\n- Die `/gpose`-Funktion mit benutzerdefinierten Hintergründen ist großartig!",
     "commonIssues": "Häufige Probleme",
@@ -409,7 +409,7 @@
     "poorExamples": "Schlechte Beispiele",
     "poorExamplesContent": "- Vollbild-Screenshot mit viel UI\n- Charakter in einem dunklen Dungeon oder einer Höhle\n- Mehrere Rüstungsteile mit verschiedenen Färbungen\n- Bild dominiert von Hintergrundfarben",
     "whenToUse": "Wann /match_image vs /match verwenden",
-    "whenToUseContent": "**Verwende `/match_image` wenn:**\n- Du einen Screenshot hast und das Färbemittel finden möchtest\n- Du dir über den genauen Farbcode unsicher bist\n- Du eine Farbe aus Inspirationsfotos abgleichen möchtest\n\n**Verwende `/match` wenn:**\n- Du den Hex-Farbcode bereits kennst\n- Du präzisere/exaktere Ergebnisse brauchst\n- Du mit Farbmustern oder Designdateien arbeitest",
+    "whenToUseContent": "**Verwende `/match_image` wenn:**\n- Du einen Screenshot hast und das Farbstoff finden möchtest\n- Du dir über den genauen Farbcode unsicher bist\n- Du eine Farbe aus Inspirationsfotos abgleichen möchtest\n\n**Verwende `/match` wenn:**\n- Du den Hex-Farbcode bereits kennst\n- Du präzisere/exaktere Ergebnisse brauchst\n- Du mit Farbmustern oder Designdateien arbeitest",
     "technicalDetails": "Technische Details",
     "supportedFormats": "Unterstützte Formate",
     "supportedFormatsContent": "- PNG\n- JPG/JPEG\n- GIF\n- BMP\n- WebP",
