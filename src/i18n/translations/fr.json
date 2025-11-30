@@ -50,7 +50,7 @@
             "excludeMetallic": "Exclure les teintures commençant par \"Métallique\"",
             "excludePastel": "Exclure les teintures commençant par \"Pastel\"",
             "excludeDark": "Exclure les teintures commençant par \"foncé\"",
-            "excludeCosmic": "Exclure les teintures dont l'acquisition est \"Exploration cosmique\" ou \"Fortunes cosmiques\"",
+            "excludeCosmic": "Exclure les teintures dont l'acquisition est \"Exploration cosmique\" ou \"Roue de la fortune cosmique\"",
             "excludeExpensive": "Exclure blanc immaculé (itemID 13114) et noir de jais (itemID 13115)"
           }
         }
