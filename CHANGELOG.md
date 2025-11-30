@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2025-11-30
+
+### Added
+- **Typed Error Classes**: New error class hierarchy for better error handling
+  - `BotError` base class with `ValidationError`, `NotFoundError`, `RateLimitError`, `PermissionError`, `ExternalServiceError`, `TimeoutError`, `ProcessingError`, `ImageProcessingError`
+  - `getUserFriendlyMessage()` and `getErrorTitle()` utilities for consistent error messaging
+- **SSRF Protection**: URL validation for image downloads (`src/utils/url-validator.ts`)
+  - Allowlist restricted to Discord CDN domains only
+  - Blocks private IP ranges and localhost
+- **Service Singletons Module**: Centralized service instances (`src/services/index.ts`)
+- **Shared Color Input Utilities**: DRY color/dye parsing (`src/utils/color-input.ts`)
+- **Worker Message Types**: Type-safe worker thread communication (`src/types/worker-messages.ts`)
+- **Unified Image Constants**: Single source of truth for image limits (`src/constants/image.ts`)
+
+### Changed
+- **Command Architecture**: Migrated remaining commands to `CommandBase` pattern
+  - `harmony.ts`, `comparison.ts`, `accessibility.ts`, `mixer.ts` now extend `CommandBase`
+  - Standardized error handling and logging across all commands
+- **Rate Limiter**: Conservative in-memory fallback when Redis is unavailable
+  - Prevents fail-open behavior with stricter limits (5/min, 20/hour)
+  - Memory leak fix in fallback tracking
+- **Analytics**: O(1) time-series operations using CircularBuffer
+  - Replaced O(n) `shift()` operations with circular buffer pattern
+- **Configuration Validation**: Enhanced startup validation
+  - URL format validation for `REDIS_URL` and `ERROR_WEBHOOK_URL`
+  - Numeric bounds validation for all config values
+- **Dye ID Validation**: Optional strict mode with database verification
+
+### Fixed
+- **Memory Leak**: Rate limiter in-memory fallback now properly cleans up old entries
+- **ESLint Errors**: Fixed async methods without await in mock Redis client
+- **Test Compatibility**: Updated test mocks for `CommandBase` compatibility
+
+### Security
+- Image downloads now restricted to Discord CDN domains (SSRF protection)
+- Configuration URLs validated at startup
+- Rate limiter fails closed instead of open when Redis unavailable
+
 ## [1.0.6] - 2025-11-28
 
 ### Fixed
