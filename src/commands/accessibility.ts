@@ -1,5 +1,6 @@
 /**
  * /accessibility command - Colorblind simulation for dyes
+ * Per R-2: Refactored to extend CommandBase for standardized error handling
  */
 
 import {
@@ -30,52 +31,55 @@ import {
 import { logger } from '../utils/logger.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { t } from '../services/i18n-service.js';
+import { CommandBase } from './base/CommandBase.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
 
-export const data = new SlashCommandBuilder()
-  .setName('accessibility')
-  .setDescription('Simulate how a dye appears with colorblindness')
-  .setDescriptionLocalizations({
-    ja: '色覚特性による染料の見え方をシミュレート',
-    de: 'Simulieren, wie ein Färbemittel bei Farbenblindheit erscheint',
-    fr: "Simuler l'apparence d'une teinture avec daltonisme",
-  })
-  .addStringOption((option) =>
-    option
-      .setName('dye')
-      .setDescription('Dye name or hex color (e.g., "Dalamud Red" or "#FF0000")')
-      .setDescriptionLocalizations({
-        ja: '染料名または16進数カラー（例：「ダラガブレッド」または「#FF0000」）',
-        de: 'Färbemittelname oder Hex-Farbe (z.B. "Dalamud-Rot" oder "#FF0000")',
-        fr: 'Nom de teinture ou couleur hex (ex. "Rouge Dalamud" ou "#FF0000")',
-      })
-      .setRequired(true)
-      .setAutocomplete(true)
-  )
-  .addStringOption((option) =>
-    option
-      .setName('vision_type')
-      .setDescription('Colorblind vision type (default: show all)')
-      .setDescriptionLocalizations({
-        ja: '色覚特性タイプ（デフォルト：全て表示）',
-        de: 'Farbenblind-Typ (Standard: alle anzeigen)',
-        fr: 'Type de daltonisme (par défaut : afficher tous)',
-      })
-      .setRequired(false)
-      .addChoices(
-        { name: 'All Types', value: 'all' },
-        { name: 'Protanopia (Red-blind)', value: 'protanopia' },
-        { name: 'Deuteranopia (Green-blind)', value: 'deuteranopia' },
-        { name: 'Tritanopia (Blue-blind)', value: 'tritanopia' }
-      )
-  );
+/**
+ * Accessibility command class extending CommandBase
+ * Per R-2: Uses template method pattern for error handling
+ */
+class AccessibilityCommand extends CommandBase {
+  readonly data = new SlashCommandBuilder()
+    .setName('accessibility')
+    .setDescription('Simulate how a dye appears with colorblindness')
+    .setDescriptionLocalizations({
+      ja: '色覚特性による染料の見え方をシミュレート',
+      de: 'Simulieren, wie ein Färbemittel bei Farbenblindheit erscheint',
+      fr: "Simuler l'apparence d'une teinture avec daltonisme",
+    })
+    .addStringOption((option) =>
+      option
+        .setName('dye')
+        .setDescription('Dye name or hex color (e.g., "Dalamud Red" or "#FF0000")')
+        .setDescriptionLocalizations({
+          ja: '染料名または16進数カラー（例：「ダラガブレッド」または「#FF0000」）',
+          de: 'Färbemittelname oder Hex-Farbe (z.B. "Dalamud-Rot" oder "#FF0000")',
+          fr: 'Nom de teinture ou couleur hex (ex. "Rouge Dalamud" ou "#FF0000")',
+        })
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('vision_type')
+        .setDescription('Colorblind vision type (default: show all)')
+        .setDescriptionLocalizations({
+          ja: '色覚特性タイプ（デフォルト：全て表示）',
+          de: 'Farbenblind-Typ (Standard: alle anzeigen)',
+          fr: 'Type de daltonisme (par défaut : afficher tous)',
+        })
+        .setRequired(false)
+        .addChoices(
+          { name: 'All Types', value: 'all' },
+          { name: 'Protanopia (Red-blind)', value: 'protanopia' },
+          { name: 'Deuteranopia (Green-blind)', value: 'deuteranopia' },
+          { name: 'Tritanopia (Blue-blind)', value: 'tritanopia' }
+        )
+    );
 
-export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply();
-
-  try {
+  protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     const dyeInput = interaction.options.getString('dye', true);
     const visionTypeInput = interaction.options.getString('vision_type') || 'all';
 
@@ -222,62 +226,56 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     });
 
     logger.info(`Accessibility command completed: ${dye.name} (${visionTypeInput})`);
-  } catch (error) {
-    logger.error('Error executing accessibility command:', error);
-    const errorEmbed = createErrorEmbed(
-      t('errors.commandError'),
-      t('errors.errorGeneratingAccessibility')
-    );
-
-    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
-}
 
-/**
- * Autocomplete handler for dye parameter
- */
-export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
-  const focusedOption = interaction.options.getFocused(true);
+  async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
+    const focusedOption = interaction.options.getFocused(true);
 
-  if (focusedOption.name === 'dye') {
-    const query = focusedOption.value.toLowerCase();
+    if (focusedOption.name === 'dye') {
+      const query = focusedOption.value.toLowerCase();
 
-    // If it looks like a hex color, don't suggest dyes
-    if (query.startsWith('#')) {
-      await interaction.respond([]);
-      return;
+      // If it looks like a hex color, don't suggest dyes
+      if (query.startsWith('#')) {
+        await interaction.respond([]);
+        return;
+      }
+
+      // Search for matching dyes
+      const allDyes = dyeService.getAllDyes();
+      const matches = allDyes
+        .filter((dye) => {
+          // Exclude Facewear category
+          if (dye.category === 'Facewear') return false;
+
+          // Match both localized and English names (case-insensitive)
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          return (
+            dye.name.toLowerCase().includes(query) ||
+            (localizedName && localizedName.toLowerCase().includes(query))
+          );
+        })
+        .slice(0, 25) // Discord limits to 25 choices
+        .map((dye) => {
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          const localizedCategory = LocalizationService.getCategory(dye.category);
+          return {
+            name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+            value: dye.name,
+          };
+        });
+
+      await interaction.respond(matches);
     }
-
-    // Search for matching dyes
-    const allDyes = dyeService.getAllDyes();
-    const matches = allDyes
-      .filter((dye) => {
-        // Exclude Facewear category
-        if (dye.category === 'Facewear') return false;
-
-        // Match both localized and English names (case-insensitive)
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        return (
-          dye.name.toLowerCase().includes(query) ||
-          (localizedName && localizedName.toLowerCase().includes(query))
-        );
-      })
-      .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => {
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        const localizedCategory = LocalizationService.getCategory(dye.category);
-        return {
-          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
-          value: dye.name,
-        };
-      });
-
-    await interaction.respond(matches);
   }
 }
 
-export const accessibilityCommand: BotCommand = {
-  data,
-  execute,
-  autocomplete,
-};
+// Export singleton instance
+const accessibilityCommandInstance = new AccessibilityCommand();
+export const accessibilityCommand: BotCommand = accessibilityCommandInstance;
+
+// Keep backward-compatible exports for existing code
+export const data = accessibilityCommandInstance.data;
+export const execute = accessibilityCommandInstance.execute.bind(accessibilityCommandInstance);
+export const autocomplete = accessibilityCommandInstance.autocomplete.bind(
+  accessibilityCommandInstance
+);

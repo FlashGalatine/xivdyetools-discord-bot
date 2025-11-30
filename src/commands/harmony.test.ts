@@ -14,21 +14,22 @@ function createMockInteraction(options: {
   type: string;
   companion_count?: number | null;
 }): ChatInputCommandInteraction {
-  const deferReply = vi.fn().mockResolvedValue(undefined);
-  const editReply = vi.fn().mockResolvedValue(undefined);
-  const followUp = vi.fn().mockResolvedValue({
-    id: 'mock-message-id',
-    channelId: 'test-channel-123',
-    guildId: 'test-guild-123',
-  });
-  const reply = vi.fn().mockResolvedValue(undefined);
-
+  // Create the mock object first so deferReply can reference it
   const mockInteraction = {
-    deferReply,
-    editReply,
-    followUp,
-    reply,
-    deferred: true,
+    editReply: vi.fn().mockResolvedValue(undefined),
+    followUp: vi.fn().mockResolvedValue({
+      id: 'mock-message-id',
+      channelId: 'test-channel-123',
+      guildId: 'test-guild-123',
+    }),
+    reply: vi.fn().mockResolvedValue(undefined),
+    deferred: false, // CommandBase will call deferReply()
+    replied: false,
+    user: {
+      id: 'test-user-123',
+      tag: 'testuser#1234',
+    },
+    guildId: 'test-guild-123',
     options: {
       getString: vi.fn((name: string, _required?: boolean) => {
         if (name === 'base_color') return options.base_color;
@@ -41,6 +42,12 @@ function createMockInteraction(options: {
       }),
     },
   } as unknown as ChatInputCommandInteraction;
+
+  // deferReply sets deferred to true so sendEphemeralError uses followUp
+  (mockInteraction as any).deferReply = vi.fn().mockImplementation(() => {
+    (mockInteraction as any).deferred = true;
+    return Promise.resolve();
+  });
 
   return mockInteraction;
 }

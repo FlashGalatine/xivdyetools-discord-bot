@@ -66,6 +66,100 @@ function validateEnv(): void {
 
   // Validate secrets are not placeholders
   validateSecrets();
+
+  // Validate optional URLs have correct format
+  validateOptionalUrls();
+
+  // Validate numeric bounds
+  validateNumericBounds();
+}
+
+/**
+ * Validate optional URL environment variables
+ * Per S-5: Ensure URLs are well-formed if provided
+ */
+function validateOptionalUrls(): void {
+  // Validate Redis URL format if provided
+  const redisUrl = process.env.REDIS_URL;
+  if (redisUrl) {
+    try {
+      const parsed = new URL(redisUrl);
+      if (!['redis:', 'rediss:'].includes(parsed.protocol)) {
+        throw new Error('REDIS_URL must use redis:// or rediss:// protocol');
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('redis://')) {
+        throw e;
+      }
+      throw new Error('REDIS_URL is not a valid URL');
+    }
+  }
+
+  // Validate webhook URL format if provided
+  const webhookUrl = process.env.ERROR_WEBHOOK_URL;
+  if (webhookUrl) {
+    try {
+      const parsed = new URL(webhookUrl);
+      if (parsed.protocol !== 'https:') {
+        throw new Error('ERROR_WEBHOOK_URL must use HTTPS protocol');
+      }
+      // Discord webhooks should be from discord.com
+      if (!parsed.hostname.endsWith('discord.com')) {
+        console.warn('⚠️  WARNING: ERROR_WEBHOOK_URL does not appear to be a Discord webhook');
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('HTTPS')) {
+        throw e;
+      }
+      throw new Error('ERROR_WEBHOOK_URL is not a valid URL');
+    }
+  }
+}
+
+/**
+ * Validate numeric environment variables have reasonable bounds
+ * Per S-5: Prevent misconfiguration
+ */
+function validateNumericBounds(): void {
+  // Port number bounds
+  const port = parseInt(process.env.PORT || '3000', 10);
+  if (isNaN(port) || port < 1 || port > 65535) {
+    throw new Error('PORT must be a number between 1 and 65535');
+  }
+
+  // Rate limit bounds
+  const rateLimitMinute = parseInt(process.env.RATE_LIMIT_PER_MINUTE || '10', 10);
+  if (isNaN(rateLimitMinute) || rateLimitMinute < 1 || rateLimitMinute > 100) {
+    throw new Error('RATE_LIMIT_PER_MINUTE must be between 1 and 100');
+  }
+
+  const rateLimitHour = parseInt(process.env.RATE_LIMIT_PER_HOUR || '100', 10);
+  if (isNaN(rateLimitHour) || rateLimitHour < 1 || rateLimitHour > 1000) {
+    throw new Error('RATE_LIMIT_PER_HOUR must be between 1 and 1000');
+  }
+
+  // Image size bounds (1-50 MB)
+  const imageSizeMB = parseInt(process.env.IMAGE_MAX_SIZE_MB || '8', 10);
+  if (isNaN(imageSizeMB) || imageSizeMB < 1 || imageSizeMB > 50) {
+    throw new Error('IMAGE_MAX_SIZE_MB must be between 1 and 50');
+  }
+
+  // Cache TTL bounds (1 second to 1 hour)
+  const imageCacheTTL = parseInt(process.env.IMAGE_CACHE_TTL || '300', 10);
+  if (isNaN(imageCacheTTL) || imageCacheTTL < 1 || imageCacheTTL > 3600) {
+    throw new Error('IMAGE_CACHE_TTL must be between 1 and 3600 seconds');
+  }
+
+  const apiCacheTTL = parseInt(process.env.API_CACHE_TTL || '300', 10);
+  if (isNaN(apiCacheTTL) || apiCacheTTL < 1 || apiCacheTTL > 3600) {
+    throw new Error('API_CACHE_TTL must be between 1 and 3600 seconds');
+  }
+
+  // API timeout bounds (100ms to 60s)
+  const apiTimeout = parseInt(process.env.API_TIMEOUT_MS || '5000', 10);
+  if (isNaN(apiTimeout) || apiTimeout < 100 || apiTimeout > 60000) {
+    throw new Error('API_TIMEOUT_MS must be between 100 and 60000 milliseconds');
+  }
 }
 
 /**

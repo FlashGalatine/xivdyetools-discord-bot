@@ -1,5 +1,6 @@
 /**
  * /harmony command - Generate color harmonies
+ * Per R-2: Refactored to extend CommandBase for standardized error handling
  */
 
 import {
@@ -21,6 +22,7 @@ import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.
 import { renderColorWheel } from '../renderers/color-wheel.js';
 import { logger } from '../utils/logger.js';
 import { t } from '../services/i18n-service.js';
+import { CommandBase } from './base/CommandBase.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -40,16 +42,48 @@ const harmonyTypes = [
   { name: 'Shades', value: 'shades' },
 ];
 
-export const data = new SlashCommandBuilder()
-  .setName('harmony')
-  .setDescription('Generate color harmony suggestions based on color theory')
-  .setDescriptionLocalizations({
-    ja: '色彩理論に基づいた配色提案を生成',
-    de: 'Farbharmonie-Vorschläge basierend auf Farbtheorie generieren',
-    fr: "Générer des suggestions d'harmonie de couleurs basées sur la théorie des couleurs",
-  })
-  .addStringOption(
-    (option) =>
+/**
+ * Get theoretical angles for harmony type
+ */
+function getTheoreticalAngles(harmonyType: string, _companionCount: number): number[] {
+  switch (harmonyType) {
+    case 'complementary':
+      return [180];
+    case 'analogous':
+      return [30, 330]; // ±30°
+    case 'triadic':
+      return [120, 240];
+    case 'split_complementary':
+      return [150, 210]; // 180° ± 30°
+    case 'tetradic':
+      return [60, 180, 240];
+    case 'square':
+      return [90, 180, 270];
+    case 'monochromatic':
+      return [0, 0]; // Same hue
+    case 'compound':
+      return [30, 330, 180]; // Analogous + complement
+    case 'shades':
+      return [15, 345]; // ±15°
+    default:
+      return [];
+  }
+}
+
+/**
+ * Harmony command class extending CommandBase
+ * Per R-2: Uses template method pattern for error handling
+ */
+class HarmonyCommand extends CommandBase {
+  readonly data = new SlashCommandBuilder()
+    .setName('harmony')
+    .setDescription('Generate color harmony suggestions based on color theory')
+    .setDescriptionLocalizations({
+      ja: '色彩理論に基づいた配色提案を生成',
+      de: 'Farbharmonie-Vorschläge basierend auf Farbtheorie generieren',
+      fr: "Générer des suggestions d'harmonie de couleurs basées sur la théorie des couleurs",
+    })
+    .addStringOption((option) =>
       option
         .setName('base_color')
         .setDescription('Base color: hex (e.g., #FF0000) or dye name (e.g., Dalamud Red)')
@@ -59,38 +93,35 @@ export const data = new SlashCommandBuilder()
           fr: 'Couleur de base : hex (ex. #FF0000) ou nom de teinture (ex. Rouge Dalamud)',
         })
         .setRequired(true)
-        .setAutocomplete(true) // Enable autocomplete
-  )
-  .addStringOption((option) =>
-    option
-      .setName('type')
-      .setDescription('Harmony type')
-      .setDescriptionLocalizations({
-        ja: 'ハーモニータイプ',
-        de: 'Harmonie-Typ',
-        fr: "Type d'harmonie",
-      })
-      .setRequired(true)
-      .addChoices(...harmonyTypes)
-  )
-  .addIntegerOption((option) =>
-    option
-      .setName('companion_count')
-      .setDescription('Limit number of companions (optional - shows all by default)')
-      .setDescriptionLocalizations({
-        ja: 'コンパニオンの数を制限（オプション）',
-        de: 'Anzahl der Begleitfarben begrenzen (optional)',
-        fr: 'Limiter le nombre de compagnons (optionnel)',
-      })
-      .setRequired(false)
-      .setMinValue(1)
-      .setMaxValue(3)
-  );
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('type')
+        .setDescription('Harmony type')
+        .setDescriptionLocalizations({
+          ja: 'ハーモニータイプ',
+          de: 'Harmonie-Typ',
+          fr: "Type d'harmonie",
+        })
+        .setRequired(true)
+        .addChoices(...harmonyTypes)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName('companion_count')
+        .setDescription('Limit number of companions (optional - shows all by default)')
+        .setDescriptionLocalizations({
+          ja: 'コンパニオンの数を制限（オプション）',
+          de: 'Anzahl der Begleitfarben begrenzen (optional)',
+          fr: 'Limiter le nombre de compagnons (optionnel)',
+        })
+        .setRequired(false)
+        .setMinValue(1)
+        .setMaxValue(3)
+    );
 
-export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply();
-
-  try {
+  protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     // Get parameters - companionCount is null if not specified
     const baseColorInput = interaction.options.getString('base_color', true);
     const harmonyType = interaction.options.getString('type', true);
@@ -219,114 +250,68 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     });
 
     const attachment = new AttachmentBuilder(wheelBuffer, {
-      name: 'color-wheel.png', // Use consistent name for attachment reference
+      name: 'color-wheel.png',
     });
 
     // Create embed with color wheel image
     const embed = createHarmonyEmbed(baseColor, baseDye, harmonyType, companions);
-    embed.setImage('attachment://color-wheel.png'); // Reference the attachment
-
-    // Collect attachments (color wheel)
-    const files = [attachment];
-
-    // Base dye emoji is now handled via embed thumbnail URL in createHarmonyEmbed -> createDyeEmbed logic if we wanted it,
-    // but createHarmonyEmbed doesn't call createDyeEmbed.
-    // However, createHarmonyEmbed sets the thumbnail? No, it sets the image to the color wheel.
-    // We might want to add the base dye emoji as a thumbnail if it's not the main image.
-    // But the design has the color wheel as the main image.
-    // Let's just leave the files list with just the attachment.
+    embed.setImage('attachment://color-wheel.png');
 
     // Send response (public)
     await sendPublicSuccess(interaction, {
       embeds: [embed],
-      files,
+      files: [attachment],
     });
 
     logger.info(`Harmony command completed successfully`);
-  } catch (error) {
-    logger.error('Error executing harmony command:', error);
-    const errorEmbed = createErrorEmbed(
-      t('errors.commandError'),
-      t('errors.errorGeneratingHarmony')
-    );
-
-    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
-}
 
-/**
- * Autocomplete handler for base_color parameter
- */
-export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
-  const focusedOption = interaction.options.getFocused(true);
+  async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
+    const focusedOption = interaction.options.getFocused(true);
 
-  if (focusedOption.name === 'base_color') {
-    const query = focusedOption.value.toLowerCase();
+    if (focusedOption.name === 'base_color') {
+      const query = focusedOption.value.toLowerCase();
 
-    // If it looks like a hex color, don't suggest dyes
-    if (query.startsWith('#')) {
-      await interaction.respond([]);
-      return;
+      // If it looks like a hex color, don't suggest dyes
+      if (query.startsWith('#')) {
+        await interaction.respond([]);
+        return;
+      }
+
+      // Search for matching dyes
+      const allDyes = dyeService.getAllDyes();
+      const matches = allDyes
+        .filter((dye) => {
+          // Exclude Facewear category
+          if (dye.category === 'Facewear') return false;
+
+          // Match both localized and English names (case-insensitive)
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          return (
+            dye.name.toLowerCase().includes(query) ||
+            (localizedName && localizedName.toLowerCase().includes(query))
+          );
+        })
+        .slice(0, 25) // Discord limits to 25 choices
+        .map((dye) => {
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          const localizedCategory = LocalizationService.getCategory(dye.category);
+          return {
+            name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+            value: dye.name, // Keep English name as value for lookup
+          };
+        });
+
+      await interaction.respond(matches);
     }
-
-    // Search for matching dyes
-    const allDyes = dyeService.getAllDyes();
-    const matches = allDyes
-      .filter((dye) => {
-        // Exclude Facewear category
-        if (dye.category === 'Facewear') return false;
-
-        // Match both localized and English names (case-insensitive)
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        return (
-          dye.name.toLowerCase().includes(query) ||
-          (localizedName && localizedName.toLowerCase().includes(query))
-        );
-      })
-      .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => {
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        const localizedCategory = LocalizationService.getCategory(dye.category);
-        return {
-          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
-          value: dye.name, // Keep English name as value for lookup
-        };
-      });
-
-    await interaction.respond(matches);
   }
 }
 
-/**
- * Get theoretical angles for harmony type
- */
-function getTheoreticalAngles(harmonyType: string, _companionCount: number): number[] {
-  switch (harmonyType) {
-    case 'complementary':
-      return [180];
-    case 'analogous':
-      return [30, 330]; // ±30°
-    case 'triadic':
-      return [120, 240];
-    case 'split_complementary':
-      return [150, 210]; // 180° ± 30°
-    case 'tetradic':
-      return [60, 180, 240];
-    case 'square':
-      return [90, 180, 270];
-    case 'monochromatic':
-      return [0, 0]; // Same hue
-    case 'compound':
-      return [30, 330, 180]; // Analogous + complement
-    case 'shades':
-      return [15, 345]; // ±15°
-    default:
-      return [];
-  }
-}
+// Export singleton instance
+const harmonyCommandInstance = new HarmonyCommand();
+export const harmonyCommand: BotCommand = harmonyCommandInstance;
 
-export const harmonyCommand: BotCommand = {
-  data,
-  execute,
-  autocomplete,
-};
+// Keep backward-compatible exports for existing code
+export const data = harmonyCommandInstance.data;
+export const execute = harmonyCommandInstance.execute.bind(harmonyCommandInstance);
+export const autocomplete = harmonyCommandInstance.autocomplete.bind(harmonyCommandInstance);

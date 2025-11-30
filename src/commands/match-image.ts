@@ -18,6 +18,7 @@ import {
   formatHSV,
 } from '../utils/embed-builder.js';
 import { validateImage, processWithTimeout } from '../utils/image-validator.js';
+import { validateImageUrl } from '../utils/url-validator.js';
 import { logger } from '../utils/logger.js';
 import { WorkerPool } from '../utils/worker-pool.js';
 import { emojiService } from '../services/emoji-service.js';
@@ -326,13 +327,20 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
 /**
  * Fetch image buffer from Discord CDN URL
+ * Per S-1: Validates URL before fetching to prevent SSRF attacks
  */
 async function fetchImageBuffer(url: string): Promise<Buffer> {
+  // Validate URL before fetching (SSRF protection)
+  const urlValidation = validateImageUrl(url);
+  if (!urlValidation.valid) {
+    throw new Error(urlValidation.error || 'Invalid image URL');
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    const response = await fetch(urlValidation.normalizedUrl!, { signal: controller.signal });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);

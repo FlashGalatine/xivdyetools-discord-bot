@@ -27,6 +27,12 @@ import { ChatInputCommandInteraction, AutocompleteInteraction, EmbedBuilder } fr
 import { createErrorEmbed } from '../../utils/embed-builder.js';
 import { logger } from '../../utils/logger.js';
 import { sendEphemeralError } from '../../utils/response-helper.js';
+import {
+  isBotError,
+  getUserFriendlyMessage,
+  getErrorTitle,
+  RateLimitError,
+} from '../../errors/index.js';
 import type { BotCommand } from '../../types/index.js';
 
 /**
@@ -88,48 +94,38 @@ export abstract class CommandBase implements BotCommand {
 
   /**
    * Handle errors with standardized error messages
-   * Per R-2: Centralized error handling
+   * Per R-2: Centralized error handling using typed BotError classes
    */
   protected async handleError(
     interaction: ChatInputCommandInteraction,
     error: unknown,
     commandName: string
   ): Promise<void> {
-    let errorMessage = 'An unexpected error occurred while executing this command.';
-    let errorTitle = 'Command Error';
+    // Log the error with appropriate detail level
+    if (isBotError(error)) {
+      logger.error(`Error in ${commandName} [${error.code}]:`, {
+        message: error.message,
+        statusCode: error.statusCode,
+        cause: error.cause,
+      });
 
-    if (error instanceof Error) {
-      // Log the full error for debugging
+      // Log retry info for rate limits
+      if (error instanceof RateLimitError && error.retryAfterSeconds) {
+        logger.info(`Rate limit retry after: ${error.retryAfterSeconds}s`);
+      }
+    } else if (error instanceof Error) {
       logger.error(`Error in ${commandName}:`, {
         message: error.message,
         stack: error.stack,
         name: error.name,
       });
-
-      // Provide user-friendly error messages
-      if (error.message.includes('Invalid input')) {
-        errorTitle = 'Invalid Input';
-        // Extract the user-friendly part of the error message
-        // Format: "Invalid input: \"...\" is not a valid hex color or dye name."
-        errorMessage = error.message;
-      } else if (error.message.includes('rate limit')) {
-        errorTitle = 'Rate Limit Exceeded';
-        errorMessage = "You're sending commands too quickly. Please wait a moment and try again.";
-      } else if (error.message.includes('permission') || error.message.includes('Missing')) {
-        errorTitle = 'Permission Denied';
-        errorMessage = "You don't have permission to use this command.";
-      } else if (error.message.includes('timeout')) {
-        errorTitle = 'Request Timeout';
-        errorMessage = 'The request took too long to process. Please try again.';
-      } else if (error.message.includes('network') || error.message.includes('fetch')) {
-        errorTitle = 'Network Error';
-        errorMessage = 'Failed to connect to external services. Please try again later.';
-      } else {
-        // Generic error - don't expose internal details
-        errorMessage =
-          'Something went wrong. Please try again or contact support if the issue persists.';
-      }
+    } else {
+      logger.error(`Unknown error in ${commandName}:`, error);
     }
+
+    // Get user-friendly error message and title using error utilities
+    const errorTitle = getErrorTitle(error);
+    const errorMessage = getUserFriendlyMessage(error);
 
     const errorEmbed = createErrorEmbed(errorTitle, errorMessage);
 

@@ -1,5 +1,6 @@
 /**
  * /comparison command - Compare multiple dyes side-by-side
+ * Per R-2: Refactored to extend CommandBase for standardized error handling
  */
 
 import {
@@ -24,6 +25,7 @@ import { logger } from '../utils/logger.js';
 import { emojiService } from '../services/emoji-service.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { t } from '../services/i18n-service.js';
+import { CommandBase } from './base/CommandBase.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -34,67 +36,101 @@ interface DyePair {
   distance: number;
 }
 
-export const data = new SlashCommandBuilder()
-  .setName('comparison')
-  .setDescription('Compare multiple FFXIV dyes side-by-side')
-  .setDescriptionLocalizations({
-    ja: '複数のFFXIV染料を並べて比較',
-    de: 'Mehrere FFXIV-Farbstoffe nebeneinander vergleichen',
-    fr: 'Comparer plusieurs teintures FFXIV côte à côte',
-  })
-  .addStringOption((option) =>
-    option
-      .setName('dye1')
-      .setDescription('First dye: hex (e.g., #FF0000) or dye name')
-      .setDescriptionLocalizations({
-        ja: '1番目の染料：16進数（例：#FF0000）または染料名',
-        de: 'Erster Farbstoff: Hex (z.B. #FF0000) oder Farbstoffname',
-        fr: 'Première teinture : hex (ex. #FF0000) ou nom de teinture',
-      })
-      .setRequired(true)
-      .setAutocomplete(true)
-  )
-  .addStringOption((option) =>
-    option
-      .setName('dye2')
-      .setDescription('Second dye: hex (e.g., #00FF00) or dye name')
-      .setDescriptionLocalizations({
-        ja: '2番目の染料：16進数（例：#00FF00）または染料名',
-        de: 'Zweiter Farbstoff: Hex (z.B. #00FF00) oder Farbstoffname',
-        fr: 'Deuxième teinture : hex (ex. #00FF00) ou nom de teinture',
-      })
-      .setRequired(true)
-      .setAutocomplete(true)
-  )
-  .addStringOption((option) =>
-    option
-      .setName('dye3')
-      .setDescription('Third dye (optional): hex or dye name')
-      .setDescriptionLocalizations({
-        ja: '3番目の染料（任意）：16進数または染料名',
-        de: 'Dritter Farbstoff (optional): Hex oder Farbstoffname',
-        fr: 'Troisième teinture (optionnel) : hex ou nom de teinture',
-      })
-      .setRequired(false)
-      .setAutocomplete(true)
-  )
-  .addStringOption((option) =>
-    option
-      .setName('dye4')
-      .setDescription('Fourth dye (optional): hex or dye name')
-      .setDescriptionLocalizations({
-        ja: '4番目の染料（任意）：16進数または染料名',
-        de: 'Vierter Farbstoff (optional): Hex oder Farbstoffname',
-        fr: 'Quatrième teinture (optionnel) : hex ou nom de teinture',
-      })
-      .setRequired(false)
-      .setAutocomplete(true)
-  );
+/**
+ * Calculate pairwise distances between all dyes
+ */
+function calculatePairwiseDistances(dyes: Dye[]): DyePair[] {
+  const pairs: DyePair[] = [];
 
-export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply();
+  for (let i = 0; i < dyes.length; i++) {
+    for (let j = i + 1; j < dyes.length; j++) {
+      const distance = ColorService.getColorDistance(dyes[i].hex, dyes[j].hex);
+      pairs.push({
+        dye1: dyes[i],
+        dye2: dyes[j],
+        distance,
+      });
+    }
+  }
 
-  try {
+  return pairs;
+}
+
+/**
+ * Get quality label for color distance
+ */
+function getQualityLabel(distance: number): string {
+  if (distance === 0) return t('comparisonQuality.identical');
+  if (distance < 10) return t('comparisonQuality.verySimilar');
+  if (distance < 25) return t('comparisonQuality.similar');
+  if (distance < 50) return t('comparisonQuality.somewhatDifferent');
+  if (distance < 100) return t('comparisonQuality.different');
+  return t('comparisonQuality.veryDifferent');
+}
+
+/**
+ * Comparison command class extending CommandBase
+ * Per R-2: Uses template method pattern for error handling
+ */
+class ComparisonCommand extends CommandBase {
+  readonly data = new SlashCommandBuilder()
+    .setName('comparison')
+    .setDescription('Compare multiple FFXIV dyes side-by-side')
+    .setDescriptionLocalizations({
+      ja: '複数のFFXIV染料を並べて比較',
+      de: 'Mehrere FFXIV-Farbstoffe nebeneinander vergleichen',
+      fr: 'Comparer plusieurs teintures FFXIV côte à côte',
+    })
+    .addStringOption((option) =>
+      option
+        .setName('dye1')
+        .setDescription('First dye: hex (e.g., #FF0000) or dye name')
+        .setDescriptionLocalizations({
+          ja: '1番目の染料：16進数（例：#FF0000）または染料名',
+          de: 'Erster Farbstoff: Hex (z.B. #FF0000) oder Farbstoffname',
+          fr: 'Première teinture : hex (ex. #FF0000) ou nom de teinture',
+        })
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('dye2')
+        .setDescription('Second dye: hex (e.g., #00FF00) or dye name')
+        .setDescriptionLocalizations({
+          ja: '2番目の染料：16進数（例：#00FF00）または染料名',
+          de: 'Zweiter Farbstoff: Hex (z.B. #00FF00) oder Farbstoffname',
+          fr: 'Deuxième teinture : hex (ex. #00FF00) ou nom de teinture',
+        })
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('dye3')
+        .setDescription('Third dye (optional): hex or dye name')
+        .setDescriptionLocalizations({
+          ja: '3番目の染料（任意）：16進数または染料名',
+          de: 'Dritter Farbstoff (optional): Hex oder Farbstoffname',
+          fr: 'Troisième teinture (optionnel) : hex ou nom de teinture',
+        })
+        .setRequired(false)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('dye4')
+        .setDescription('Fourth dye (optional): hex or dye name')
+        .setDescriptionLocalizations({
+          ja: '4番目の染料（任意）：16進数または染料名',
+          de: 'Vierter Farbstoff (optional): Hex oder Farbstoffname',
+          fr: 'Quatrième teinture (optionnel) : hex ou nom de teinture',
+        })
+        .setRequired(false)
+        .setAutocomplete(true)
+    );
+
+  protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     const dyeInputs = [
       interaction.options.getString('dye1', true),
       interaction.options.getString('dye2', true),
@@ -216,91 +252,54 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     });
 
     logger.info(`Comparison completed: ${dyes.length} dyes`);
-  } catch (error) {
-    logger.error('Error executing comparison command:', error);
-    const errorEmbed = createErrorEmbed(t('errors.commandError'), t('errors.errorComparingDyes'));
-
-    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
-}
 
-/**
- * Calculate pairwise distances between all dyes
- */
-function calculatePairwiseDistances(dyes: Dye[]): DyePair[] {
-  const pairs: DyePair[] = [];
+  async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
+    const focusedOption = interaction.options.getFocused(true);
 
-  for (let i = 0; i < dyes.length; i++) {
-    for (let j = i + 1; j < dyes.length; j++) {
-      const distance = ColorService.getColorDistance(dyes[i].hex, dyes[j].hex);
-      pairs.push({
-        dye1: dyes[i],
-        dye2: dyes[j],
-        distance,
-      });
+    if (['dye1', 'dye2', 'dye3', 'dye4'].includes(focusedOption.name)) {
+      const query = focusedOption.value.toLowerCase();
+
+      // If it looks like a hex color, don't suggest dyes
+      if (query.startsWith('#')) {
+        await interaction.respond([]);
+        return;
+      }
+
+      // Search for matching dyes
+      const allDyes = dyeService.getAllDyes();
+      const matches = allDyes
+        .filter((dye) => {
+          // Exclude Facewear category
+          if (dye.category === 'Facewear') return false;
+
+          // Match both localized and English names (case-insensitive)
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          return (
+            dye.name.toLowerCase().includes(query) ||
+            (localizedName && localizedName.toLowerCase().includes(query))
+          );
+        })
+        .slice(0, 25) // Discord limits to 25 choices
+        .map((dye) => {
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          const localizedCategory = LocalizationService.getCategory(dye.category);
+          return {
+            name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+            value: dye.name,
+          };
+        });
+
+      await interaction.respond(matches);
     }
   }
-
-  return pairs;
 }
 
-/**
- * Get quality label for color distance
- */
-function getQualityLabel(distance: number): string {
-  if (distance === 0) return t('comparisonQuality.identical');
-  if (distance < 10) return t('comparisonQuality.verySimilar');
-  if (distance < 25) return t('comparisonQuality.similar');
-  if (distance < 50) return t('comparisonQuality.somewhatDifferent');
-  if (distance < 100) return t('comparisonQuality.different');
-  return t('comparisonQuality.veryDifferent');
-}
+// Export singleton instance
+const comparisonCommandInstance = new ComparisonCommand();
+export const comparisonCommand: BotCommand = comparisonCommandInstance;
 
-/**
- * Autocomplete handler for dye parameters
- */
-export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
-  const focusedOption = interaction.options.getFocused(true);
-
-  if (['dye1', 'dye2', 'dye3', 'dye4'].includes(focusedOption.name)) {
-    const query = focusedOption.value.toLowerCase();
-
-    // If it looks like a hex color, don't suggest dyes
-    if (query.startsWith('#')) {
-      await interaction.respond([]);
-      return;
-    }
-
-    // Search for matching dyes
-    const allDyes = dyeService.getAllDyes();
-    const matches = allDyes
-      .filter((dye) => {
-        // Exclude Facewear category
-        if (dye.category === 'Facewear') return false;
-
-        // Match both localized and English names (case-insensitive)
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        return (
-          dye.name.toLowerCase().includes(query) ||
-          (localizedName && localizedName.toLowerCase().includes(query))
-        );
-      })
-      .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => {
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        const localizedCategory = LocalizationService.getCategory(dye.category);
-        return {
-          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
-          value: dye.name,
-        };
-      });
-
-    await interaction.respond(matches);
-  }
-}
-
-export const comparisonCommand: BotCommand = {
-  data,
-  execute,
-  autocomplete,
-};
+// Keep backward-compatible exports for existing code
+export const data = comparisonCommandInstance.data;
+export const execute = comparisonCommandInstance.execute.bind(comparisonCommandInstance);
+export const autocomplete = comparisonCommandInstance.autocomplete.bind(comparisonCommandInstance);

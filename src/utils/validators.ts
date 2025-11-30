@@ -40,11 +40,28 @@ export function validateHexColor(hex: string): ValidationResult<string> {
   return { success: true, value: normalized };
 }
 
+// Cache valid dye IDs for quick lookup
+let validDyeIds: Set<number> | null = null;
+
 /**
- * Validate dye ID with bounds checking
- * Per S-1: Bounds checking, prevents out-of-range IDs
+ * Get the set of valid dye IDs (lazily initialized)
  */
-export function validateDyeId(id: number): ValidationResult<number> {
+function getValidDyeIds(): Set<number> {
+  if (validDyeIds === null) {
+    const allDyes = dyeService.getAllDyes();
+    validDyeIds = new Set(allDyes.map((dye) => dye.id));
+  }
+  return validDyeIds;
+}
+
+/**
+ * Validate dye ID with optional database verification
+ * Per S-1: Validates against real dye data when strict mode is enabled
+ *
+ * @param id - The dye ID to validate
+ * @param strict - If true, validates ID exists in database. If false, only checks bounds. Default: false
+ */
+export function validateDyeId(id: number, strict = false): ValidationResult<number> {
   if (!Number.isInteger(id)) {
     return {
       success: false,
@@ -59,12 +76,23 @@ export function validateDyeId(id: number): ValidationResult<number> {
     };
   }
 
-  // Check against known dye range (1-125 currently, allow headroom for future dyes)
+  // Quick bounds check (allows headroom for future dyes)
   if (id > 200) {
     return {
       success: false,
       error: t('errors.dyeIdOutOfRange'),
     };
+  }
+
+  // Strict validation: check if ID exists in database
+  if (strict) {
+    const validIds = getValidDyeIds();
+    if (!validIds.has(id)) {
+      return {
+        success: false,
+        error: t('errors.dyeIdNotFound', { id }),
+      };
+    }
   }
 
   return { success: true, value: id };
@@ -282,14 +310,15 @@ export function validateCommandInputs(
     }
 
     // Validate integer options (dye IDs, counts, etc.)
+    // Note: Using non-strict validation for quick bounds check during pre-execution
     const integerOptions = interaction.options.data.filter(
       (opt) => opt.type === ApplicationCommandOptionType.Integer
     );
     for (const opt of integerOptions) {
       if (opt.value !== null && typeof opt.value === 'number') {
-        // Check if it's a dye ID
+        // Check if it's a dye ID - use non-strict (bounds-only) for pre-execution validation
         if (opt.name.includes('dye') || opt.name.includes('id')) {
-          const dyeIdResult = validateDyeId(opt.value);
+          const dyeIdResult = validateDyeId(opt.value, false);
           if (!dyeIdResult.success) {
             return dyeIdResult;
           }

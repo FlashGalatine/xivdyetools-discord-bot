@@ -75,7 +75,7 @@ vi.mock('../utils/validators.js', () => ({
 // Mock xivdyetools-core
 vi.mock('xivdyetools-core', () => ({
   DyeService: vi.fn().mockImplementation(() => ({
-    findClosestDye: vi.fn((hex: string) => ({
+    findClosestDye: vi.fn((_hex: string) => ({
       id: 1,
       name: 'Ruby Red',
       hex: '#E60026',
@@ -87,9 +87,9 @@ vi.mock('xivdyetools-core', () => ({
     ]),
   })),
   ColorService: {
-    hexToRgb: vi.fn((hex: string) => ({ r: 255, g: 0, b: 0 })),
-    rgbToHex: vi.fn((r: number, g: number, b: number) => '#FF0000'),
-    simulateColorblindness: vi.fn((rgb: { r: number; g: number; b: number }, type: string) => ({
+    hexToRgb: vi.fn((_hex: string) => ({ r: 255, g: 0, b: 0 })),
+    rgbToHex: vi.fn((_r: number, _g: number, _b: number) => '#FF0000'),
+    simulateColorblindness: vi.fn((_rgb: { r: number; g: number; b: number }, _type: string) => ({
       r: 200,
       g: 100,
       b: 50,
@@ -99,32 +99,39 @@ vi.mock('xivdyetools-core', () => ({
     getAllDyes: vi.fn(() => []),
   },
   LocalizationService: {
-    getDyeName: vi.fn((id: number) => null),
-    getCategory: vi.fn((category: string) => null),
+    getDyeName: vi.fn((_id: number) => null),
+    getCategory: vi.fn((_category: string) => null),
   },
 }));
 
 /**
  * Create mock ChatInputCommandInteraction
+ * Updated for CommandBase compatibility (needs user.id, guildId, deferred/replied state)
  */
 function createMockInteraction(options: {
   stringOptions?: Record<string, string | null>;
 }): ChatInputCommandInteraction {
-  const deferReply = vi.fn().mockResolvedValue(undefined);
-  const editReply = vi.fn().mockResolvedValue(undefined);
-  const followUp = vi.fn().mockResolvedValue(undefined);
-
-  return {
-    deferReply,
-    editReply,
-    followUp,
-    deferred: true,
+  const mockInteraction = {
+    editReply: vi.fn().mockResolvedValue(undefined),
+    followUp: vi.fn().mockResolvedValue(undefined),
+    deferred: false,
+    replied: false,
+    user: { id: 'test-user-123' },
+    guildId: 'test-guild-123',
     options: {
       getString: vi.fn((name: string, _required?: boolean) => {
         return options.stringOptions?.[name] ?? null;
       }),
     },
-  } as unknown as ChatInputCommandInteraction;
+  };
+
+  // deferReply mock must update deferred state for sendEphemeralError to work correctly
+  (mockInteraction as any).deferReply = vi.fn().mockImplementation(() => {
+    (mockInteraction as any).deferred = true;
+    return Promise.resolve();
+  });
+
+  return mockInteraction as unknown as ChatInputCommandInteraction;
 }
 
 /**
@@ -212,7 +219,9 @@ describe('Accessibility Command', () => {
   describe('Vision Type Filtering', () => {
     it('should show all vision types by default', async () => {
       const { execute } = await import('./accessibility.js');
-      const { renderAccessibilityComparison } = await import('../renderers/accessibility-comparison.js');
+      const { renderAccessibilityComparison } = await import(
+        '../renderers/accessibility-comparison.js'
+      );
 
       const interaction = createMockInteraction({
         stringOptions: { dye: '#FF0000' },

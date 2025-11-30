@@ -68,7 +68,22 @@ export class MockRedisPipeline {
     return this;
   }
 
-  async exec(): Promise<PipelineResult> {
+  pfcount(...keys: string[]): this {
+    this.commands.push({ command: 'pfcount', args: keys });
+    return this;
+  }
+
+  keys(pattern: string): this {
+    this.commands.push({ command: 'keys', args: [pattern] });
+    return this;
+  }
+
+  lrange(key: string, start: number, stop: number): this {
+    this.commands.push({ command: 'lrange', args: [key, start, stop] });
+    return this;
+  }
+
+  exec(): Promise<PipelineResult> {
     const results: PipelineResult = [];
 
     for (const cmd of this.commands) {
@@ -166,6 +181,39 @@ export class MockRedisPipeline {
             result = 'OK';
             break;
           }
+          case 'pfcount': {
+            // HyperLogLog count - combine all keys' sets
+            const keys = cmd.args as string[];
+            const combined = new Set<string>();
+            for (const key of keys) {
+              const data = this.store.get(key);
+              if (data) {
+                (JSON.parse(data) as string[]).forEach((el) => combined.add(el));
+              }
+            }
+            result = combined.size;
+            break;
+          }
+          case 'keys': {
+            const pattern = cmd.args[0] as string;
+            const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+            result = Array.from(this.store.keys()).filter((key) => regex.test(key));
+            break;
+          }
+          case 'lrange': {
+            const key = cmd.args[0] as string;
+            const start = cmd.args[1] as number;
+            const stop = cmd.args[2] as number;
+            const data = this.store.get(key);
+            if (!data) {
+              result = [];
+            } else {
+              const list = JSON.parse(data) as string[];
+              const actualStop = stop < 0 ? list.length + stop + 1 : stop + 1;
+              result = list.slice(start, actualStop);
+            }
+            break;
+          }
           default:
             result = null;
         }
@@ -175,7 +223,7 @@ export class MockRedisPipeline {
       }
     }
 
-    return results;
+    return Promise.resolve(results);
   }
 }
 
@@ -211,12 +259,12 @@ export class MockRedisClient {
   }
 
   // Basic commands
-  async get(key: string): Promise<string | null> {
+  get(key: string): Promise<string | null> {
     this.checkExpiry(key);
-    return this.store.get(key) ?? null;
+    return Promise.resolve(this.store.get(key) ?? null);
   }
 
-  async set(key: string, value: string, ...args: unknown[]): Promise<'OK'> {
+  set(key: string, value: string, ...args: unknown[]): Promise<'OK'> {
     this.store.set(key, value);
 
     // Handle EX option for TTL
@@ -226,10 +274,10 @@ export class MockRedisClient {
       this.ttls.set(key, Date.now() + ttl * 1000);
     }
 
-    return 'OK';
+    return Promise.resolve('OK');
   }
 
-  async del(...keys: string[]): Promise<number> {
+  del(...keys: string[]): Promise<number> {
     let deleted = 0;
     for (const key of keys) {
       if (this.store.has(key)) {
@@ -238,74 +286,74 @@ export class MockRedisClient {
         deleted++;
       }
     }
-    return deleted;
+    return Promise.resolve(deleted);
   }
 
-  async incr(key: string): Promise<number> {
+  incr(key: string): Promise<number> {
     this.checkExpiry(key);
     const current = parseInt(this.store.get(key) || '0', 10);
     const newValue = current + 1;
     this.store.set(key, String(newValue));
-    return newValue;
+    return Promise.resolve(newValue);
   }
 
-  async expire(key: string, seconds: number): Promise<number> {
+  expire(key: string, seconds: number): Promise<number> {
     if (this.store.has(key)) {
       this.ttls.set(key, Date.now() + seconds * 1000);
-      return 1;
+      return Promise.resolve(1);
     }
-    return 0;
+    return Promise.resolve(0);
   }
 
-  async ttl(key: string): Promise<number> {
+  ttl(key: string): Promise<number> {
     const expiry = this.ttls.get(key);
     if (expiry) {
       const remaining = Math.ceil((expiry - Date.now()) / 1000);
-      return remaining > 0 ? remaining : -2;
+      return Promise.resolve(remaining > 0 ? remaining : -2);
     }
     if (this.store.has(key)) {
-      return -1; // No expiry
+      return Promise.resolve(-1); // No expiry
     }
-    return -2; // Key doesn't exist
+    return Promise.resolve(-2); // Key doesn't exist
   }
 
-  async exists(...keys: string[]): Promise<number> {
+  exists(...keys: string[]): Promise<number> {
     let count = 0;
     for (const key of keys) {
       this.checkExpiry(key);
       if (this.store.has(key)) count++;
     }
-    return count;
+    return Promise.resolve(count);
   }
 
-  async keys(pattern: string): Promise<string[]> {
+  keys(pattern: string): Promise<string[]> {
     this.cleanupExpired();
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
-    return Array.from(this.store.keys()).filter((key) => regex.test(key));
+    return Promise.resolve(Array.from(this.store.keys()).filter((key) => regex.test(key)));
   }
 
-  async ping(): Promise<string> {
-    return 'PONG';
+  ping(): Promise<string> {
+    return Promise.resolve('PONG');
   }
 
-  async quit(): Promise<'OK'> {
+  quit(): Promise<'OK'> {
     this.store.clear();
     this.ttls.clear();
     this.emit('close');
-    return 'OK';
+    return Promise.resolve('OK');
   }
 
   // HyperLogLog commands (simplified)
-  async pfadd(key: string, ...elements: string[]): Promise<number> {
+  pfadd(key: string, ...elements: string[]): Promise<number> {
     const existing = this.store.get(key);
     const set = existing ? new Set(JSON.parse(existing) as string[]) : new Set<string>();
     const sizeBefore = set.size;
     elements.forEach((el) => set.add(el));
     this.store.set(key, JSON.stringify(Array.from(set)));
-    return set.size > sizeBefore ? 1 : 0;
+    return Promise.resolve(set.size > sizeBefore ? 1 : 0);
   }
 
-  async pfcount(...keys: string[]): Promise<number> {
+  pfcount(...keys: string[]): Promise<number> {
     const combined = new Set<string>();
     for (const key of keys) {
       const data = this.store.get(key);
@@ -313,33 +361,42 @@ export class MockRedisClient {
         (JSON.parse(data) as string[]).forEach((el) => combined.add(el));
       }
     }
-    return combined.size;
+    return Promise.resolve(combined.size);
   }
 
   // List commands
-  async lpush(key: string, ...values: string[]): Promise<number> {
+  lpush(key: string, ...values: string[]): Promise<number> {
     const existing = this.store.get(key);
     const list: string[] = existing ? (JSON.parse(existing) as string[]) : [];
     list.unshift(...values.reverse());
     this.store.set(key, JSON.stringify(list));
-    return list.length;
+    return Promise.resolve(list.length);
   }
 
-  async lrange(key: string, start: number, stop: number): Promise<string[]> {
+  lrange(key: string, start: number, stop: number): Promise<string[]> {
     const data = this.store.get(key);
-    if (!data) return [];
+    if (!data) return Promise.resolve([]);
     const list = JSON.parse(data) as string[];
     const actualStop = stop < 0 ? list.length + stop + 1 : stop + 1;
-    return list.slice(start, actualStop);
+    return Promise.resolve(list.slice(start, actualStop));
   }
 
-  async ltrim(key: string, start: number, stop: number): Promise<'OK'> {
+  mget(...keys: string[]): Promise<(string | null)[]> {
+    return Promise.resolve(
+      keys.map((key) => {
+        this.checkExpiry(key);
+        return this.store.get(key) ?? null;
+      })
+    );
+  }
+
+  ltrim(key: string, start: number, stop: number): Promise<'OK'> {
     const data = this.store.get(key);
-    if (!data) return 'OK';
+    if (!data) return Promise.resolve('OK');
     const list = JSON.parse(data) as string[];
     const actualStop = stop < 0 ? list.length + stop + 1 : stop + 1;
     this.store.set(key, JSON.stringify(list.slice(start, actualStop)));
-    return 'OK';
+    return Promise.resolve('OK');
   }
 
   // Pipeline

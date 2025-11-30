@@ -1,5 +1,6 @@
 /**
  * /mixer command - Generate color gradients with intermediate dyes
+ * Per R-2: Refactored to extend CommandBase for standardized error handling
  */
 
 import {
@@ -24,6 +25,7 @@ import { renderGradient } from '../renderers/gradient.js';
 import { logger } from '../utils/logger.js';
 import { emojiService } from '../services/emoji-service.js';
 import { t } from '../services/i18n-service.js';
+import { CommandBase } from './base/CommandBase.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -56,56 +58,58 @@ function generateGradientColors(startColor: string, endColor: string, steps: num
   return colors;
 }
 
-export const data = new SlashCommandBuilder()
-  .setName('mixer')
-  .setDescription('Generate a color gradient between two colors with intermediate dyes')
-  .setDescriptionLocalizations({
-    ja: '2色間のカラーグラデーションを生成し、中間の染料を提案',
-    de: 'Farbverlauf zwischen zwei Farben mit passenden Farbstoffen generieren',
-    fr: 'Générer un dégradé de couleurs entre deux couleurs avec des teintures intermédiaires',
-  })
-  .addStringOption((option) =>
-    option
-      .setName('start_color')
-      .setDescription('Starting color: hex (e.g., #FF0000) or dye name')
-      .setDescriptionLocalizations({
-        ja: '開始色：16進数（例：#FF0000）または染料名',
-        de: 'Startfarbe: Hex (z.B. #FF0000) oder Farbstoffname',
-        fr: 'Couleur de départ : hex (ex. #FF0000) ou nom de teinture',
-      })
-      .setRequired(true)
-      .setAutocomplete(true)
-  )
-  .addStringOption((option) =>
-    option
-      .setName('end_color')
-      .setDescription('Ending color: hex (e.g., #0000FF) or dye name')
-      .setDescriptionLocalizations({
-        ja: '終了色：16進数（例：#0000FF）または染料名',
-        de: 'Endfarbe: Hex (z.B. #0000FF) oder Farbstoffname',
-        fr: 'Couleur de fin : hex (ex. #0000FF) ou nom de teinture',
-      })
-      .setRequired(true)
-      .setAutocomplete(true)
-  )
-  .addIntegerOption((option) =>
-    option
-      .setName('steps')
-      .setDescription('Number of color steps (default: 6)')
-      .setDescriptionLocalizations({
-        ja: 'グラデーションのステップ数（デフォルト：6）',
-        de: 'Anzahl der Farbschritte (Standard: 6)',
-        fr: 'Nombre de paliers de couleur (par défaut : 6)',
-      })
-      .setRequired(false)
-      .setMinValue(2)
-      .setMaxValue(10)
-  );
+/**
+ * Mixer command class extending CommandBase
+ * Per R-2: Uses template method pattern for error handling
+ */
+class MixerCommand extends CommandBase {
+  readonly data = new SlashCommandBuilder()
+    .setName('mixer')
+    .setDescription('Generate a color gradient between two colors with intermediate dyes')
+    .setDescriptionLocalizations({
+      ja: '2色間のカラーグラデーションを生成し、中間の染料を提案',
+      de: 'Farbverlauf zwischen zwei Farben mit passenden Farbstoffen generieren',
+      fr: 'Générer un dégradé de couleurs entre deux couleurs avec des teintures intermédiaires',
+    })
+    .addStringOption((option) =>
+      option
+        .setName('start_color')
+        .setDescription('Starting color: hex (e.g., #FF0000) or dye name')
+        .setDescriptionLocalizations({
+          ja: '開始色：16進数（例：#FF0000）または染料名',
+          de: 'Startfarbe: Hex (z.B. #FF0000) oder Farbstoffname',
+          fr: 'Couleur de départ : hex (ex. #FF0000) ou nom de teinture',
+        })
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('end_color')
+        .setDescription('Ending color: hex (e.g., #0000FF) or dye name')
+        .setDescriptionLocalizations({
+          ja: '終了色：16進数（例：#0000FF）または染料名',
+          de: 'Endfarbe: Hex (z.B. #0000FF) oder Farbstoffname',
+          fr: 'Couleur de fin : hex (ex. #0000FF) ou nom de teinture',
+        })
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName('steps')
+        .setDescription('Number of color steps (default: 6)')
+        .setDescriptionLocalizations({
+          ja: 'グラデーションのステップ数（デフォルト：6）',
+          de: 'Anzahl der Farbschritte (Standard: 6)',
+          fr: 'Nombre de paliers de couleur (par défaut : 6)',
+        })
+        .setRequired(false)
+        .setMinValue(2)
+        .setMaxValue(10)
+    );
 
-export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply();
-
-  try {
+  protected async executeCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     const startColorInput = interaction.options.getString('start_color', true);
     const endColorInput = interaction.options.getString('end_color', true);
     const steps = interaction.options.getInteger('steps') || 6;
@@ -266,62 +270,54 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     });
 
     logger.info(`Mixer command completed: ${steps} steps generated`);
-  } catch (error) {
-    logger.error('Error executing mixer command:', error);
-    const errorEmbed = createErrorEmbed(
-      t('errors.commandError'),
-      t('errors.errorGeneratingGradient')
-    );
-
-    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
-}
 
-/**
- * Autocomplete handler for color parameters
- */
-export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
-  const focusedOption = interaction.options.getFocused(true);
+  async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
+    const focusedOption = interaction.options.getFocused(true);
 
-  if (focusedOption.name === 'start_color' || focusedOption.name === 'end_color') {
-    const query = focusedOption.value.toLowerCase();
+    if (focusedOption.name === 'start_color' || focusedOption.name === 'end_color') {
+      const query = focusedOption.value.toLowerCase();
 
-    // If it looks like a hex color, don't suggest dyes
-    if (query.startsWith('#')) {
-      await interaction.respond([]);
-      return;
+      // If it looks like a hex color, don't suggest dyes
+      if (query.startsWith('#')) {
+        await interaction.respond([]);
+        return;
+      }
+
+      // Search for matching dyes
+      const allDyes = dyeService.getAllDyes();
+      const matches = allDyes
+        .filter((dye) => {
+          // Exclude Facewear category
+          if (dye.category === 'Facewear') return false;
+
+          // Match both localized and English names (case-insensitive)
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          return (
+            dye.name.toLowerCase().includes(query) ||
+            (localizedName && localizedName.toLowerCase().includes(query))
+          );
+        })
+        .slice(0, 25) // Discord limits to 25 choices
+        .map((dye) => {
+          const localizedName = LocalizationService.getDyeName(dye.id);
+          const localizedCategory = LocalizationService.getCategory(dye.category);
+          return {
+            name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
+            value: dye.name,
+          };
+        });
+
+      await interaction.respond(matches);
     }
-
-    // Search for matching dyes
-    const allDyes = dyeService.getAllDyes();
-    const matches = allDyes
-      .filter((dye) => {
-        // Exclude Facewear category
-        if (dye.category === 'Facewear') return false;
-
-        // Match both localized and English names (case-insensitive)
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        return (
-          dye.name.toLowerCase().includes(query) ||
-          (localizedName && localizedName.toLowerCase().includes(query))
-        );
-      })
-      .slice(0, 25) // Discord limits to 25 choices
-      .map((dye) => {
-        const localizedName = LocalizationService.getDyeName(dye.id);
-        const localizedCategory = LocalizationService.getCategory(dye.category);
-        return {
-          name: `${localizedName || dye.name} (${localizedCategory || dye.category})`,
-          value: dye.name,
-        };
-      });
-
-    await interaction.respond(matches);
   }
 }
 
-export const mixerCommand: BotCommand = {
-  data,
-  execute,
-  autocomplete,
-};
+// Export singleton instance
+const mixerCommandInstance = new MixerCommand();
+export const mixerCommand: BotCommand = mixerCommandInstance;
+
+// Keep backward-compatible exports for existing code
+export const data = mixerCommandInstance.data;
+export const execute = mixerCommandInstance.execute.bind(mixerCommandInstance);
+export const autocomplete = mixerCommandInstance.autocomplete.bind(mixerCommandInstance);
