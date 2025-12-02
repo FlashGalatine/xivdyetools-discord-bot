@@ -9,6 +9,17 @@ import type {
   AutocompleteInteraction,
   InteractionEditReplyOptions,
 } from 'discord.js';
+
+// Mock config before importing modules that depend on it
+vi.mock('../../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
+
+// Import after mocks are set up
 import { matchCommand } from '../../commands/match.js';
 import { harmonyCommand } from '../../commands/harmony.js';
 import { dyeCommand } from '../../commands/dye.js';

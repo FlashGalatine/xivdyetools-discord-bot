@@ -2,7 +2,20 @@
  * Unit tests for validator utilities
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import type { ChatInputCommandInteraction, CommandInteractionOption } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
+
+// Mock config before importing modules that depend on it
+vi.mock('../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
+
+// Import after mocks are set up
 import {
     validateHexColor,
     validateHexColorLegacy,
@@ -14,8 +27,6 @@ import {
     validateCommandInputs,
     findDyeByName,
 } from './validators.js';
-import type { ChatInputCommandInteraction, CommandInteractionOption } from 'discord.js';
-import { ApplicationCommandOptionType } from 'discord.js';
 
 describe('validateHexColor', () => {
     it('should accept valid hex colors with #', () => {

@@ -5,6 +5,17 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ChatInputCommandInteraction, InteractionEditReplyOptions } from 'discord.js';
+
+// Mock config before importing modules that depend on it
+vi.mock('../../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
+
+// Import after mocks are set up
 import { matchCommand } from '../../commands/match.js';
 // Note: harmony and dye commands may need to be imported differently
 // For now, we'll focus on match command which we know works

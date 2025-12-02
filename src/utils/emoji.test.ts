@@ -2,9 +2,20 @@
  * Unit tests for emoji utility functions
  */
 
-import { describe, it, expect } from 'vitest';
-import { getDyeEmojiPath, getDyeEmojiBuffer, getDyeEmojiFilename, hasDyeEmoji } from './emoji.js';
+import { describe, it, expect, vi } from 'vitest';
 import type { Dye } from 'xivdyetools-core';
+
+// Mock config before importing modules that depend on it
+vi.mock('../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
+
+// Import after mocks are set up
+import { getDyeEmojiPath, getDyeEmojiBuffer, getDyeEmojiFilename, hasDyeEmoji } from './emoji.js';
 
 // Mock dye objects for testing
 const mockDyeWithEmoji: Dye = {

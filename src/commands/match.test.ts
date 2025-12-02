@@ -3,9 +3,17 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { matchCommand } from './match.js';
 import type { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
 import type { Dye } from 'xivdyetools-core';
+
+// Mock config before importing modules that depend on it
+vi.mock('../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
 
 // Mock emoji service
 vi.mock('../services/emoji-service.js', () => ({
@@ -29,6 +37,9 @@ vi.mock('../services/emoji-service.js', () => ({
     }),
   },
 }));
+
+// Import after mocks are set up
+import { matchCommand } from './match.js';
 
 /**
  * Create mock ChatInputCommandInteraction

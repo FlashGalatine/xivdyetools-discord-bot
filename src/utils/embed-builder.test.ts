@@ -2,22 +2,17 @@
  * Unit tests for embed builder utilities
  */
 
-import { describe, it, expect } from 'vitest';
-import {
-  COLORS,
-  formatColorSwatch,
-  formatRGB,
-  formatHSV,
-  formatPrice,
-  createErrorEmbed,
-  createSuccessEmbed,
-  createInfoEmbed,
-  createDyeEmbed,
-  createHarmonyEmbed,
-  createDyeEmojiAttachment,
-} from './embed-builder.js';
-import { vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type { Dye } from 'xivdyetools-core';
+
+// Mock config before importing modules that depend on it
+vi.mock('../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
 
 // Mock xivdyetools-core LocalizationService to test fallback paths
 vi.mock('xivdyetools-core', async (importOriginal) => {
@@ -38,6 +33,21 @@ vi.mock('xivdyetools-core', async (importOriginal) => {
     },
   };
 });
+
+// Import after mocks are set up
+import {
+  COLORS,
+  formatColorSwatch,
+  formatRGB,
+  formatHSV,
+  formatPrice,
+  createErrorEmbed,
+  createSuccessEmbed,
+  createInfoEmbed,
+  createDyeEmbed,
+  createHarmonyEmbed,
+  createDyeEmojiAttachment,
+} from './embed-builder.js';
 
 // Mock emoji service
 vi.mock('../services/emoji-service.js', () => ({

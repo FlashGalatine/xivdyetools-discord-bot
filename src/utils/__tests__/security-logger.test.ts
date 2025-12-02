@@ -4,12 +4,23 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { securityLogger, SecurityEventType } from '../security-logger.js';
+
+// Mock config before importing modules that depend on it
+vi.mock('../../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
 
 // Mock Redis client
 vi.mock('../../services/redis.js', () => ({
   getRedisClient: vi.fn(() => null), // Use in-memory fallback
 }));
+
+// Import after mocks are set up
+import { securityLogger, SecurityEventType } from '../security-logger.js';
 
 describe('Security Logger', () => {
   beforeEach(() => {
@@ -163,6 +174,15 @@ describe('Security Logger - Redis Path', () => {
   it('should store events in Redis when available (lines 85, 98-122)', async () => {
     vi.resetModules();
 
+    // Mock config to prevent validation errors
+    vi.doMock('../../config.js', () => ({
+      config: {
+        logLevel: 'info',
+        token: 'test-token',
+        clientId: 'test-client-id',
+      },
+    }));
+
     // Create mock Redis client
     const mockPipeline = {
       lpush: vi.fn().mockReturnThis(),
@@ -196,6 +216,15 @@ describe('Security Logger - Redis Path', () => {
 
   it('should get user events from Redis (lines 281-283)', async () => {
     vi.resetModules();
+
+    // Mock config to prevent validation errors
+    vi.doMock('../../config.js', () => ({
+      config: {
+        logLevel: 'info',
+        token: 'test-token',
+        clientId: 'test-client-id',
+      },
+    }));
 
     const mockEvent = JSON.stringify({
       type: 'rate_limit_exceeded',
@@ -231,6 +260,15 @@ describe('Security Logger - Redis Path', () => {
 
   it('should get stats from Redis (lines 306-336)', async () => {
     vi.resetModules();
+
+    // Mock config to prevent validation errors
+    vi.doMock('../../config.js', () => ({
+      config: {
+        logLevel: 'info',
+        token: 'test-token',
+        clientId: 'test-client-id',
+      },
+    }));
 
     const mockRedis = {
       pipeline: vi.fn(() => ({
@@ -269,6 +307,15 @@ describe('Security Logger - Error Handling', () => {
   it('should handle getUserEvents errors (lines 291-293)', async () => {
     vi.resetModules();
 
+    // Mock config to prevent validation errors
+    vi.doMock('../../config.js', () => ({
+      config: {
+        logLevel: 'info',
+        token: 'test-token',
+        clientId: 'test-client-id',
+      },
+    }));
+
     const mockRedis = {
       pipeline: vi.fn(() => ({
         lpush: vi.fn().mockReturnThis(),
@@ -294,6 +341,15 @@ describe('Security Logger - Error Handling', () => {
 
   it('should handle getStats errors (lines 357-359)', async () => {
     vi.resetModules();
+
+    // Mock config to prevent validation errors
+    vi.doMock('../../config.js', () => ({
+      config: {
+        logLevel: 'info',
+        token: 'test-token',
+        clientId: 'test-client-id',
+      },
+    }));
 
     const mockRedis = {
       pipeline: vi.fn(() => ({
@@ -321,6 +377,15 @@ describe('Security Logger - Error Handling', () => {
   it('should handle logEvent errors (lines 90-91)', async () => {
     vi.resetModules();
 
+    // Mock config to prevent validation errors
+    vi.doMock('../../config.js', () => ({
+      config: {
+        logLevel: 'info',
+        token: 'test-token',
+        clientId: 'test-client-id',
+      },
+    }));
+
     const mockRedis = {
       pipeline: vi.fn(() => {
         throw new Error('Pipeline creation failed');
@@ -345,6 +410,15 @@ describe('Security Logger - Error Handling', () => {
 describe('Security Logger - Memory Store', () => {
   it('should trim old events when max exceeded (lines 130-132)', async () => {
     vi.resetModules();
+
+    // Mock config to prevent validation errors
+    vi.doMock('../../config.js', () => ({
+      config: {
+        logLevel: 'info',
+        token: 'test-token',
+        clientId: 'test-client-id',
+      },
+    }));
 
     vi.doMock('../../services/redis.js', () => ({
       getRedisClient: vi.fn(() => null),

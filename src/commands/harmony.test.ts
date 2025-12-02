@@ -3,8 +3,19 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { execute, autocomplete } from './harmony.js';
 import type { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
+
+// Mock config before importing modules that depend on it
+vi.mock('../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
+
+// Import after mocks are set up
+import { execute, autocomplete } from './harmony.js';
 
 /**
  * Create mock ChatInputCommandInteraction

@@ -3,11 +3,21 @@
  * Per R-5: Performance testing and benchmarking
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { DyeService, ColorService, dyeDatabase } from 'xivdyetools-core';
-import { matchCommand } from '../../commands/match.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
-import { vi } from 'vitest';
+
+// Mock config before importing modules that depend on it
+vi.mock('../../config.js', () => ({
+  config: {
+    logLevel: 'info',
+    token: 'test-token',
+    clientId: 'test-client-id',
+  },
+}));
+
+// Import after mocks are set up
+import { matchCommand } from '../../commands/match.js';
 
 describe('Performance Benchmarks', () => {
   const dyeService = new DyeService(dyeDatabase);
