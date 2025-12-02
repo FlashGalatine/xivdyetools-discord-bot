@@ -71,6 +71,10 @@ const mockDye: Dye = {
   itemID: 5730,
   acquisition: 'Vendor (200 Gil)',
   cost: 200,
+  isMetallic: false,
+  isPastel: false,
+  isDark: false,
+  isCosmic: false,
 };
 
 const mockDyeWithoutEmoji: Dye = {
@@ -83,6 +87,10 @@ const mockDyeWithoutEmoji: Dye = {
   itemID: 99999,
   acquisition: 'Unknown',
   cost: 0,
+  isMetallic: false,
+  isPastel: false,
+  isDark: false,
+  isCosmic: false,
 };
 
 describe('COLORS constant', () => {
