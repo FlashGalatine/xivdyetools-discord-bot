@@ -4,14 +4,14 @@
  * Tests color input parsing and autocomplete handling
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import {
   parseColorInput,
   parseColorToHex,
   handleDyeAutocomplete,
   getAllDyesForAutocomplete,
 } from './color-input.js';
-import type { AutocompleteInteraction } from 'discord.js';
+import type { AutocompleteInteraction, ApplicationCommandOptionChoiceData } from 'discord.js';
 
 describe('Color Input Utilities', () => {
   describe('parseColorInput', () => {
@@ -160,16 +160,21 @@ describe('Color Input Utilities', () => {
 
   describe('handleDyeAutocomplete', () => {
     let mockInteraction: Partial<AutocompleteInteraction>;
-    let respondSpy: ReturnType<typeof vi.fn>;
+    let respondSpy: Mock<
+      [readonly ApplicationCommandOptionChoiceData<string | number>[]],
+      Promise<void>
+    >;
 
     beforeEach(() => {
-      respondSpy = vi.fn().mockResolvedValue(undefined);
+      respondSpy = vi
+        .fn<[readonly ApplicationCommandOptionChoiceData<string | number>[]], Promise<void>>()
+        .mockResolvedValue(undefined);
       mockInteraction = {
         options: {
           getFocused: vi.fn().mockReturnValue(''),
         } as unknown as AutocompleteInteraction['options'],
         respond: respondSpy,
-      };
+      } as unknown as Partial<AutocompleteInteraction>;
     });
 
     afterEach(() => {

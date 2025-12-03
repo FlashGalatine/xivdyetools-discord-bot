@@ -182,6 +182,17 @@
     "protanopiaAffects": "남성의 약 1%",
     "deuteranopiaAffects": "남성의 약 1%",
     "tritanopiaAffects": "인구의 0.01% 미만",
+    "contrastScores": "대비 점수",
+    "vsWhite": "vs 흰색",
+    "vsBlack": "vs 검정색",
+    "contrastMatrix": "대비 매트릭스",
+    "contrastComparison": "대비 비교",
+    "contrastMatrixDescription": "염료 간 WCAG 대비 비율. 높은 비율은 함께 사용할 때 더 나은 가독성을 나타냅니다.",
+    "wcagLegend": "WCAG 레벨",
+    "wcagAAA": "우수한 대비 (7:1+)",
+    "wcagAA": "양호한 대비 (4.5:1+)",
+    "wcagFail": "불충분한 대비 (<4.5:1)",
+    "fail": "실패",
     "aboutCVD": "색각 특성에 대하여",
     "cvdDescription": "색각 특성 (색각 이상)은 남성의 약 8%, 여성의 약 0.5%에 영향을 미칩니다. 이러한 시뮬레이션은 Brettel 1997 알고리즘을 사용하여 다양한 유형의 색각 특성을 가진 사람들에게 색상이 어떻게 보이는지 근사합니다.",
     "botStatistics": "봇 통계",
@@ -359,7 +370,7 @@
       },
       "accessibility": {
         "title": "/accessibility",
-        "description": "**색각 특성에서 염료가 어떻게 보이는지 시뮬레이션*\n- **매개변수:*\n  - `dye` - 16진수 코드 또는 염료 이\n  - `vision_type` - 제1색맹, 제2색맹 또는 제3색\n- **예:** `/accessibility dye:달라가브색 vision_type:protanopia\n- 원본 및 시뮬레이션된 색상을 대안과 함께 표시"
+        "description": "**색각 시뮬레이션 또는 염료 대비 비교**\n\n**단일 염료 모드:**\n- `dye` - 16진수 코드 또는 염료 이름\n- `vision_type` (선택 사항) - 제1색맹, 제2색맹 또는 제3색맹\n- 색각 시뮬레이션 + 흰색/검정색 대비 점수 표시\n- **예:** `/accessibility dye:달라가브색`\n\n**다중 염료 모드 (2-4개):**\n- `dye`, `dye2`, `dye3`, `dye4` - 염료 간 대비 비교\n- AAA/AA/실패 등급이 있는 WCAG 대비 매트릭스 표시\n- **예:** `/accessibility dye:퓨어화이트 dye2:수트블랙`"
       },
       "about": {
         "title": "/about",

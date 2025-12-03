@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.11] - 2025-12-02
+
+### Added
+- **`/accessibility` Multi-Dye Contrast Comparison**: Enhanced command to support up to 4 dyes
+  - **Single dye mode**: Now displays WCAG contrast scores vs white (#FFFFFF) and black (#000000) in addition to colorblind simulation
+  - **Multi-dye mode (2-4 dyes)**: New graphical contrast matrix showing pairwise WCAG contrast ratios with AAA/AA/Fail compliance badges
+  - New options: `dye2`, `dye3`, `dye4` for comparing multiple dyes
+  - New renderer: `accessibility-matrix.ts` generates visual contrast comparison grid
+
+### Changed
+- **`/manual` Command**: Updated accessibility command documentation to reflect new multi-dye contrast comparison feature
+- **Localization**: Added new translation keys for contrast features across all 6 languages (en, ja, de, fr, ko, zh):
+  - `contrastScores`, `vsWhite`, `vsBlack`, `contrastMatrix`, `contrastComparison`
+  - `contrastMatrixDescription`, `wcagLegend`, `wcagAAA`, `wcagAA`, `wcagFail`, `fail`
+
 ## [1.0.10] - 2025-12-02
 
 ### Security (Based on SECURITY_AND_BUG_AUDIT.md)

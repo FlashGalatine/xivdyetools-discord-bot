@@ -180,6 +180,17 @@
     "protanopiaAffects": "男性の約1%",
     "deuteranopiaAffects": "男性の約1%",
     "tritanopiaAffects": "人口の0.01%未満",
+    "contrastScores": "コントラストスコア",
+    "vsWhite": "白との比較",
+    "vsBlack": "黒との比較",
+    "contrastMatrix": "コントラストマトリックス",
+    "contrastComparison": "コントラスト比較",
+    "contrastMatrixDescription": "染料間のWCAGコントラスト比。高い比率ほど、一緒に使用した際の視認性が良くなります。",
+    "wcagLegend": "WCAGレベル",
+    "wcagAAA": "優れたコントラスト (7:1以上)",
+    "wcagAA": "良好なコントラスト (4.5:1以上)",
+    "wcagFail": "不十分なコントラスト (4.5:1未満)",
+    "fail": "不合格",
     "aboutCVD": "色覚特性について",
     "cvdDescription": "色覚特性（色覚異常）は男性の約8%、女性の約0.5%に影響します。これらのシミュレーションはBrettel 1997アルゴリズムを使用して、さまざまなタイプの色覚特性を持つ人々に色がどのように見えるかを近似しています。",
     "botStatistics": "ボット統計",
@@ -357,7 +368,7 @@
       },
       "accessibility": {
         "title": "/accessibility",
-        "description": "**色覚特性でカララントがどのように見えるかをシミュレート**\n- **パラメーター：**\n  - `dye` - 16進数コードまたはカララント名\n  - `vision_type` - 1型色覚、2型色覚、または3型色覚\n- **例：** `/accessibility dye:ダラガブレッド vision_type:protanopia`\n- オリジナルとシミュレートされた色を代替案と共に表示"
+        "description": "**色覚シミュレーションまたはカララントコントラスト比較**\n\n**単一カララントモード：**\n- `dye` - 16進数コードまたはカララント名\n- `vision_type`（任意）- 1型色覚、2型色覚、または3型色覚\n- 色覚シミュレーション + 白/黒とのコントラストスコアを表示\n- **例：** `/accessibility dye:ダラガブレッド`\n\n**複数カララントモード（2-4個）：**\n- `dye`, `dye2`, `dye3`, `dye4` - カララント間のコントラストを比較\n- AAA/AA/不合格評価付きWCAGコントラストマトリックスを表示\n- **例：** `/accessibility dye:ピュアホワイト dye2:スートブラック`"
       },
       "about": {
         "title": "/about",

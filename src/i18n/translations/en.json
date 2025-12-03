@@ -180,6 +180,17 @@
     "protanopiaAffects": "~1% of males",
     "deuteranopiaAffects": "~1% of males",
     "tritanopiaAffects": "<0.01% of people",
+    "contrastScores": "Contrast Scores",
+    "vsWhite": "vs White",
+    "vsBlack": "vs Black",
+    "contrastMatrix": "Contrast Matrix",
+    "contrastComparison": "Contrast Comparison",
+    "contrastMatrixDescription": "WCAG contrast ratios between dyes. Higher ratios indicate better readability when used together.",
+    "wcagLegend": "WCAG Levels",
+    "wcagAAA": "Excellent contrast (7:1+)",
+    "wcagAA": "Good contrast (4.5:1+)",
+    "wcagFail": "Insufficient contrast (<4.5:1)",
+    "fail": "Fail",
     "aboutCVD": "About Color Vision Deficiency",
     "cvdDescription": "Color vision deficiency (colorblindness) affects approximately 8% of males and 0.5% of females. These simulations use the Brettel 1997 algorithm to approximate how colors appear to individuals with different types of color vision deficiency.",
     "botStatistics": "Bot Statistics",
@@ -357,7 +368,7 @@
       },
       "accessibility": {
         "title": "/accessibility",
-        "description": "**Simulate how a dye appears with colorblindness**\n- **Parameters:**\n  - `dye` - Hex code or dye name\n  - `vision_type` - Protanopia, Deuteranopia, or Tritanopia\n- **Example:** `/accessibility dye:Dalamud Red vision_type:protanopia`\n- Shows original vs simulated color with alternative suggestions"
+        "description": "**Simulate colorblindness or compare dye contrast**\n\n**Single Dye Mode:**\n- `dye` - Hex code or dye name\n- `vision_type` (optional) - Protanopia, Deuteranopia, or Tritanopia\n- Shows colorblind simulation + contrast scores vs white/black\n- **Example:** `/accessibility dye:Dalamud Red`\n\n**Multi-Dye Mode (2-4 dyes):**\n- `dye`, `dye2`, `dye3`, `dye4` - Compare contrast between dyes\n- Shows WCAG contrast matrix with AAA/AA/Fail ratings\n- **Example:** `/accessibility dye:Snow White dye2:Soot Black`"
       },
       "about": {
         "title": "/about",

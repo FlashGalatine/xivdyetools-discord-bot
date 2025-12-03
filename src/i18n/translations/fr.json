@@ -180,6 +180,17 @@
     "protanopiaAffects": "~1% des hommes",
     "deuteranopiaAffects": "~1% des hommes",
     "tritanopiaAffects": "<0,01% des personnes",
+    "contrastScores": "Scores de contraste",
+    "vsWhite": "vs Blanc",
+    "vsBlack": "vs Noir",
+    "contrastMatrix": "Matrice de contraste",
+    "contrastComparison": "Comparaison de contraste",
+    "contrastMatrixDescription": "Ratios de contraste WCAG entre les teintures. Des ratios plus élevés indiquent une meilleure lisibilité lorsqu'elles sont utilisées ensemble.",
+    "wcagLegend": "Niveaux WCAG",
+    "wcagAAA": "Excellent contraste (7:1+)",
+    "wcagAA": "Bon contraste (4,5:1+)",
+    "wcagFail": "Contraste insuffisant (<4,5:1)",
+    "fail": "Échec",
     "aboutCVD": "À propos de la déficience de la vision des couleurs",
     "cvdDescription": "La déficience de la vision des couleurs (daltonisme) affecte environ 8% des hommes et 0,5% des femmes. Ces simulations utilisent l'algorithme Brettel 1997 pour approximer l'apparence des couleurs pour les personnes atteintes de différents types de déficience de la vision des couleurs.",
     "botStatistics": "Statistiques du bot",
@@ -357,7 +368,7 @@
       },
       "accessibility": {
         "title": "/accessibility",
-        "description": "**Simuler l'apparence d'une teinture avec le daltonisme**\n- **Paramètres :**\n  - `dye` - Code hex ou nom de teinture\n  - `vision_type` - Protanopie, Deutéranopie ou Tritanopie\n- **Exemple :** `/accessibility dye:Rouge Dalamud vision_type:protanopia`\n- Affiche la couleur originale vs simulée avec des suggestions alternatives"
+        "description": "**Simuler le daltonisme ou comparer le contraste des teintures**\n\n**Mode teinture unique :**\n- `dye` - Code hex ou nom de teinture\n- `vision_type` (optionnel) - Protanopie, Deutéranopie ou Tritanopie\n- Affiche la simulation du daltonisme + scores de contraste vs blanc/noir\n- **Exemple :** `/accessibility dye:Rouge Dalamud`\n\n**Mode multi-teintures (2-4 teintures) :**\n- `dye`, `dye2`, `dye3`, `dye4` - Comparer le contraste entre teintures\n- Affiche la matrice de contraste WCAG avec notations AAA/AA/Échec\n- **Exemple :** `/accessibility dye:Blanc Neige dye2:Noir Suie`"
       },
       "about": {
         "title": "/about",

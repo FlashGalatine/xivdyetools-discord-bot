@@ -180,6 +180,17 @@
     "protanopiaAffects": "~1% der Männer",
     "deuteranopiaAffects": "~1% der Männer",
     "tritanopiaAffects": "<0,01% der Menschen",
+    "contrastScores": "Kontrastwerte",
+    "vsWhite": "vs Weiß",
+    "vsBlack": "vs Schwarz",
+    "contrastMatrix": "Kontrastmatrix",
+    "contrastComparison": "Kontrastvergleich",
+    "contrastMatrixDescription": "WCAG-Kontrastverhältnisse zwischen Färbemitteln. Höhere Werte bedeuten bessere Lesbarkeit bei gemeinsamer Verwendung.",
+    "wcagLegend": "WCAG-Stufen",
+    "wcagAAA": "Ausgezeichneter Kontrast (7:1+)",
+    "wcagAA": "Guter Kontrast (4,5:1+)",
+    "wcagFail": "Unzureichender Kontrast (<4,5:1)",
+    "fail": "Fehler",
     "aboutCVD": "Über Farbfehlsichtigkeit",
     "cvdDescription": "Farbfehlsichtigkeit (Farbenblindheit) betrifft etwa 8% der Männer und 0,5% der Frauen. Diese Simulationen verwenden den Brettel 1997-Algorithmus, um anzunähern, wie Farben für Menschen mit verschiedenen Arten von Farbfehlsichtigkeit erscheinen.",
     "botStatistics": "Bot-Statistiken",
@@ -357,7 +368,7 @@
       },
       "accessibility": {
         "title": "/accessibility",
-        "description": "**Simuliere, wie ein Farbstoff bei Farbenblindheit erscheint**\n- **Parameter:**\n  - `dye` - Hex-Code oder Farbstoffname\n  - `vision_type` - Protanopie, Deuteranopie oder Tritanopie\n- **Beispiel:** `/accessibility dye:Dalamud-Rot vision_type:protanopia`\n- Zeigt Original- vs. simulierte Farbe mit alternativen Vorschlägen"
+        "description": "**Farbenblindheit simulieren oder Farbstoffkontrast vergleichen**\n\n**Einzelner Farbstoff-Modus:**\n- `dye` - Hex-Code oder Farbstoffname\n- `vision_type` (optional) - Protanopie, Deuteranopie oder Tritanopie\n- Zeigt Farbenblindheits-Simulation + Kontrastwerte vs. Weiß/Schwarz\n- **Beispiel:** `/accessibility dye:Dalamud-Rot`\n\n**Multi-Farbstoff-Modus (2-4 Farbstoffe):**\n- `dye`, `dye2`, `dye3`, `dye4` - Kontrast zwischen Farbstoffen vergleichen\n- Zeigt WCAG-Kontrastmatrix mit AAA/AA/Fehler-Bewertungen\n- **Beispiel:** `/accessibility dye:Schneeweiß dye2:Rußschwarz`"
       },
       "about": {
         "title": "/about",

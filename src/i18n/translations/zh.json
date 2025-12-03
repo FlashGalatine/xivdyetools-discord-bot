@@ -182,6 +182,17 @@
     "protanopiaAffects": "约1%的男性",
     "deuteranopiaAffects": "约1%的男性",
     "tritanopiaAffects": "不到0.01%的人口",
+    "contrastScores": "对比度分数",
+    "vsWhite": "与白色",
+    "vsBlack": "与黑色",
+    "contrastMatrix": "对比度矩阵",
+    "contrastComparison": "对比度比较",
+    "contrastMatrixDescription": "染料之间的WCAG对比度。较高的比率表示一起使用时具有更好的可读性。",
+    "wcagLegend": "WCAG等级",
+    "wcagAAA": "优秀对比度 (7:1+)",
+    "wcagAA": "良好对比度 (4.5:1+)",
+    "wcagFail": "对比度不足 (<4.5:1)",
+    "fail": "失败",
     "aboutCVD": "关于色觉特性",
     "cvdDescription": "色觉特性（色觉异常）影响约8%的男性和约0.5%的女性。这些模拟使用Brettel 1997算法来近似各种类型的色觉特性下颜色的外观。",
     "botStatistics": "机器人统计",
@@ -359,7 +370,7 @@
       },
       "accessibility": {
         "title": "/accessibility",
-        "description": "**模拟色觉特性下染剂的外观*\n- **参数：*\n  - `dye` - 十六进制代码或染剂名\n  - `vision_type` - 红色盲、绿色盲或蓝色\n- **示例：**`/accessibility dye:卫月红 vision_type:protanopia\n- 显示原始和模拟的颜色及替代方案"
+        "description": "**模拟色觉特性或比较染剂对比度**\n\n**单一染剂模式：**\n- `dye` - 十六进制代码或染剂名称\n- `vision_type`（可选）- 红色盲、绿色盲或蓝色盲\n- 显示色觉模拟 + 与白色/黑色的对比度分数\n- **示例：** `/accessibility dye:卫月红`\n\n**多染剂模式（2-4个）：**\n- `dye`、`dye2`、`dye3`、`dye4` - 比较染剂之间的对比度\n- 显示带有AAA/AA/失败评级的WCAG对比度矩阵\n- **示例：** `/accessibility dye:纯白 dye2:煤黑`"
       },
       "about": {
         "title": "/about",
