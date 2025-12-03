@@ -9,6 +9,7 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { t } from '../services/i18n-service.js';
+import { VERSION } from '../version.js';
 import type { BotCommand } from '../types/index.js';
 
 export const aboutCommand: BotCommand = {
@@ -30,7 +31,7 @@ export const aboutCommand: BotCommand = {
         {
           name: `🤖 ${t('about.botInformation')}`,
           value:
-            `**${t('about.version')}:** v1.0.2\n` +
+            `**${t('about.version')}:** v${VERSION}\n` +
             `**${t('about.author')}:** Flash Galatine (Balmung)\n` +
             `**${t('about.license')}:** MIT`,
           inline: false,

@@ -1,12 +1,12 @@
 {
   "name": "xivdyetools-discord-bot",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Discord bot for XIV Dye Tools - Color harmony, matching, and accessibility tools for FFXIV",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && npm run copy:translations",
+    "build": "tsx scripts/generate-version.ts && tsc && npm run copy:translations",
     "copy:translations": "tsx scripts/copy-translations.ts",
     "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) fs.rmSync('dist', {recursive: true, force: true})\"",
     "rebuild": "npm run clean && npm run build",
