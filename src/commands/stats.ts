@@ -7,6 +7,7 @@ import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from '
 import { getAnalytics } from '../services/analytics.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { t } from '../services/i18n-service.js';
+import { config } from '../config.js';
 import type { BotCommand } from '../types/index.js';
 
 export const statsCommand: BotCommand = {
@@ -20,8 +21,8 @@ export const statsCommand: BotCommand = {
     }),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    // Restrict to specific user
-    if (interaction.user.id !== '110457699291906048') {
+    // Per Security Audit: Use config-based authorized users instead of hardcoded ID
+    if (!config.statsAuthorizedUsers.includes(interaction.user.id)) {
       await interaction.reply({
         content: `⛔ ${t('errors.noPermission')}`,
         ephemeral: true,

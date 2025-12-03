@@ -39,13 +39,10 @@ const startTime = Date.now();
 app.get('/health', (req, res) => {
   const uptimeSeconds = Math.floor((Date.now() - startTime) / 1000);
 
+  // Per Security Audit: Only expose minimal information to prevent enumeration attacks
   res.json({
     status: 'healthy',
     uptime: uptimeSeconds,
-    timestamp: new Date().toISOString(),
-    guilds: client.guilds?.cache.size || 0,
-    users: client.users?.cache.size || 0,
-    commands: client.commands?.size || 0,
   });
 });
 

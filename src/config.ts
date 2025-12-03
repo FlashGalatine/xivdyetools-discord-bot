@@ -14,6 +14,10 @@ export interface BotConfig {
   clientId: string;
   guildId?: string; // Optional: for testing commands in a specific guild
 
+  // Stats Command Authorization
+  // Per Security Audit: Configurable list of user IDs allowed to access /stats
+  statsAuthorizedUsers: string[];
+
   // Redis (optional - will use in-memory cache if not provided)
   redisUrl?: string;
 
@@ -212,6 +216,13 @@ export const config: BotConfig = {
   token: process.env.DISCORD_TOKEN!,
   clientId: process.env.DISCORD_CLIENT_ID!,
   guildId: process.env.DISCORD_GUILD_ID,
+
+  // Stats Command Authorization
+  // Per Security Audit: Comma-separated list of Discord user IDs authorized to use /stats
+  statsAuthorizedUsers: (process.env.STATS_AUTHORIZED_USERS || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0),
 
   // Redis
   redisUrl: process.env.REDIS_URL,
