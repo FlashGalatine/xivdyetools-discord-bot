@@ -19,7 +19,7 @@ import { statsCommand } from './commands/stats.js';
 import { manualCommand } from './commands/manual.js';
 import { aboutCommand } from './commands/about.js';
 import { languageCommand } from './commands/language.js';
-import { getRateLimiter } from './services/rate-limiter.js';
+import { getRateLimiter, stopRateLimiter } from './services/rate-limiter.js';
 import { getAnalytics } from './services/analytics.js';
 import { closeRedis } from './services/redis.js';
 import { emojiService } from './services/emoji-service.js';
@@ -313,6 +313,7 @@ process.on('SIGINT', () => {
     logger.info('Shutting down gracefully...');
     server.close();
     closeErrorWebhook();
+    stopRateLimiter(); // Per Issue #5: Stop rate limiter cleanup interval
     await cleanupWorkerPool(); // Per P-6: Cleanup worker pool
     await closeRedis();
     await client.destroy();
@@ -328,6 +329,7 @@ process.on('SIGTERM', () => {
     logger.info('Shutting down gracefully...');
     server.close();
     closeErrorWebhook();
+    stopRateLimiter(); // Per Issue #5: Stop rate limiter cleanup interval
     await cleanupWorkerPool(); // Per P-6: Cleanup worker pool
     await closeRedis();
     await client.destroy();

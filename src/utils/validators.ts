@@ -43,6 +43,9 @@ export function validateHexColor(hex: string): ValidationResult<string> {
 // Cache valid dye IDs for quick lookup
 let validDyeIds: Set<number> | null = null;
 
+/** Per Issue #6: Cache max dye ID derived from actual data */
+let maxDyeId: number | null = null;
+
 /**
  * Get the set of valid dye IDs (lazily initialized)
  */
@@ -52,6 +55,20 @@ function getValidDyeIds(): Set<number> {
     validDyeIds = new Set(allDyes.map((dye) => dye.id));
   }
   return validDyeIds;
+}
+
+/**
+ * Get the maximum dye ID from actual database (lazily initialized)
+ * Per Issue #6: Derives max from data instead of arbitrary hardcoded value
+ */
+function getMaxDyeId(): number {
+  if (maxDyeId === null) {
+    const validIds = getValidDyeIds();
+    maxDyeId = Math.max(...validIds);
+    // Add headroom for future dyes (20% buffer, minimum 10)
+    maxDyeId = maxDyeId + Math.max(10, Math.floor(maxDyeId * 0.2));
+  }
+  return maxDyeId;
 }
 
 /**
@@ -76,8 +93,9 @@ export function validateDyeId(id: number, strict = false): ValidationResult<numb
     };
   }
 
-  // Quick bounds check (allows headroom for future dyes)
-  if (id > 200) {
+  // Per Issue #6: Quick bounds check using max ID derived from actual data
+  const maxId = getMaxDyeId();
+  if (id > maxId) {
     return {
       success: false,
       error: t('errors.dyeIdOutOfRange'),

@@ -32,6 +32,8 @@ export class WorkerPool {
   private activeTasks = 0;
   private readonly maxWorkers: number;
   private readonly workerPath: string;
+  /** Per Issue #3: Track busy workers to prevent race conditions */
+  private busyWorkers: Set<Worker> = new Set();
 
   /**
    * Create a new worker pool
@@ -86,12 +88,15 @@ export class WorkerPool {
       return;
     }
 
+    // Per Issue #3: Mark worker as busy immediately to prevent race conditions
+    this.busyWorkers.add(worker);
     this.activeTasks++;
 
     // Set up message handler
     const messageHandler = (result: { success: boolean; data?: unknown; error?: string }): void => {
       worker.removeListener('message', messageHandler);
       worker.removeListener('error', errorHandler);
+      this.busyWorkers.delete(worker);
       this.activeTasks--;
 
       if (result.success && result.data !== undefined) {
@@ -107,6 +112,7 @@ export class WorkerPool {
     const errorHandler = (error: Error): void => {
       worker.removeListener('message', messageHandler);
       worker.removeListener('error', errorHandler);
+      this.busyWorkers.delete(worker);
       this.activeTasks--;
 
       logger.error('Worker error:', error);
@@ -126,12 +132,13 @@ export class WorkerPool {
 
   /**
    * Get an available worker or create a new one
+   * Per Issue #3: Uses busyWorkers set to prevent race conditions
    */
   private getAvailableWorker(): Worker | null {
-    // Check for existing workers
+    // Check for existing non-busy workers
     for (const worker of this.workers) {
-      if (worker.threadId !== 0) {
-        // Worker is alive
+      // Worker must be alive (threadId !== 0) and not currently busy
+      if (worker.threadId !== 0 && !this.busyWorkers.has(worker)) {
         return worker;
       }
     }
@@ -187,6 +194,7 @@ export class WorkerPool {
     const index = this.workers.indexOf(worker);
     if (index !== -1) {
       this.workers.splice(index, 1);
+      this.busyWorkers.delete(worker);
       try {
         void worker.terminate().catch((error) => {
           logger.warn(`Error terminating worker ${worker.threadId}:`, error);
@@ -227,6 +235,7 @@ export class WorkerPool {
 
     await Promise.all(terminatePromises);
     this.workers = [];
+    this.busyWorkers.clear();
     this.activeTasks = 0;
 
     logger.info('Worker pool terminated');

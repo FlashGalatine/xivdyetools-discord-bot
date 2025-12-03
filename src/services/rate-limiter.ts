@@ -299,6 +299,9 @@ export class RateLimiter {
 // Singleton instance
 let rateLimiterInstance: RateLimiter | null = null;
 
+/** Per Issue #5: Store cleanup interval ID for graceful shutdown */
+let cleanupIntervalId: NodeJS.Timeout | null = null;
+
 /**
  * Get rate limiter instance (singleton)
  */
@@ -309,11 +312,23 @@ export function getRateLimiter(): RateLimiter {
     // Clean up memory store at configured interval (2 minutes by default)
     // This prevents memory leaks from expired entries accumulating
     if (!getRedisClient()) {
-      setInterval(() => {
+      cleanupIntervalId = setInterval(() => {
         rateLimiterInstance?.cleanupMemoryStore();
       }, MEMORY_STORE_CONFIG.cleanupIntervalMs);
     }
   }
 
   return rateLimiterInstance;
+}
+
+/**
+ * Stop the rate limiter cleanup interval
+ * Per Issue #5: Should be called during graceful shutdown to allow clean process exit
+ */
+export function stopRateLimiter(): void {
+  if (cleanupIntervalId) {
+    clearInterval(cleanupIntervalId);
+    cleanupIntervalId = null;
+    logger.debug('Rate limiter cleanup interval stopped');
+  }
 }

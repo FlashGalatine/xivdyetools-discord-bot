@@ -25,6 +25,7 @@ const ALLOWED_IMAGE_DOMAINS = [
 /**
  * Blocked IP patterns (SSRF protection)
  * Prevents requests to internal/private networks
+ * Per Issue #4: Includes comprehensive IPv6 patterns
  */
 const BLOCKED_IP_PATTERNS = [
   // Localhost
@@ -39,6 +40,17 @@ const BLOCKED_IP_PATTERNS = [
   // Loopback IPv6
   /^::1$/,
   /^0:0:0:0:0:0:0:1$/,
+  // IPv4-mapped IPv6 addresses (::ffff:x.x.x.x)
+  /^::ffff:127\./i,
+  /^::ffff:10\./i,
+  /^::ffff:172\.(1[6-9]|2[0-9]|3[0-1])\./i,
+  /^::ffff:192\.168\./i,
+  /^::ffff:169\.254\./i,
+  // IPv6 link-local (fe80::/10)
+  /^fe80:/i,
+  // IPv6 unique local addresses (fc00::/7 = fc00:: and fd00::)
+  /^fc[0-9a-f]{2}:/i,
+  /^fd[0-9a-f]{2}:/i,
   // Cloud metadata endpoints
   /^169\.254\.169\.254$/,
   /^metadata\./i,
