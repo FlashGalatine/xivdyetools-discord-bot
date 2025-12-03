@@ -42,6 +42,13 @@ vi.mock('../utils/response-helper.js', () => ({
 // Bot owner ID from the actual command
 const BOT_OWNER_ID = '110457699291906048';
 
+// Mock config to include BOT_OWNER_ID in statsAuthorizedUsers
+vi.mock('../config.js', () => ({
+  config: {
+    statsAuthorizedUsers: ['110457699291906048'],
+  },
+}));
+
 /**
  * Create mock ChatInputCommandInteraction
  */

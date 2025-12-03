@@ -26,16 +26,14 @@ class EmojiService {
 
         try {
             if (!client.application) {
-                // Wait for application to be ready if needed, though usually ready by now
+                // Per Issue #7: Log warning and return early when application not ready
+                logger.warn('EmojiService: client.application is null, emojis will not be available. Bot may have started before application was ready.');
+                return;
             }
 
-            if (client.application) {
-                this.emojis = await client.application.emojis.fetch();
-                logger.info(`EmojiService initialized with ${this.emojis.size} emojis`);
-                this.initialized = true;
-            } else {
-                logger.warn('EmojiService: Could not fetch client application');
-            }
+            this.emojis = await client.application.emojis.fetch();
+            logger.info(`EmojiService initialized with ${this.emojis.size} emojis`);
+            this.initialized = true;
         } catch (error) {
             logger.error('EmojiService initialization failed:', error);
         }

@@ -181,15 +181,27 @@ export class RedisCacheBackend implements ICacheBackend {
 
   /**
    * Clear all cache entries
+   * Per Issue #12: Uses SCAN instead of KEYS to avoid blocking Redis
    */
   async clear(): Promise<void> {
     try {
       if (this.redis) {
-        // Only clear keys with our prefix to avoid affecting other data
-        const keys = await this.redis.keys('xivdye:*');
-        if (keys.length > 0) {
-          await this.redis.del(...keys);
-        }
+        // Per Issue #12: Use SCAN for non-blocking iteration instead of KEYS
+        // KEYS is O(N) and blocks Redis; SCAN is incremental and non-blocking
+        let cursor = '0';
+        do {
+          const [nextCursor, keys] = await this.redis.scan(
+            cursor,
+            'MATCH',
+            'xivdye:*',
+            'COUNT',
+            100
+          );
+          cursor = nextCursor;
+          if (keys.length > 0) {
+            await this.redis.del(...keys);
+          }
+        } while (cursor !== '0');
       } else {
         // Per P-4: Clear LRU memory cache
         this.memoryCache.clear();

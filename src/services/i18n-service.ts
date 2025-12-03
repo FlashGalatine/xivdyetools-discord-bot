@@ -68,10 +68,58 @@ const translations: Record<LocaleCode, TranslationData> = {
 const REDIS_PREFIX = 'i18n:user:';
 
 /**
+ * Per Issue #13: Maximum size for in-memory user preference cache
+ * Prevents unbounded memory growth with many unique users
+ */
+const MEMORY_CACHE_MAX_SIZE = 1000;
+
+/**
+ * Simple LRU cache for user preferences
+ * Per Issue #13: Bounded cache to prevent memory leaks
+ */
+class LRUUserCache {
+  private cache: Map<string, LocaleCode>;
+  private maxSize: number;
+
+  constructor(maxSize: number) {
+    this.cache = new Map();
+    this.maxSize = maxSize;
+  }
+
+  get(key: string): LocaleCode | undefined {
+    const value = this.cache.get(key);
+    if (value !== undefined) {
+      // Move to end (most recently used)
+      this.cache.delete(key);
+      this.cache.set(key, value);
+    }
+    return value;
+  }
+
+  set(key: string, value: LocaleCode): void {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // Remove least recently used (first item)
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
+    }
+    this.cache.set(key, value);
+  }
+
+  delete(key: string): void {
+    this.cache.delete(key);
+  }
+}
+
+/**
  * In-memory cache for user preferences (fallback when Redis unavailable)
+ * Per Issue #13: Uses LRU cache with max size to prevent unbounded growth
  * Note: Preferences stored here won't persist across bot restarts
  */
-const memoryCache = new Map<string, LocaleCode>();
+const memoryCache = new LRUUserCache(MEMORY_CACHE_MAX_SIZE);
 
 /**
  * Current active locale (thread-local concept - set per request)
@@ -282,7 +330,12 @@ function t(key: string, params?: Record<string, string | number>): string {
 
   // If still not found, return the key formatted
   if (value === undefined || typeof value !== 'string') {
-    // Convert camelCase/dot.notation to readable format
+    // Per Issue #8: In production, return generic message to avoid exposing internal structure
+    // In development, return formatted key for debugging
+    if (process.env.NODE_ENV === 'production') {
+      return 'Translation missing';
+    }
+    // Convert camelCase/dot.notation to readable format (dev only)
     return key
       .split('.')
       .pop()!

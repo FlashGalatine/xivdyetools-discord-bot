@@ -332,6 +332,38 @@ export class MockRedisClient {
     return Promise.resolve(Array.from(this.store.keys()).filter((key) => regex.test(key)));
   }
 
+  // SCAN command for non-blocking key iteration (Per Issue #12)
+  scan(cursor: string, ...args: unknown[]): Promise<[string, string[]]> {
+    this.cleanupExpired();
+
+    // Parse MATCH pattern and COUNT from args
+    let pattern = '*';
+    let count = 10;
+
+    for (let i = 0; i < args.length; i += 2) {
+      const arg = String(args[i]).toUpperCase();
+      if (arg === 'MATCH' && args[i + 1]) {
+        pattern = String(args[i + 1]);
+      } else if (arg === 'COUNT' && args[i + 1]) {
+        count = Number(args[i + 1]);
+      }
+    }
+
+    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+    const allKeys = Array.from(this.store.keys()).filter((key) => regex.test(key));
+
+    // Simulate cursor-based pagination
+    const cursorNum = parseInt(cursor, 10);
+    const start = cursorNum;
+    const end = Math.min(start + count, allKeys.length);
+    const keys = allKeys.slice(start, end);
+
+    // Return '0' cursor when done, otherwise next position
+    const nextCursor = end >= allKeys.length ? '0' : String(end);
+
+    return Promise.resolve([nextCursor, keys]);
+  }
+
   ping(): Promise<string> {
     return Promise.resolve('PONG');
   }

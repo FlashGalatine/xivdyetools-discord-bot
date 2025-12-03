@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Client, ApplicationEmoji, Collection } from 'discord.js';
+import type { Client } from 'discord.js';
 import type { Dye } from 'xivdyetools-core';
 
 // Mock logger
@@ -91,7 +91,8 @@ describe('EmojiService', () => {
 
       await emojiService.initialize(mockClient);
 
-      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not fetch'));
+      // Per Issue #7: Now logs specific warning about client.application being null
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('client.application is null'));
     });
 
     it('should handle fetch errors', async () => {

@@ -271,8 +271,10 @@ describe('validateDyeId', () => {
     });
 
     it('should reject IDs out of range', () => {
-        expect(validateDyeId(201).success).toBe(false);
-        expect(validateDyeId(999).success).toBe(false);
+        // Per Issue #6: Max ID is now derived from database with 20% headroom
+        // Using extremely large IDs that will definitely be out of range (max is typically around 40000)
+        expect(validateDyeId(9999999).success).toBe(false);
+        expect(validateDyeId(99999999).success).toBe(false);
     });
 });
 
@@ -489,9 +491,11 @@ describe('validateCommandInputs', () => {
         });
 
         it('should reject invalid dye ID (out of range)', () => {
+            // Per Issue #6: Max ID is now derived from database with 20% headroom
+            // Using an extremely large ID that will definitely be out of range
             const interaction = createMockInteraction({
                 commandName: 'dye',
-                integerOptions: [{ name: 'dye_id', value: 999 }],
+                integerOptions: [{ name: 'dye_id', value: 9999999 }],
             });
             const result = validateCommandInputs(interaction);
             expect(result.success).toBe(false);

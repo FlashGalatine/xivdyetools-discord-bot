@@ -58,6 +58,13 @@ export async function sendEphemeralError(
   response: InteractionEditReplyOptions
 ): Promise<void> {
   if (interaction.deferred) {
+    // Per Issue #10: Delete the original deferred reply ("thinking..." message) before
+    // sending the ephemeral error to avoid leaving a confusing public message
+    try {
+      await interaction.deleteReply();
+    } catch {
+      // Reply may already be deleted or timed out, ignore errors
+    }
     // Use followUp with ephemeral flag to send error only to user
     await interaction.followUp({
       ...response,

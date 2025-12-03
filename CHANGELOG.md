@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.10] - 2025-12-02
+
+### Security (Based on SECURITY_AND_BUG_AUDIT.md)
+
+#### High Priority Fixes
+- **Health Endpoint Information Disclosure**: Reduced exposed information in `/health` endpoint to only `status` and `uptime`, removing guild/user/command counts that could enable enumeration attacks.
+- **Stats Command Authorization**: Moved hardcoded user ID to environment variable `STATS_AUTHORIZED_USERS` supporting comma-separated list of authorized Discord user IDs.
+
+#### Medium Priority Fixes
+- **Worker Pool Race Condition**: Added `busyWorkers` Set to track which workers are processing tasks, preventing multiple tasks from being assigned to the same worker under high load.
+- **Incomplete IPv6 SSRF Protection**: Added comprehensive IPv6 patterns including `::ffff:` mapped addresses, `fe80::` link-local, and `fc00::`/`fd00::` unique local address ranges.
+- **Rate Limiter Cleanup Interval**: Store cleanup interval ID and export `stopRateLimiter()` function, called during graceful shutdown in SIGINT/SIGTERM handlers.
+- **Arbitrary Dye ID Limit**: Derive max dye ID from actual database with 20% headroom instead of hardcoded value of 200.
+
+#### Low Priority Fixes
+- **Emoji Service Null Check**: Added warning log when `client.application` is null during emoji service initialization, with early return to prevent silent failures.
+- **Translation Key Exposure**: In production, return generic "Translation missing" message instead of exposing internal key structure (dev mode still shows formatted key for debugging).
+- **Logger ANSI Colors in Non-TTY**: Check `process.stdout.isTTY` before using ANSI color codes to prevent issues in log aggregation systems.
+- **Inconsistent Error Visibility**: Delete the original deferred reply ("thinking..." message) before sending ephemeral error to avoid leaving confusing public messages.
+- **Data Center Validation Length**: Added early length check (max 20 characters) to prevent performance issues with very long strings.
+- **Redis KEYS Blocking**: Replaced O(N) blocking `KEYS` command with incremental non-blocking `SCAN` command in `clear()` method.
+- **i18n Memory Cache Unbounded**: Replaced unbounded `Map` with LRU cache (max 1000 entries) for user locale preferences to prevent memory leaks with many unique users.
+
+### Changed
+- Environment variable `STATS_AUTHORIZED_USERS` now controls access to `/stats` command
+
 ## [1.0.9] - 2025-12-02
 
 ### Changed

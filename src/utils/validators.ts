@@ -172,8 +172,17 @@ export function findDyeByName(name: string): { dye?: Dye; error?: string } {
 
 /**
  * Validate data center name
+ * Per Issue #11: Early length check to prevent performance issues with very long strings
  */
 export function validateDataCenter(dc: string): { valid: boolean; error?: string } {
+  // Per Issue #11: Early length check - no valid data center name exceeds 20 characters
+  if (dc.length > 20) {
+    return {
+      valid: false,
+      error: t('errors.invalidDataCenter', { dc: dc.substring(0, 20) + '...' }),
+    };
+  }
+
   const validDataCenters = [
     // North America
     'Aether',
