@@ -192,6 +192,22 @@ describe('Language Command', () => {
         })
       );
     });
+
+    it('should handle error when setUserPreference fails', async () => {
+      const { execute } = await import('./language.js');
+      const { i18nService, t } = await import('../services/i18n-service.js');
+      vi.mocked(i18nService.setUserPreference).mockResolvedValueOnce(false);
+
+      const interaction = createMockInteraction({
+        subcommand: 'set',
+        stringOptions: { language: 'en' },
+      });
+
+      await execute(interaction);
+
+      expect(interaction.reply).toHaveBeenCalled();
+      expect(t).toHaveBeenCalledWith('errors.errorProcessingRequest');
+    });
   });
 
   describe('Show Subcommand', () => {
@@ -295,6 +311,19 @@ describe('Language Command', () => {
           flags: expect.anything(),
         })
       );
+    });
+
+    it('should set locale from interaction after reset', async () => {
+      const { execute } = await import('./language.js');
+      const { i18nService } = await import('../services/i18n-service.js');
+
+      const interaction = createMockInteraction({
+        subcommand: 'reset',
+      });
+
+      await execute(interaction);
+
+      expect(i18nService.setLocaleFromInteraction).toHaveBeenCalledWith(interaction);
     });
   });
 

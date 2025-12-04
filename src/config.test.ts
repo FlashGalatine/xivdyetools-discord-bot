@@ -278,4 +278,236 @@ describe('Config Module', () => {
       expect(config.errorWebhookUrl).toBe('https://discord.com/webhook/123');
     });
   });
+
+  describe('validateOptionalUrls - Redis URL validation', () => {
+    beforeEach(() => {
+      process.env.DISCORD_TOKEN = 'valid_token_that_is_definitely_long_enough_to_pass_all_checks';
+      process.env.DISCORD_CLIENT_ID = 'valid-client-id-12345';
+    });
+
+    it('should accept valid redis:// URL', async () => {
+      process.env.REDIS_URL = 'redis://localhost:6379';
+
+      const configModule = await import('./config.js');
+      expect(configModule.config.redisUrl).toBe('redis://localhost:6379');
+    });
+
+    it('should accept valid rediss:// URL', async () => {
+      process.env.REDIS_URL = 'rediss://secure.redis.example.com:6379';
+
+      const configModule = await import('./config.js');
+      expect(configModule.config.redisUrl).toBe('rediss://secure.redis.example.com:6379');
+    });
+
+    it('should throw when REDIS_URL uses wrong protocol', async () => {
+      process.env.REDIS_URL = 'http://localhost:6379';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'REDIS_URL must use redis:// or rediss:// protocol'
+      );
+    });
+
+    it('should throw when REDIS_URL is invalid', async () => {
+      process.env.REDIS_URL = 'not-a-valid-url';
+
+      await expect(import('./config.js')).rejects.toThrow('REDIS_URL is not a valid URL');
+    });
+  });
+
+  describe('validateOptionalUrls - Webhook URL validation', () => {
+    beforeEach(() => {
+      process.env.DISCORD_TOKEN = 'valid_token_that_is_definitely_long_enough_to_pass_all_checks';
+      process.env.DISCORD_CLIENT_ID = 'valid-client-id-12345';
+    });
+
+    it('should throw when ERROR_WEBHOOK_URL uses HTTP instead of HTTPS', async () => {
+      process.env.ERROR_WEBHOOK_URL = 'http://discord.com/api/webhooks/123/abc';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'ERROR_WEBHOOK_URL must use HTTPS protocol'
+      );
+    });
+
+    it('should throw when ERROR_WEBHOOK_URL is invalid', async () => {
+      process.env.ERROR_WEBHOOK_URL = 'not-a-valid-url';
+
+      await expect(import('./config.js')).rejects.toThrow('ERROR_WEBHOOK_URL is not a valid URL');
+    });
+
+    it('should warn when webhook URL is not from discord.com', async () => {
+      process.env.ERROR_WEBHOOK_URL = 'https://example.com/webhook/123';
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const configModule = await import('./config.js');
+
+      expect(configModule.config.errorWebhookUrl).toBe('https://example.com/webhook/123');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('ERROR_WEBHOOK_URL does not appear to be a Discord webhook')
+      );
+
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('validateNumericBounds', () => {
+    beforeEach(() => {
+      process.env.DISCORD_TOKEN = 'valid_token_that_is_definitely_long_enough_to_pass_all_checks';
+      process.env.DISCORD_CLIENT_ID = 'valid-client-id-12345';
+    });
+
+    it('should throw when PORT is not a number', async () => {
+      process.env.PORT = 'not-a-number';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'PORT must be a number between 1 and 65535'
+      );
+    });
+
+    it('should throw when PORT is below 1', async () => {
+      process.env.PORT = '0';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'PORT must be a number between 1 and 65535'
+      );
+    });
+
+    it('should throw when PORT is above 65535', async () => {
+      process.env.PORT = '70000';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'PORT must be a number between 1 and 65535'
+      );
+    });
+
+    it('should throw when RATE_LIMIT_PER_MINUTE is out of bounds', async () => {
+      process.env.RATE_LIMIT_PER_MINUTE = '0';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'RATE_LIMIT_PER_MINUTE must be between 1 and 100'
+      );
+    });
+
+    it('should throw when RATE_LIMIT_PER_MINUTE is too high', async () => {
+      process.env.RATE_LIMIT_PER_MINUTE = '200';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'RATE_LIMIT_PER_MINUTE must be between 1 and 100'
+      );
+    });
+
+    it('should throw when RATE_LIMIT_PER_HOUR is out of bounds', async () => {
+      process.env.RATE_LIMIT_PER_HOUR = '0';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'RATE_LIMIT_PER_HOUR must be between 1 and 1000'
+      );
+    });
+
+    it('should throw when RATE_LIMIT_PER_HOUR is too high', async () => {
+      process.env.RATE_LIMIT_PER_HOUR = '5000';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'RATE_LIMIT_PER_HOUR must be between 1 and 1000'
+      );
+    });
+
+    it('should throw when IMAGE_MAX_SIZE_MB is out of bounds', async () => {
+      process.env.IMAGE_MAX_SIZE_MB = '0';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'IMAGE_MAX_SIZE_MB must be between 1 and 50'
+      );
+    });
+
+    it('should throw when IMAGE_MAX_SIZE_MB is too high', async () => {
+      process.env.IMAGE_MAX_SIZE_MB = '100';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'IMAGE_MAX_SIZE_MB must be between 1 and 50'
+      );
+    });
+
+    it('should throw when IMAGE_CACHE_TTL is out of bounds', async () => {
+      process.env.IMAGE_CACHE_TTL = '0';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'IMAGE_CACHE_TTL must be between 1 and 3600 seconds'
+      );
+    });
+
+    it('should throw when IMAGE_CACHE_TTL is too high', async () => {
+      process.env.IMAGE_CACHE_TTL = '7200';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'IMAGE_CACHE_TTL must be between 1 and 3600 seconds'
+      );
+    });
+
+    it('should throw when API_CACHE_TTL is out of bounds', async () => {
+      process.env.API_CACHE_TTL = '0';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'API_CACHE_TTL must be between 1 and 3600 seconds'
+      );
+    });
+
+    it('should throw when API_CACHE_TTL is too high', async () => {
+      process.env.API_CACHE_TTL = '7200';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'API_CACHE_TTL must be between 1 and 3600 seconds'
+      );
+    });
+
+    it('should throw when API_TIMEOUT_MS is too low', async () => {
+      process.env.API_TIMEOUT_MS = '50';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'API_TIMEOUT_MS must be between 100 and 60000 milliseconds'
+      );
+    });
+
+    it('should throw when API_TIMEOUT_MS is too high', async () => {
+      process.env.API_TIMEOUT_MS = '120000';
+
+      await expect(import('./config.js')).rejects.toThrow(
+        'API_TIMEOUT_MS must be between 100 and 60000 milliseconds'
+      );
+    });
+  });
+
+  describe('statsAuthorizedUsers parsing', () => {
+    beforeEach(() => {
+      process.env.DISCORD_TOKEN = 'valid_token_that_is_definitely_long_enough_to_pass_all_checks';
+      process.env.DISCORD_CLIENT_ID = 'valid-client-id-12345';
+    });
+
+    it('should parse comma-separated user IDs', async () => {
+      process.env.STATS_AUTHORIZED_USERS = 'user1,user2,user3';
+
+      const { config } = await import('./config.js');
+      expect(config.statsAuthorizedUsers).toEqual(['user1', 'user2', 'user3']);
+    });
+
+    it('should trim whitespace from user IDs', async () => {
+      process.env.STATS_AUTHORIZED_USERS = ' user1 , user2 , user3 ';
+
+      const { config } = await import('./config.js');
+      expect(config.statsAuthorizedUsers).toEqual(['user1', 'user2', 'user3']);
+    });
+
+    it('should filter out empty strings', async () => {
+      process.env.STATS_AUTHORIZED_USERS = 'user1,,user2,';
+
+      const { config } = await import('./config.js');
+      expect(config.statsAuthorizedUsers).toEqual(['user1', 'user2']);
+    });
+
+    it('should return empty array when not set', async () => {
+      delete process.env.STATS_AUTHORIZED_USERS;
+
+      const { config } = await import('./config.js');
+      expect(config.statsAuthorizedUsers).toEqual([]);
+    });
+  });
 });

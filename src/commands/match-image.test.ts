@@ -475,5 +475,38 @@ describe('Match Image Command', () => {
       await execute(createMockInteraction());
       expect(sendEphemeralError).toHaveBeenCalled();
     });
+
+    it('should handle input buffer error', async () => {
+      vi.resetModules();
+      mockFetch.mockRejectedValueOnce(new Error('Input buffer contains unsupported image format'));
+      const { execute } = await import('./match-image.js');
+      const { t } = await import('../services/i18n-service.js');
+      await execute(createMockInteraction());
+      expect(t).toHaveBeenCalledWith('errors.invalidOrCorruptedImage');
+    });
+  });
+
+  describe('Worker Pool Success Path', () => {
+    it('should fall back to sync when worker validation fails', async () => {
+      vi.resetModules();
+
+      // Mock worker pool to fail on validation
+      vi.doMock('../utils/worker-pool.js', () => ({
+        WorkerPool: vi.fn().mockImplementation(() => ({
+          execute: vi.fn().mockResolvedValue({
+            success: false,
+            error: 'Worker validation failed',
+          }),
+          terminate: vi.fn().mockResolvedValue(undefined),
+        })),
+      }));
+
+      const { execute } = await import('./match-image.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+
+      await execute(createMockInteraction());
+
+      expect(sendEphemeralError).toHaveBeenCalled();
+    });
   });
 });

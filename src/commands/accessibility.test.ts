@@ -46,6 +46,14 @@ vi.mock('../renderers/accessibility-comparison.js', () => ({
   renderAccessibilityComparison: vi.fn().mockResolvedValue(Buffer.from([0x89, 0x50, 0x4e, 0x47])),
 }));
 
+vi.mock('../renderers/accessibility-matrix.js', () => ({
+  renderContrastMatrix: vi.fn().mockReturnValue(Buffer.from([0x89, 0x50, 0x4e, 0x47])),
+  calculateContrast: vi.fn().mockReturnValue({
+    ratio: 4.5,
+    level: 'AA' as const,
+  }),
+}));
+
 // Mock validators
 vi.mock('../utils/validators.js', () => ({
   validateHexColor: vi.fn((hex: string) => {
@@ -94,6 +102,7 @@ vi.mock('xivdyetools-core', () => ({
       g: 100,
       b: 50,
     })),
+    getContrastRatio: vi.fn((_hex1: string, _hex2: string) => 4.5),
   },
   dyeDatabase: {
     getAllDyes: vi.fn(() => []),
@@ -319,6 +328,158 @@ describe('Accessibility Command', () => {
       const responseArg = vi.mocked(interaction.respond).mock.calls[0][0] as Array<unknown>;
       expect(responseArg.length).toBeLessThanOrEqual(25);
     });
+
+    it('should return empty array for hex color query', async () => {
+      const { autocomplete } = await import('./accessibility.js');
+
+      const interaction = createMockAutocompleteInteraction({
+        name: 'dye',
+        value: '#FF0000',
+      });
+
+      await autocomplete(interaction);
+
+      expect(interaction.respond).toHaveBeenCalledWith([]);
+    });
+
+    it('should work for dye2 parameter', async () => {
+      const { autocomplete } = await import('./accessibility.js');
+
+      const interaction = createMockAutocompleteInteraction({
+        name: 'dye2',
+        value: 'red',
+      });
+
+      await autocomplete(interaction);
+
+      expect(interaction.respond).toHaveBeenCalled();
+    });
+
+    it('should work for dye3 parameter', async () => {
+      const { autocomplete } = await import('./accessibility.js');
+
+      const interaction = createMockAutocompleteInteraction({
+        name: 'dye3',
+        value: 'red',
+      });
+
+      await autocomplete(interaction);
+
+      expect(interaction.respond).toHaveBeenCalled();
+    });
+
+    it('should work for dye4 parameter', async () => {
+      const { autocomplete } = await import('./accessibility.js');
+
+      const interaction = createMockAutocompleteInteraction({
+        name: 'dye4',
+        value: 'red',
+      });
+
+      await autocomplete(interaction);
+
+      expect(interaction.respond).toHaveBeenCalled();
+    });
+  });
+
+  describe('Multi-Dye Contrast Matrix', () => {
+    it('should handle 2 dyes for contrast comparison', async () => {
+      const { execute } = await import('./accessibility.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: 'Dalamud Red', dye2: 'Ruby Red' },
+      });
+
+      await execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+
+    it('should handle 3 dyes for contrast comparison', async () => {
+      const { execute } = await import('./accessibility.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: '#FF0000', dye2: '#00FF00', dye3: '#0000FF' },
+      });
+
+      await execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+
+    it('should handle 4 dyes for contrast comparison', async () => {
+      const { execute } = await import('./accessibility.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: '#FF0000', dye2: '#00FF00', dye3: '#0000FF', dye4: '#FFFF00' },
+      });
+
+      await execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+
+    it('should use renderContrastMatrix for multi-dye comparison', async () => {
+      const { execute } = await import('./accessibility.js');
+      const { renderContrastMatrix } = await import('../renderers/accessibility-matrix.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: '#FF0000', dye2: '#0000FF' },
+      });
+
+      await execute(interaction);
+
+      expect(renderContrastMatrix).toHaveBeenCalled();
+    });
+  });
+
+  describe('WCAG Badge Levels', () => {
+    it('should show AAA badge for high contrast', async () => {
+      vi.resetModules();
+      vi.doMock('../renderers/accessibility-matrix.js', () => ({
+        renderContrastMatrix: vi.fn().mockReturnValue(Buffer.from([0x89, 0x50, 0x4e, 0x47])),
+        calculateContrast: vi.fn().mockReturnValue({
+          ratio: 7.5,
+          level: 'AAA' as const,
+        }),
+      }));
+
+      const { execute } = await import('./accessibility.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: '#000000', dye2: '#FFFFFF' },
+      });
+
+      await execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+
+    it('should show Fail badge for low contrast', async () => {
+      vi.resetModules();
+      vi.doMock('../renderers/accessibility-matrix.js', () => ({
+        renderContrastMatrix: vi.fn().mockReturnValue(Buffer.from([0x89, 0x50, 0x4e, 0x47])),
+        calculateContrast: vi.fn().mockReturnValue({
+          ratio: 1.5,
+          level: 'Fail' as const,
+        }),
+      }));
+
+      const { execute } = await import('./accessibility.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: '#777777', dye2: '#888888' },
+      });
+
+      await execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
   });
 
   describe('Error Handling', () => {
@@ -332,6 +493,32 @@ describe('Accessibility Command', () => {
       await execute(interaction);
 
       expect(interaction.deferReply).toHaveBeenCalled();
+    });
+
+    it('should handle invalid second dye in multi-dye mode', async () => {
+      const { execute } = await import('./accessibility.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: '#FF0000', dye2: 'InvalidDye12345' },
+      });
+
+      await execute(interaction);
+
+      expect(sendEphemeralError).toHaveBeenCalled();
+    });
+
+    it('should handle invalid hex in dye2', async () => {
+      const { execute } = await import('./accessibility.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        stringOptions: { dye: '#FF0000', dye2: '#GGGGGG' },
+      });
+
+      await execute(interaction);
+
+      expect(sendEphemeralError).toHaveBeenCalled();
     });
   });
 });

@@ -147,5 +147,22 @@ describe('Gradient Renderer', () => {
       expect(buffer).toBeInstanceOf(Buffer);
       expect(buffer[0]).toBe(PNG_MAGIC_BYTES[0]);
     });
+
+    it('should truncate long dye names (> 15 characters)', async () => {
+      const options: GradientOptions = {
+        startColor: '#FF0000',
+        endColor: '#0000FF',
+        steps: 3,
+        dyeNames: [
+          'Extremely Long Dye Name That Exceeds Limit',
+          'Short Name',
+          'Another Very Long Dye Name Here',
+        ],
+      };
+
+      const buffer = await renderGradient(options);
+      expect(buffer).toBeInstanceOf(Buffer);
+      expect(buffer[0]).toBe(PNG_MAGIC_BYTES[0]);
+    });
   });
 });

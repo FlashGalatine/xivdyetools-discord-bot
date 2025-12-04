@@ -224,4 +224,46 @@ describe('Stats Command', () => {
       expect(sendEphemeralError).toHaveBeenCalled();
     });
   });
+
+  describe('Edge Cases', () => {
+    it('should handle client without commands property', async () => {
+      vi.resetModules();
+      vi.doMock('../services/analytics.js', () => ({
+        getAnalytics: vi.fn(() => ({
+          getStats: vi.fn().mockResolvedValue({
+            totalCommands: 100,
+            commandBreakdown: { harmony: 100 },
+            uniqueUsers: 10,
+            successRate: 100,
+            recentErrors: [],
+          }),
+        })),
+      }));
+
+      const { statsCommand } = await import('./stats.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      // Create interaction without commands property on client
+      const guildsCache = new Map();
+      guildsCache.set('guild-1', { id: 'guild-1' });
+
+      const interaction = {
+        deferReply: vi.fn().mockResolvedValue(undefined),
+        editReply: vi.fn().mockResolvedValue(undefined),
+        reply: vi.fn().mockResolvedValue(undefined),
+        deferred: true,
+        user: { id: BOT_OWNER_ID },
+        locale: 'en-US',
+        client: {
+          guilds: { cache: guildsCache },
+          // No commands property - should default to 0
+          uptime: 86400000,
+        },
+      } as unknown as ChatInputCommandInteraction;
+
+      await statsCommand.execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
+    });
+  });
 });

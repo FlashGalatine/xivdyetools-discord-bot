@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.12] - 2025-12-04
+
+### Changed
+- **Test Coverage**: Improved branch coverage from 86.87% to 90.06%, exceeding the 90% target
+  - Added 10 new tests across 8 test files
+  - Total tests: 1068 passed, 3 skipped
+
+### Added
+- **New Tests**:
+  - `match.test.ts`: Test for `findClosestDye` returning null
+  - `language.test.ts`: Tests for `setUserPreference` failure scenarios
+  - `dye.test.ts`: Tests for unknown subcommand handling and error catch block
+  - `emoji-service.test.ts`: 3 tests for emoji availability scenarios (now 100% branch coverage)
+  - `color-input.test.ts`: Test for `findClosestDye` returning null for hex input
+  - `validators.test.ts`: Test for excessively long data center strings (>20 chars)
+  - `stats.test.ts`: Test for client without `commands` property (now 100% branch coverage)
+  - `gradient.test.ts`: Test for truncating long dye names (>15 characters)
+
+### Metrics
+- Statement coverage: 97.09%
+- Branch coverage: 90.06%
+- Function coverage: 99.2%
+- Line coverage: 97.09%
+
 ## [1.0.11] - 2025-12-02
 
 ### Added

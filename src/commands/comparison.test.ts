@@ -546,6 +546,40 @@ describe('Comparison Command - Error Handling', () => {
     const embed = (followUpCall as any).embeds[0];
     expect(embed.data.title).toContain('❌');
   });
+
+  it('should handle case when findClosestDye returns null for hex input', async () => {
+    // We need to mock the DyeService to return null for findClosestDye
+    vi.resetModules();
+    vi.doMock('xivdyetools-core', () => ({
+      DyeService: vi.fn().mockImplementation(() => ({
+        findClosestDye: vi.fn().mockReturnValue(null),
+        getAllDyes: vi.fn(() => []),
+      })),
+      ColorService: {
+        getColorDistance: vi.fn(() => 0),
+      },
+      dyeDatabase: {},
+      LocalizationService: {
+        getDyeName: vi.fn(() => null),
+        getCategory: vi.fn(() => null),
+      },
+    }));
+
+    const { execute: testExecute } = await import('./comparison.js');
+
+    const interaction = createMockInteraction({
+      dye1: '#FF0000',
+      dye2: '#0000FF',
+    });
+
+    await testExecute(interaction);
+
+    // Should have called followUp with error about no matching dye
+    expect(interaction.followUp).toHaveBeenCalled();
+    const followUpCall = vi.mocked(interaction.followUp).mock.calls[0][0];
+    const embed = (followUpCall as any).embeds[0];
+    expect(embed.data.title).toContain('❌');
+  });
 });
 
 describe('Comparison Command - Autocomplete', () => {

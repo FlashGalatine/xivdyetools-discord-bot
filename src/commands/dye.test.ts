@@ -19,11 +19,11 @@ vi.mock('../services/i18n-service.js', () => ({
   t: vi.fn((key: string, params?: Record<string, unknown>) => {
     const translations: Record<string, string> = {
       'errors.dyeNotFound': 'Dye Not Found',
-      'errors.couldNotFindDyeWithSuggestion': `Could not find dye: ${params?.name || 'unknown'}`,
+      'errors.couldNotFindDyeWithSuggestion': `Could not find dye: ${String(params?.name ?? 'unknown')}`,
       'errors.noResults': 'No Results',
-      'errors.noDyesFoundWithSuggestion': `No dyes found for: ${params?.query || 'unknown'}`,
+      'errors.noDyesFoundWithSuggestion': `No dyes found for: ${String(params?.query ?? 'unknown')}`,
       'errors.emptyCategory': 'Empty Category',
-      'errors.noDyesInCategory': `No dyes in category: ${params?.category || 'unknown'}`,
+      'errors.noDyesInCategory': `No dyes in category: ${String(params?.category ?? 'unknown')}`,
       'errors.noDyesAvailable': 'No Dyes Available',
       'errors.noMatchingFilterCriteria': 'No dyes match your filter criteria',
       'errors.invalidCount': 'Invalid Count',
@@ -42,7 +42,7 @@ vi.mock('../services/i18n-service.js', () => ({
       'labels.dye': 'dye',
       'labels.dyes': 'dyes',
       'labels.dyesInCategory': 'dyes in category',
-      'labels.showingFirst': `showing first ${params?.count || 0}`,
+      'labels.showingFirst': `showing first ${String(params?.count ?? 0)}`,
       'labels.count': 'Count',
     };
     return translations[key] || key;
@@ -243,7 +243,16 @@ describe('Dye Command', () => {
       const { execute } = await import('./dye.js');
       const { sendPublicSuccess } = await import('../utils/response-helper.js');
 
-      const categories = ['Neutral', 'Reds', 'Browns', 'Yellows', 'Greens', 'Blues', 'Purples', 'Special'];
+      const categories = [
+        'Neutral',
+        'Reds',
+        'Browns',
+        'Yellows',
+        'Greens',
+        'Blues',
+        'Purples',
+        'Special',
+      ];
 
       for (const category of categories) {
         vi.clearAllMocks();
@@ -431,6 +440,47 @@ describe('Dye Command', () => {
       await execute(interaction);
 
       expect(interaction.deferReply).toHaveBeenCalled();
+    });
+
+    it('should handle unknown subcommand', async () => {
+      const { execute } = await import('./dye.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        subcommand: 'unknown_subcommand',
+      });
+
+      await execute(interaction);
+
+      expect(sendEphemeralError).toHaveBeenCalled();
+    });
+
+    it('should handle invalid count for random', async () => {
+      const { execute } = await import('./dye.js');
+      const { sendEphemeralError } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        subcommand: 'random',
+        integerOptions: { count: 100 }, // Invalid - too high
+      });
+
+      await execute(interaction);
+
+      expect(sendEphemeralError).toHaveBeenCalled();
+    });
+
+    it('should handle multiple random dyes request', async () => {
+      const { execute } = await import('./dye.js');
+      const { sendPublicSuccess } = await import('../utils/response-helper.js');
+
+      const interaction = createMockInteraction({
+        subcommand: 'random',
+        integerOptions: { count: 3 }, // Request multiple dyes
+      });
+
+      await execute(interaction);
+
+      expect(sendPublicSuccess).toHaveBeenCalled();
     });
   });
 });

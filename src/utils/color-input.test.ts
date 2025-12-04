@@ -133,6 +133,28 @@ describe('Color Input Utilities', () => {
           expect(result.hex).toBe('#FF0000');
         }
       });
+
+      it('should fail when findClosestDye returns null for hex input', async () => {
+        vi.resetModules();
+        vi.doMock('xivdyetools-core', () => ({
+          DyeService: vi.fn().mockImplementation(() => ({
+            findClosestDye: vi.fn().mockReturnValue(null),
+            getAllDyes: vi.fn(() => []),
+          })),
+          dyeDatabase: {},
+          LocalizationService: {
+            getDyeName: vi.fn(() => null),
+            getCategory: vi.fn(() => null),
+          },
+        }));
+
+        const { parseColorInput: testParseColorInput } = await import('./color-input.js');
+        const result = testParseColorInput('#FF0000');
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toContain('Could not find a matching dye');
+        }
+      });
     });
   });
 

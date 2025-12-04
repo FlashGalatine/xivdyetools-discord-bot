@@ -92,7 +92,9 @@ describe('EmojiService', () => {
       await emojiService.initialize(mockClient);
 
       // Per Issue #7: Now logs specific warning about client.application being null
-      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('client.application is null'));
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('client.application is null')
+      );
     });
 
     it('should handle fetch errors', async () => {
@@ -127,6 +129,38 @@ describe('EmojiService', () => {
 
       expect(result).toBeUndefined();
     });
+
+    it('should return emoji when initialized and emoji exists', async () => {
+      vi.resetModules();
+      const { emojiService } = await import('./emoji-service.js');
+
+      const mockEmoji = { id: '1', name: 'dye_123', toString: (): string => '<:dye_123:1>' };
+      const mockEmojis = new Map();
+      mockEmojis.set('1', mockEmoji);
+      // Add find method to the Map (mimicking Collection behavior)
+      (mockEmojis as any).find = (predicate: (e: unknown) => boolean): unknown => {
+        for (const emoji of mockEmojis.values()) {
+          if (predicate(emoji)) return emoji;
+        }
+        return undefined;
+      };
+
+      const mockClient = {
+        application: {
+          emojis: {
+            fetch: vi.fn().mockResolvedValue(mockEmojis),
+          },
+        },
+      } as unknown as Client;
+
+      await emojiService.initialize(mockClient);
+
+      const mockDye = { itemID: 123, hex: '#FF0000' } as Dye;
+      const result = emojiService.getDyeEmoji(mockDye);
+
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('dye_123');
+    });
   });
 
   describe('getDyeEmojiString', () => {
@@ -138,6 +172,36 @@ describe('EmojiService', () => {
       const result = emojiService.getDyeEmojiString(mockDye);
 
       expect(result).toBeNull();
+    });
+
+    it('should return emoji string when initialized and emoji exists', async () => {
+      vi.resetModules();
+      const { emojiService } = await import('./emoji-service.js');
+
+      const mockEmoji = { id: '1', name: 'dye_456', toString: (): string => '<:dye_456:1>' };
+      const mockEmojis = new Map();
+      mockEmojis.set('1', mockEmoji);
+      (mockEmojis as any).find = (predicate: (e: unknown) => boolean): unknown => {
+        for (const emoji of mockEmojis.values()) {
+          if (predicate(emoji)) return emoji;
+        }
+        return undefined;
+      };
+
+      const mockClient = {
+        application: {
+          emojis: {
+            fetch: vi.fn().mockResolvedValue(mockEmojis),
+          },
+        },
+      } as unknown as Client;
+
+      await emojiService.initialize(mockClient);
+
+      const mockDye = { itemID: 456, hex: '#FF0000' } as Dye;
+      const result = emojiService.getDyeEmojiString(mockDye);
+
+      expect(result).toBe('<:dye_456:1>');
     });
   });
 
@@ -160,6 +224,36 @@ describe('EmojiService', () => {
       const result = emojiService.getDyeEmojiOrSwatch(mockDye);
 
       expect(result).toBe('[swatch:#00FF00:4]');
+    });
+
+    it('should return emoji when initialized and emoji exists', async () => {
+      vi.resetModules();
+      const { emojiService } = await import('./emoji-service.js');
+
+      const mockEmoji = { id: '1', name: 'dye_789', toString: (): string => '<:dye_789:1>' };
+      const mockEmojis = new Map();
+      mockEmojis.set('1', mockEmoji);
+      (mockEmojis as any).find = (predicate: (e: unknown) => boolean): unknown => {
+        for (const emoji of mockEmojis.values()) {
+          if (predicate(emoji)) return emoji;
+        }
+        return undefined;
+      };
+
+      const mockClient = {
+        application: {
+          emojis: {
+            fetch: vi.fn().mockResolvedValue(mockEmojis),
+          },
+        },
+      } as unknown as Client;
+
+      await emojiService.initialize(mockClient);
+
+      const mockDye = { itemID: 789, hex: '#00FF00' } as Dye;
+      const result = emojiService.getDyeEmojiOrSwatch(mockDye, 4);
+
+      expect(result).toBe('<:dye_789:1>');
     });
   });
 });

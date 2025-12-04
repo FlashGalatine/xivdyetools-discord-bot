@@ -389,6 +389,37 @@ describe('Match Command - Error Handling', () => {
     expect(interaction.editReply).toHaveBeenCalled();
     expect(interaction.deferReply).toHaveBeenCalledTimes(1);
   });
+
+  it('should handle findClosestDye returning null', async () => {
+    // We need to mock the DyeService to return null for findClosestDye
+    vi.resetModules();
+    vi.doMock('xivdyetools-core', () => ({
+      DyeService: vi.fn().mockImplementation(() => ({
+        findClosestDye: vi.fn().mockReturnValue(null),
+        getAllDyes: vi.fn(() => []),
+      })),
+      ColorService: {
+        getColorDistance: vi.fn(() => 0),
+      },
+      dyeDatabase: {},
+      LocalizationService: {
+        getDyeName: vi.fn(() => null),
+        getCategory: vi.fn(() => null),
+        getAcquisition: vi.fn(() => null),
+      },
+    }));
+
+    const { matchCommand: testMatchCommand } = await import('./match.js');
+    const interaction = createMockInteraction('#FF0000');
+
+    await testMatchCommand.execute(interaction);
+
+    // Should have called followUp with error
+    expect(interaction.followUp).toHaveBeenCalled();
+    const followUpCall = vi.mocked(interaction.followUp).mock.calls[0][0];
+    const embed = (followUpCall as any).embeds[0];
+    expect(embed.data.title).toContain('❌');
+  });
 });
 
 describe('Match Command - Autocomplete', () => {
