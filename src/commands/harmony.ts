@@ -20,6 +20,7 @@ import { validateHexColor, validateHarmonyType, findDyeByName } from '../utils/v
 import { createErrorEmbed, createHarmonyEmbed } from '../utils/embed-builder.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { renderColorWheel } from '../renderers/color-wheel.js';
+import { priceService } from '../services/price-service.js';
 import { logger } from '../utils/logger.js';
 import { t } from '../services/i18n-service.js';
 import { CommandBase } from './base/CommandBase.js';
@@ -253,8 +254,23 @@ class HarmonyCommand extends CommandBase {
       name: 'color-wheel.png',
     });
 
+    // Fetch market prices for all dyes (base + companions)
+    const allDyes = [baseDye, ...harmonyDyes];
+    const pricesMap = new Map<number, string>();
+    try {
+      const priceResults = await priceService.getPricesForDyes(allDyes);
+      for (const [dyeId, priceInfo] of priceResults) {
+        if (priceInfo.available) {
+          pricesMap.set(dyeId, priceInfo.formatted);
+        }
+      }
+    } catch (error) {
+      logger.debug('Failed to fetch prices for harmony dyes', error);
+      // Continue without prices - they're optional
+    }
+
     // Create embed with color wheel image
-    const embed = createHarmonyEmbed(baseColor, baseDye, harmonyType, companions);
+    const embed = createHarmonyEmbed(baseColor, baseDye, harmonyType, companions, pricesMap);
     embed.setImage('attachment://color-wheel.png');
 
     // Send response (public)

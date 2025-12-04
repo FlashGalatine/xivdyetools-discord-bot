@@ -20,6 +20,7 @@ import {
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
 import { formatColorSwatch, formatRGB, formatHSV } from '../utils/embed-builder.js';
 import { emojiService } from '../services/emoji-service.js';
+import { priceService } from '../services/price-service.js';
 import { sendPublicSuccess } from '../utils/response-helper.js';
 import { CommandBase } from './base/CommandBase.js';
 import { t } from '../services/i18n-service.js';
@@ -165,7 +166,24 @@ class MatchCommand extends CommandBase {
       embed.addFields({
         name: t('embeds.acquisition'),
         value: localizedAcquisition,
-        inline: false,
+        inline: true,
+      });
+    }
+
+    // Fetch and add market price (non-blocking)
+    try {
+      const priceInfo = await priceService.getFormattedPrice(closestDye);
+      embed.addFields({
+        name: t('embeds.marketPrice'),
+        value: priceInfo.available ? priceInfo.formatted : t('embeds.priceUnavailable'),
+        inline: true,
+      });
+    } catch {
+      // Price fetch failed, add unavailable message
+      embed.addFields({
+        name: t('embeds.marketPrice'),
+        value: t('embeds.priceUnavailable'),
+        inline: true,
       });
     }
 

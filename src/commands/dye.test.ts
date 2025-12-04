@@ -15,6 +15,18 @@ vi.mock('../utils/logger.js', () => ({
   },
 }));
 
+vi.mock('../services/price-service.js', () => ({
+  priceService: {
+    getFormattedPrice: vi.fn().mockResolvedValue({
+      gil: 1000,
+      formatted: '1,000 Gil',
+      available: true,
+    }),
+    getPricesForDyes: vi.fn().mockResolvedValue(new Map()),
+    isAvailable: vi.fn().mockResolvedValue(true),
+  },
+}));
+
 vi.mock('../services/i18n-service.js', () => ({
   t: vi.fn((key: string, params?: Record<string, unknown>) => {
     const translations: Record<string, string> = {
@@ -33,6 +45,8 @@ vi.mock('../services/i18n-service.js', () => ({
       'embeds.dyeSearch': 'Dye Search',
       'embeds.category': 'Category',
       'embeds.acquisition': 'Acquisition',
+      'embeds.marketPrice': 'Market Price',
+      'embeds.priceUnavailable': 'Price unavailable',
       'embeds.randomDyes': 'Random Dyes',
       'embeds.useDyeInfoForDetails': 'Use /dye info for details',
       'embeds.useDyeInfoForFullDetails': 'Use /dye info for full details',
@@ -61,8 +75,9 @@ vi.mock('../utils/embed-builder.js', () => ({
     data: { title: `❌ ${title}`, description },
   })),
   createDyeEmbed: vi.fn((dye: { name: string; hex: string }) => ({
-    data: { title: dye.name, color: parseInt(dye.hex.replace('#', ''), 16) },
+    data: { title: dye.name, color: parseInt(dye.hex.replace('#', ''), 16), fields: [] },
     setTitle: vi.fn().mockReturnThis(),
+    addFields: vi.fn().mockReturnThis(),
   })),
   createDyeEmojiAttachment: vi.fn(() => null),
 }));

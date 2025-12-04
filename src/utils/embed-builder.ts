@@ -151,12 +151,18 @@ function formatHarmonyType(harmonyType: string): string {
 
 /**
  * Create harmony result embed
+ * @param baseColor - The base hex color
+ * @param baseDye - The base dye
+ * @param harmonyType - The type of harmony
+ * @param companions - Array of companion dyes with angle info
+ * @param prices - Optional map of dye ID to formatted price string
  */
 export function createHarmonyEmbed(
   baseColor: string,
   baseDye: Dye,
   harmonyType: string,
-  companions: Array<{ dye: Dye; angle: number; deviation: number }>
+  companions: Array<{ dye: Dye; angle: number; deviation: number }>,
+  prices?: Map<number, string>
 ): EmbedBuilder {
   // Get localized harmony type from core library (with fallback)
   const localizedHarmonyType =
@@ -182,13 +188,17 @@ export function createHarmonyEmbed(
   const localizedBaseAcquisition = baseDye.acquisition
     ? LocalizationService.getAcquisition(baseDye.acquisition) || baseDye.acquisition
     : t('labels.unknown');
+  const baseDyeValue = [
+    emojiService.getDyeEmojiOrSwatch(baseDye, 4),
+    formatHSV(baseDye.hex),
+    `**${t('embeds.acquisition')}:** ${localizedBaseAcquisition}`,
+  ];
+  if (prices?.has(baseDye.id)) {
+    baseDyeValue.push(`**${t('embeds.marketPrice')}:** ${prices.get(baseDye.id)}`);
+  }
   embed.addFields({
     name: `1️⃣ ${localizedBaseDyeName} [${t('embeds.base')}]`,
-    value: [
-      emojiService.getDyeEmojiOrSwatch(baseDye, 4),
-      formatHSV(baseDye.hex),
-      `**${t('embeds.acquisition')}:** ${localizedBaseAcquisition}`,
-    ].join('\n'),
+    value: baseDyeValue.join('\n'),
     inline: false,
   });
 
@@ -206,14 +216,19 @@ export function createHarmonyEmbed(
           ? t('matchQuality.good')
           : t('matchQuality.fair');
 
+    const compValue = [
+      emojiService.getDyeEmojiOrSwatch(comp.dye, 4),
+      `${t('embeds.angle')}: ${Math.round(comp.angle)}° ${t('embeds.fromBase')}`,
+      `${t('embeds.deviation')}: ${comp.deviation.toFixed(1)}° (${deviationText})`,
+      `**${t('embeds.acquisition')}:** ${localizedCompAcquisition}`,
+    ];
+    if (prices?.has(comp.dye.id)) {
+      compValue.push(`**${t('embeds.marketPrice')}:** ${prices.get(comp.dye.id)}`);
+    }
+
     embed.addFields({
       name: `${number} ${localizedCompDyeName}`,
-      value: [
-        emojiService.getDyeEmojiOrSwatch(comp.dye, 4),
-        `${t('embeds.angle')}: ${Math.round(comp.angle)}° ${t('embeds.fromBase')}`,
-        `${t('embeds.deviation')}: ${comp.deviation.toFixed(1)}° (${deviationText})`,
-        `**${t('embeds.acquisition')}:** ${localizedCompAcquisition}`,
-      ].join('\n'),
+      value: compValue.join('\n'),
       inline: false,
     });
   });

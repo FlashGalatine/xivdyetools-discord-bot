@@ -19,6 +19,7 @@ import {
   createDyeEmojiAttachment,
 } from '../utils/embed-builder.js';
 import { emojiService } from '../services/emoji-service.js';
+import { priceService } from '../services/price-service.js';
 import { logger } from '../utils/logger.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { t } from '../services/i18n-service.js';
@@ -236,6 +237,23 @@ async function handleInfo(interaction: ChatInputCommandInteraction): Promise<voi
   // Attach emoji if available
   const emojiAttachment = createDyeEmojiAttachment(dye);
   const embed = createDyeEmbed(dye, true, true, !!emojiAttachment); // Show extended info, use file attachment if available
+
+  // Fetch and add market price
+  try {
+    const priceInfo = await priceService.getFormattedPrice(dye);
+    embed.addFields({
+      name: t('embeds.marketPrice'),
+      value: priceInfo.available ? priceInfo.formatted : t('embeds.priceUnavailable'),
+      inline: true,
+    });
+  } catch {
+    embed.addFields({
+      name: t('embeds.marketPrice'),
+      value: t('embeds.priceUnavailable'),
+      inline: true,
+    });
+  }
+
   const files = emojiAttachment ? [emojiAttachment] : [];
 
   await sendPublicSuccess(interaction, { embeds: [embed], files });

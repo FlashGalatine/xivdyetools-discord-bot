@@ -7,6 +7,19 @@ import { matchCommand } from './match.js';
 import type { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
 import type { Dye } from 'xivdyetools-core';
 
+// Mock price service
+vi.mock('../services/price-service.js', () => ({
+  priceService: {
+    getFormattedPrice: vi.fn().mockResolvedValue({
+      gil: 1000,
+      formatted: '1,000 Gil',
+      available: true,
+    }),
+    getPricesForDyes: vi.fn().mockResolvedValue(new Map()),
+    isAvailable: vi.fn().mockResolvedValue(true),
+  },
+}));
+
 // Mock emoji service
 vi.mock('../services/emoji-service.js', () => ({
   emojiService: {

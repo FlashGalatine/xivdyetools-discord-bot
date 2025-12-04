@@ -6,6 +6,19 @@ import { describe, it, expect, vi } from 'vitest';
 import { execute, autocomplete } from './harmony.js';
 import type { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
 
+// Mock price service
+vi.mock('../services/price-service.js', () => ({
+  priceService: {
+    getFormattedPrice: vi.fn().mockResolvedValue({
+      gil: 1000,
+      formatted: '1,000 Gil',
+      available: true,
+    }),
+    getPricesForDyes: vi.fn().mockResolvedValue(new Map()),
+    isAvailable: vi.fn().mockResolvedValue(true),
+  },
+}));
+
 /**
  * Create mock ChatInputCommandInteraction
  */

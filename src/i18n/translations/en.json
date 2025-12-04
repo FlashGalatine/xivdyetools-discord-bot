@@ -214,7 +214,11 @@
     "categoryDyes": "{category} Dyes",
     "dyesInCategory": "dyes in this category",
     "useDyeInfoDetails": "Use /dye info <name> to see full details",
-    "randomDyes": "Random Dyes"
+    "randomDyes": "Random Dyes",
+    "marketPrice": "Market Price",
+    "currentPrice": "Current Price",
+    "priceUnavailable": "Price unavailable",
+    "priceDisclaimer": "Prices from Universalis (may be outdated)"
   },
   "matchQuality": {
     "perfect": "Perfect match",
