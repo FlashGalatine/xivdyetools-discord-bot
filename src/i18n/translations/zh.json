@@ -431,5 +431,13 @@
     "matchQualityRatings": "匹配质量评级",
     "matchQualityRatingsContent": "**完美**（距离0\n**优秀**（距离<10\n**良好**（距离<25\n**一般**（距离<50\n**大致**（距离>=50\n\n*距离越低匹配越好*",
     "poweredBy": "由Sharp图像处理库提供支持"
+  },
+  "buttons": {
+    "copyHex": "复制 Hex",
+    "copyRgb": "复制 RGB",
+    "copyHsv": "复制 HSV",
+    "copyHexResponse": "**Hex 颜色:**\n`{value}`\n\n*在手机上长按复制*",
+    "copyRgbResponse": "**RGB 颜色:**\n`{value}`\n\n*在手机上长按复制*",
+    "copyHsvResponse": "**HSV 颜色:**\n`{value}`\n\n*在手机上长按复制*"
   }
 }

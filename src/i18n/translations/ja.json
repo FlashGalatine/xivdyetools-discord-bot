@@ -429,5 +429,13 @@
     "matchQualityRatings": "マッチ品質評価",
     "matchQualityRatingsContent": "**完璧**（距離0）\n**優秀**（距離<10）\n**良い**（距離<25）\n**まずまず**（距離<50）\n**おおよそ**（距離>=50）\n\n*距離が低いほど良いマッチ*",
     "poweredBy": "Sharp画像処理ライブラリにより駆動"
+  },
+  "buttons": {
+    "copyHex": "Hexをコピー",
+    "copyRgb": "RGBをコピー",
+    "copyHsv": "HSVをコピー",
+    "copyHexResponse": "**Hexカラー:**\n`{value}`\n\n*モバイルでは長押しでコピー*",
+    "copyRgbResponse": "**RGBカラー:**\n`{value}`\n\n*モバイルでは長押しでコピー*",
+    "copyHsvResponse": "**HSVカラー:**\n`{value}`\n\n*モバイルでは長押しでコピー*"
   }
 }

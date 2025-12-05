@@ -431,5 +431,13 @@
     "matchQualityRatings": "일치 품질 등급",
     "matchQualityRatingsContent": "**완벽** (거리 0\n**우수** (거리 <10\n**좋음** (거리 <25\n**보통** (거리 <50\n**대략적** (거리 >=50\n\n*거리가 낮을수록 좋은 일치*",
     "poweredBy": "Sharp 이미지 처리 라이브러리로 구동"
+  },
+  "buttons": {
+    "copyHex": "Hex 복사",
+    "copyRgb": "RGB 복사",
+    "copyHsv": "HSV 복사",
+    "copyHexResponse": "**Hex 색상:**\n`{value}`\n\n*모바일에서 복사하려면 길게 누르세요*",
+    "copyRgbResponse": "**RGB 색상:**\n`{value}`\n\n*모바일에서 복사하려면 길게 누르세요*",
+    "copyHsvResponse": "**HSV 색상:**\n`{value}`\n\n*모바일에서 복사하려면 길게 누르세요*"
   }
 }

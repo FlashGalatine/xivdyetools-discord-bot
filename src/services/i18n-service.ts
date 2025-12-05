@@ -9,7 +9,12 @@
  * - Redis storage for user language preferences
  */
 
-import { ChatInputCommandInteraction, AutocompleteInteraction, Locale } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  AutocompleteInteraction,
+  ButtonInteraction,
+  Locale,
+} from 'discord.js';
 import { LocalizationService } from 'xivdyetools-core';
 import { getRedisClient } from './redis.js';
 import { logger } from '../utils/logger.js';
@@ -265,7 +270,7 @@ function getCurrentLocale(): LocaleCode {
  * Priority: User preference (Redis) > Discord locale > English fallback
  */
 async function setLocaleFromInteraction(
-  interaction: ChatInputCommandInteraction | AutocompleteInteraction
+  interaction: ChatInputCommandInteraction | AutocompleteInteraction | ButtonInteraction
 ): Promise<LocaleCode> {
   const userId = interaction.user.id;
 

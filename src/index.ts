@@ -27,6 +27,7 @@ import { i18nService, t } from './services/i18n-service.js';
 import { initErrorWebhook, notifyError, closeErrorWebhook } from './utils/error-webhook.js';
 import { validateCommandInputs } from './utils/validators.js';
 import { securityLogger } from './utils/security-logger.js';
+import { handleButtonInteraction } from './handlers/button-handler.js';
 import type { BotClient, BotCommand } from './types/index.js';
 
 // Initialize error webhook
@@ -105,6 +106,17 @@ client.on(Events.InteractionCreate, (interaction) => {
         await command.autocomplete(interaction);
       } catch (error) {
         logger.error(`Error in autocomplete for ${interaction.commandName}:`, error);
+      }
+      return;
+    }
+
+    // Handle button interactions (copy dye info buttons)
+    if (interaction.isButton()) {
+      try {
+        await i18nService.setLocaleFromInteraction(interaction);
+        await handleButtonInteraction(interaction);
+      } catch (error) {
+        logger.error('Error handling button interaction:', error);
       }
       return;
     }

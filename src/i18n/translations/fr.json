@@ -429,5 +429,13 @@
     "matchQualityRatings": "Évaluations de qualité de correspondance",
     "matchQualityRatingsContent": "**Parfait** (distance 0)\n**Excellent** (distance <10)\n**Bon** (distance <25)\n**Acceptable** (distance <50)\n**Approximatif** (distance >=50)\n\n*Distance plus faible = meilleure correspondance*",
     "poweredBy": "Propulsé par la bibliothèque de traitement d'images Sharp"
+  },
+  "buttons": {
+    "copyHex": "Copier Hex",
+    "copyRgb": "Copier RGB",
+    "copyHsv": "Copier HSV",
+    "copyHexResponse": "**Couleur Hex :**\n`{value}`\n\n*Appuyez longuement pour copier sur mobile*",
+    "copyRgbResponse": "**Couleur RGB :**\n`{value}`\n\n*Appuyez longuement pour copier sur mobile*",
+    "copyHsvResponse": "**Couleur HSV :**\n`{value}`\n\n*Appuyez longuement pour copier sur mobile*"
   }
 }

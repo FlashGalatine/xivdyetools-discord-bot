@@ -19,6 +19,7 @@ import {
 } from 'xivdyetools-core';
 import { validateHexColor, findDyeByName } from '../utils/validators.js';
 import { formatColorSwatch, formatRGB, formatHSV } from '../utils/embed-builder.js';
+import { createCopyButtonsRow } from '../utils/button-builder.js';
 import { emojiService } from '../services/emoji-service.js';
 import { priceService } from '../services/price-service.js';
 import { sendPublicSuccess } from '../utils/response-helper.js';
@@ -193,8 +194,11 @@ class MatchCommand extends CommandBase {
       embed.setThumbnail(emoji.imageURL());
     }
 
+    // Create copy buttons for matched dye
+    const copyButtons = createCopyButtonsRow(closestDye.hex);
+
     // Send response (public)
-    await sendPublicSuccess(interaction, { embeds: [embed] });
+    await sendPublicSuccess(interaction, { embeds: [embed], components: [copyButtons] });
   }
 
   async autocomplete(interaction: AutocompleteInteraction): Promise<void> {

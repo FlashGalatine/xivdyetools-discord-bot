@@ -18,6 +18,7 @@ import {
   createDyeEmbed,
   createDyeEmojiAttachment,
 } from '../utils/embed-builder.js';
+import { createCopyButtonsRow } from '../utils/button-builder.js';
 import { emojiService } from '../services/emoji-service.js';
 import { priceService } from '../services/price-service.js';
 import { logger } from '../utils/logger.js';
@@ -255,8 +256,9 @@ async function handleInfo(interaction: ChatInputCommandInteraction): Promise<voi
   }
 
   const files = emojiAttachment ? [emojiAttachment] : [];
+  const copyButtons = createCopyButtonsRow(dye.hex);
 
-  await sendPublicSuccess(interaction, { embeds: [embed], files });
+  await sendPublicSuccess(interaction, { embeds: [embed], files, components: [copyButtons] });
   logger.info(`Dye info completed: ${dye.name}`);
 }
 
@@ -433,8 +435,9 @@ async function handleRandom(interaction: ChatInputCommandInteraction): Promise<v
     embed.setTitle(`🎲 ${embed.data.title}`); // Add dice emoji
 
     const files = emojiAttachment ? [emojiAttachment] : [];
+    const copyButtons = createCopyButtonsRow(dye.hex);
 
-    await sendPublicSuccess(interaction, { embeds: [embed], files });
+    await sendPublicSuccess(interaction, { embeds: [embed], files, components: [copyButtons] });
   } else {
     // Multiple dyes - use compact list
     const dyeList = randomDyes

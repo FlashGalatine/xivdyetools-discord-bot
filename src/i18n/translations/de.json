@@ -429,5 +429,13 @@
     "matchQualityRatings": "Übereinstimmungsqualitätsbewertungen",
     "matchQualityRatingsContent": "**Perfekt** (Abstand 0)\n**Ausgezeichnet** (Abstand <10)\n**Gut** (Abstand <25)\n**Passabel** (Abstand <50)\n**Ungefähr** (Abstand >=50)\n\n*Geringerer Abstand = bessere Übereinstimmung*",
     "poweredBy": "Betrieben von der Sharp-Bildverarbeitungsbibliothek"
+  },
+  "buttons": {
+    "copyHex": "Hex kopieren",
+    "copyRgb": "RGB kopieren",
+    "copyHsv": "HSV kopieren",
+    "copyHexResponse": "**Hex-Farbe:**\n`{value}`\n\n*Zum Kopieren auf Mobilgeräten gedrückt halten*",
+    "copyRgbResponse": "**RGB-Farbe:**\n`{value}`\n\n*Zum Kopieren auf Mobilgeräten gedrückt halten*",
+    "copyHsvResponse": "**HSV-Farbe:**\n`{value}`\n\n*Zum Kopieren auf Mobilgeräten gedrückt halten*"
   }
 }

@@ -17,6 +17,7 @@ import {
   formatRGB,
   formatHSV,
 } from '../utils/embed-builder.js';
+import { createCopyButtonsRow } from '../utils/button-builder.js';
 import { validateImage, processWithTimeout } from '../utils/image-validator.js';
 import { validateImageUrl } from '../utils/url-validator.js';
 import { logger } from '../utils/logger.js';
@@ -302,7 +303,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       embed.setThumbnail(emoji.imageURL());
     }
 
-    await sendPublicSuccess(interaction, { embeds: [embed] });
+    // Create copy buttons for matched dye
+    const copyButtons = createCopyButtonsRow(closestDye.hex);
+
+    await sendPublicSuccess(interaction, { embeds: [embed], components: [copyButtons] });
 
     logger.info(`Image match completed: ${closestDye.name} (distance: ${distance.toFixed(2)})`);
   } catch (error) {

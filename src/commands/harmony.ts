@@ -18,6 +18,7 @@ import {
 } from 'xivdyetools-core';
 import { validateHexColor, validateHarmonyType, findDyeByName } from '../utils/validators.js';
 import { createErrorEmbed, createHarmonyEmbed } from '../utils/embed-builder.js';
+import { createCopyButtonsRow } from '../utils/button-builder.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { renderColorWheel } from '../renderers/color-wheel.js';
 import { priceService } from '../services/price-service.js';
@@ -273,10 +274,14 @@ class HarmonyCommand extends CommandBase {
     const embed = createHarmonyEmbed(baseColor, baseDye, harmonyType, companions, pricesMap);
     embed.setImage('attachment://color-wheel.png');
 
+    // Create copy buttons for base dye
+    const copyButtons = createCopyButtonsRow(baseDye.hex);
+
     // Send response (public)
     await sendPublicSuccess(interaction, {
       embeds: [embed],
       files: [attachment],
+      components: [copyButtons],
     });
 
     logger.info(`Harmony command completed successfully`);

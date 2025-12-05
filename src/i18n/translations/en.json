@@ -433,5 +433,13 @@
     "matchQualityRatings": "Match Quality Ratings",
     "matchQualityRatingsContent": "**Perfect** (0 distance)\n**Excellent** (<10 distance)\n**Good** (<25 distance)\n**Fair** (<50 distance)\n**Approximate** (>=50 distance)\n\n*Lower distance = better match*",
     "poweredBy": "Powered by Sharp image processing library"
+  },
+  "buttons": {
+    "copyHex": "Copy Hex",
+    "copyRgb": "Copy RGB",
+    "copyHsv": "Copy HSV",
+    "copyHexResponse": "**Hex Color:**\n`{value}`\n\n*Tap and hold to copy on mobile*",
+    "copyRgbResponse": "**RGB Color:**\n`{value}`\n\n*Tap and hold to copy on mobile*",
+    "copyHsvResponse": "**HSV Color:**\n`{value}`\n\n*Tap and hold to copy on mobile*"
   }
 }
