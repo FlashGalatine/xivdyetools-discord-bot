@@ -81,7 +81,8 @@
     "matchImage": {
       "description": "从图像中提取主要颜色并搜索匹配的FFXIV染剂",
       "options": {
-        "image": "要分析的图像文件（PNG、JPG、GIF、BMP、WebP）"
+        "image": "要分析的图像文件（PNG、JPG、GIF、BMP、WebP）",
+        "colors": "要提取的颜色数量（1-5，默认：1）"
       }
     },
     "matchImageHelp": {
@@ -216,7 +217,14 @@
     "categoryDyes": "{category}染剂",
     "dyesInCategory": "此类别中的染剂",
     "useDyeInfoDetails": "使用/dye info <名称>查看详细信息",
-    "randomDyes": "随机染剂"
+    "randomDyes": "随机染剂",
+    "marketPrice": "市场价格",
+    "currentPrice": "当前价格",
+    "priceUnavailable": "价格不可用",
+    "priceDisclaimer": "来自Universalis的价格（可能过期）",
+    "paletteExtraction": "调色板提取",
+    "extractedColors": "已提取",
+    "colorsFromImage": "从图像中提取颜色"
   },
   "matchQuality": {
     "perfect": "完美匹配",

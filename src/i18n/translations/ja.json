@@ -81,7 +81,8 @@
     "matchImage": {
       "description": "画像から主要な色を抽出し、マッチするFFXIVカララントを検索",
       "options": {
-        "image": "分析する画像ファイル（PNG、JPG、GIF、BMP、WebP）"
+        "image": "分析する画像ファイル（PNG、JPG、GIF、BMP、WebP）",
+        "colors": "抽出する色の数（1-5、デフォルト: 1）"
       }
     },
     "matchImageHelp": {
@@ -214,7 +215,14 @@
     "categoryDyes": "{category} カララント",
     "dyesInCategory": "このカテゴリのカララント",
     "useDyeInfoDetails": "詳細を見るには /dye info <名前> を使用してください",
-    "randomDyes": "ランダムカララント"
+    "randomDyes": "ランダムカララント",
+    "marketPrice": "マーケット価格",
+    "currentPrice": "現在の価格",
+    "priceUnavailable": "価格不明",
+    "priceDisclaimer": "Universalisからの価格（古い可能性あり）",
+    "paletteExtraction": "パレット抽出",
+    "extractedColors": "抽出",
+    "colorsFromImage": "色を画像から抽出"
   },
   "matchQuality": {
     "perfect": "完璧なマッチ",

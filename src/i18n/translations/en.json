@@ -81,7 +81,8 @@
     "matchImage": {
       "description": "Extract the dominant color from an image and find matching FFXIV dye",
       "options": {
-        "image": "Image file to analyze (PNG, JPG, GIF, BMP, WebP)"
+        "image": "Image file to analyze (PNG, JPG, GIF, BMP, WebP)",
+        "colors": "Number of colors to extract (1-5, default: 1)"
       }
     },
     "matchImageHelp": {
@@ -218,7 +219,10 @@
     "marketPrice": "Market Price",
     "currentPrice": "Current Price",
     "priceUnavailable": "Price unavailable",
-    "priceDisclaimer": "Prices from Universalis (may be outdated)"
+    "priceDisclaimer": "Prices from Universalis (may be outdated)",
+    "paletteExtraction": "Palette Extraction",
+    "extractedColors": "Extracted",
+    "colorsFromImage": "colors from image"
   },
   "matchQuality": {
     "perfect": "Perfect match",
@@ -348,7 +352,7 @@
       },
       "matchImage": {
         "title": "/match_image",
-        "description": "**Extract dominant color from an image and find matching dye**\n- **Parameters:**\n  - `image` - Image file (PNG, JPG, GIF, BMP, WebP)\n- **Example:** `/match_image image:[attach file]`\n- Supports up to 8MB images\n- **Tip:** See `/match_image_help` for best practices!"
+        "description": "**Extract dominant color from an image and find matching dye**\n- **Parameters:**\n  - `image` - Image file (PNG, JPG, GIF, BMP, WebP)\n  - `colors` (optional) - Number of colors to extract (1-5, default: 1)\n- **Example:** `/match_image image:[attach file]`\n- **Multi-color:** `/match_image image:[file] colors:3`\n- Supports up to 8MB images\n- **Tip:** See `/match_image_help` for best practices!"
       },
       "matchImageHelp": {
         "title": "/match_image_help",

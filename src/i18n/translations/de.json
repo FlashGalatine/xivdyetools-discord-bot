@@ -81,7 +81,8 @@
     "matchImage": {
       "description": "Extrahiere die dominante Farbe aus einem Bild und finde passenden FFXIV-Farbstoff",
       "options": {
-        "image": "Zu analysierende Bilddatei (PNG, JPG, GIF, BMP, WebP)"
+        "image": "Zu analysierende Bilddatei (PNG, JPG, GIF, BMP, WebP)",
+        "colors": "Anzahl der zu extrahierenden Farben (1-5, Standard: 1)"
       }
     },
     "matchImageHelp": {
@@ -214,7 +215,14 @@
     "categoryDyes": "{category}-Farbstoffe",
     "dyesInCategory": "Farbstoffe in dieser Kategorie",
     "useDyeInfoDetails": "Verwende /dye info <Name> für vollständige Details",
-    "randomDyes": "Zufällige Farbstoffe"
+    "randomDyes": "Zufällige Farbstoffe",
+    "marketPrice": "Marktpreis",
+    "currentPrice": "Aktueller Preis",
+    "priceUnavailable": "Preis nicht verfügbar",
+    "priceDisclaimer": "Preise von Universalis (möglicherweise veraltet)",
+    "paletteExtraction": "Paletten-Extraktion",
+    "extractedColors": "Extrahiert",
+    "colorsFromImage": "Farben aus Bild"
   },
   "matchQuality": {
     "perfect": "Perfekte Übereinstimmung",

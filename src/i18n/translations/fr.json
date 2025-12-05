@@ -81,7 +81,8 @@
     "matchImage": {
       "description": "Extraire la couleur dominante d'une image et trouver la teinture FFXIV correspondante",
       "options": {
-        "image": "Fichier image à analyser (PNG, JPG, GIF, BMP, WebP)"
+        "image": "Fichier image à analyser (PNG, JPG, GIF, BMP, WebP)",
+        "colors": "Nombre de couleurs à extraire (1-5, par défaut: 1)"
       }
     },
     "matchImageHelp": {
@@ -214,7 +215,14 @@
     "categoryDyes": "Teintures {category}",
     "dyesInCategory": "teintures dans cette catégorie",
     "useDyeInfoDetails": "Utilisez /dye info <nom> pour voir tous les détails",
-    "randomDyes": "Teintures aléatoires"
+    "randomDyes": "Teintures aléatoires",
+    "marketPrice": "Prix du marché",
+    "currentPrice": "Prix actuel",
+    "priceUnavailable": "Prix non disponible",
+    "priceDisclaimer": "Prix de Universalis (peut être obsolète)",
+    "paletteExtraction": "Extraction de palette",
+    "extractedColors": "Extrait",
+    "colorsFromImage": "couleurs de l'image"
   },
   "matchQuality": {
     "perfect": "Correspondance parfaite",

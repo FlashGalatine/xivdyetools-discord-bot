@@ -6,10 +6,19 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   EmbedBuilder,
+  AttachmentBuilder,
   ColorResolvable,
 } from 'discord.js';
 import sharp from 'sharp';
-import { DyeService, ColorService, dyeDatabase, LocalizationService } from 'xivdyetools-core';
+import {
+  DyeService,
+  ColorService,
+  PaletteService,
+  dyeDatabase,
+  LocalizationService,
+  type RGB,
+  type PaletteMatch,
+} from 'xivdyetools-core';
 import { config } from '../config.js';
 import {
   createErrorEmbed,
@@ -25,9 +34,19 @@ import { WorkerPool } from '../utils/worker-pool.js';
 import { emojiService } from '../services/emoji-service.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { t } from '../services/i18n-service.js';
+import { renderPaletteGrid, type PaletteGridEntry } from '../renderers/palette-grid.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
+
+// Lazy initialization to support test mocking with vi.resetModules()
+let _paletteService: PaletteService | null = null;
+function getPaletteService(): PaletteService {
+  if (!_paletteService) {
+    _paletteService = new PaletteService();
+  }
+  return _paletteService;
+}
 
 // Per P-6: Worker pool for image processing (with fallback to sync)
 let workerPool: WorkerPool | null = null;
@@ -84,6 +103,19 @@ export const data = new SlashCommandBuilder()
         fr: 'Fichier image à analyser (PNG, JPG, GIF, BMP, WebP)',
       })
       .setRequired(true)
+  )
+  .addIntegerOption((option) =>
+    option
+      .setName('colors')
+      .setDescription('Number of colors to extract (1-5, default: 1)')
+      .setDescriptionLocalizations({
+        ja: '抽出する色の数（1-5、デフォルト: 1）',
+        de: 'Anzahl der zu extrahierenden Farben (1-5, Standard: 1)',
+        fr: 'Nombre de couleurs à extraire (1-5, par défaut: 1)',
+      })
+      .setRequired(false)
+      .setMinValue(1)
+      .setMaxValue(5)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -91,8 +123,11 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   try {
     const attachment = interaction.options.getAttachment('image', true);
+    const colorCount = interaction.options.getInteger('colors') ?? 1;
 
-    logger.info(`Analyzing image: ${attachment.name} (${attachment.size} bytes)`);
+    logger.info(
+      `Analyzing image: ${attachment.name} (${attachment.size} bytes), colors: ${colorCount}`
+    );
 
     // Fetch image buffer from Discord CDN (with timeout)
     const imageBuffer = await processWithTimeout(
@@ -204,6 +239,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         `Image validated: ${validationResult.metadata.width}x${validationResult.metadata.height}, format: ${validationResult.metadata.format}`
       );
     }
+
+    // Multi-color palette extraction mode
+    if (colorCount > 1) {
+      await handleMultiColorExtraction(interaction, attachment, imageBuffer, colorCount);
+      return;
+    }
+
+    // Single color mode (original behavior)
     const dominantHex = ColorService.rgbToHex(dominantRGB.r, dominantRGB.g, dominantRGB.b);
 
     logger.debug(
@@ -378,6 +421,125 @@ async function extractDominantColor(
     logger.error('Sharp processing error:', error);
     throw new Error('Invalid or corrupted image file');
   }
+}
+
+/**
+ * Extract raw pixel data from image buffer
+ * Downsamples to 256x256 for performance
+ */
+async function extractPixelData(imageBuffer: Buffer): Promise<RGB[]> {
+  try {
+    // Downsample and extract raw pixel data
+    const { data, info } = await sharp(imageBuffer)
+      .resize(256, 256, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .removeAlpha() // Remove alpha channel to get RGB only
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    // Convert raw buffer to RGB array
+    const pixels: RGB[] = [];
+    for (let i = 0; i < data.length; i += 3) {
+      pixels.push({
+        r: data[i],
+        g: data[i + 1],
+        b: data[i + 2],
+      });
+    }
+
+    logger.debug(`Extracted ${pixels.length} pixels from ${info.width}x${info.height} image`);
+    return pixels;
+  } catch (error) {
+    logger.error('Sharp pixel extraction error:', error);
+    throw new Error('Failed to extract pixel data from image');
+  }
+}
+
+/**
+ * Handle multi-color palette extraction mode
+ */
+async function handleMultiColorExtraction(
+  interaction: ChatInputCommandInteraction,
+  attachment: { name: string; url: string },
+  imageBuffer: Buffer,
+  colorCount: number
+): Promise<void> {
+  logger.info(`Extracting ${colorCount} colors from image: ${attachment.name}`);
+
+  // Extract pixel data
+  const pixels = await processWithTimeout(extractPixelData(imageBuffer), 15000);
+
+  // Extract and match palette
+  const paletteMatches = getPaletteService().extractAndMatchPalette(pixels, dyeService, {
+    colorCount,
+    maxIterations: 25,
+    maxSamples: 10000,
+  });
+
+  if (paletteMatches.length === 0) {
+    const errorEmbed = createErrorEmbed(t('errors.error'), t('errors.couldNotFindMatchingDye'));
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+    return;
+  }
+
+  // Convert to grid entries
+  const gridEntries: PaletteGridEntry[] = paletteMatches.map((match: PaletteMatch) => ({
+    extracted: match.extracted,
+    matchedDye: match.matchedDye,
+    distance: match.distance,
+    dominance: match.dominance,
+  }));
+
+  // Render palette grid
+  const gridBuffer = renderPaletteGrid({ colors: gridEntries });
+
+  // Create embed
+  const primaryDye = paletteMatches[0].matchedDye;
+  const embed = new EmbedBuilder()
+    .setColor(parseInt(primaryDye.hex.replace('#', ''), 16) as ColorResolvable)
+    .setTitle(`🎨 ${t('embeds.paletteExtraction') || 'Palette Extraction'}`)
+    .setDescription(
+      `${t('embeds.analyzedImage')}: **${attachment.name}**\n` +
+        `${t('embeds.extractedColors') || 'Extracted'} **${paletteMatches.length}** ${t('embeds.colorsFromImage') || 'colors from image'}`
+    )
+    .setThumbnail(attachment.url)
+    .setTimestamp();
+
+  // Add field for each color
+  paletteMatches.forEach((match: PaletteMatch, index: number) => {
+    const localizedName =
+      LocalizationService.getDyeName(match.matchedDye.id) || match.matchedDye.name;
+    const extractedHex = ColorService.rgbToHex(
+      match.extracted.r,
+      match.extracted.g,
+      match.extracted.b
+    );
+
+    embed.addFields({
+      name: `${index + 1}. ${localizedName} (${match.dominance}%)`,
+      value: [
+        `${emojiService.getDyeEmojiOrSwatch(match.matchedDye, 3)} ${extractedHex.toUpperCase()} → ${match.matchedDye.hex.toUpperCase()}`,
+        `Δ${match.distance.toFixed(1)}`,
+      ].join(' | '),
+      inline: true,
+    });
+  });
+
+  // Create attachment from grid buffer
+  const gridAttachment = new AttachmentBuilder(gridBuffer, { name: 'palette_grid.png' });
+
+  embed.setImage('attachment://palette_grid.png');
+
+  await sendPublicSuccess(interaction, {
+    embeds: [embed],
+    files: [gridAttachment],
+  });
+
+  logger.info(
+    `Multi-color extraction completed: ${paletteMatches.map((m: PaletteMatch) => m.matchedDye.name).join(', ')}`
+  );
 }
 
 export const matchImageCommand: BotCommand = {

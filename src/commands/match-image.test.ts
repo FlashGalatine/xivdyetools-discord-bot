@@ -104,6 +104,17 @@ vi.mock('xivdyetools-core', () => ({
     rgbToHex: vi.fn((_r: number, _g: number, _b: number) => '#FF0000'),
     getColorDistance: vi.fn(() => 5.5),
   },
+  PaletteService: vi.fn().mockImplementation(() => ({
+    extractPalette: vi.fn(() => [{ color: { r: 255, g: 0, b: 0 }, dominance: 50 }]),
+    extractAndMatchPalette: vi.fn(() => [
+      {
+        extracted: { r: 255, g: 0, b: 0 },
+        matchedDye: { id: 1, name: 'Ruby Red', hex: '#E60026', category: 'Red' },
+        distance: 5.5,
+        dominance: 50,
+      },
+    ]),
+  })),
   dyeDatabase: {},
   LocalizationService: {
     getDyeName: vi.fn((_id: number) => null),

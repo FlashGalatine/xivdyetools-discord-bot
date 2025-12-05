@@ -81,7 +81,8 @@
     "matchImage": {
       "description": "이미지에서 주요 색상을 추출하고 일치하는 FFXIV 염료 검색",
       "options": {
-        "image": "분석할 이미지 파일 (PNG, JPG, GIF, BMP, WebP)"
+        "image": "분석할 이미지 파일 (PNG, JPG, GIF, BMP, WebP)",
+        "colors": "추출할 색상 수 (1-5, 기본값: 1)"
       }
     },
     "matchImageHelp": {
@@ -216,7 +217,14 @@
     "categoryDyes": "{category} 염료",
     "dyesInCategory": "이 카테고리의 염료",
     "useDyeInfoDetails": "자세한 내용은 /dye info <이름>을 사용하세요",
-    "randomDyes": "무작위 염료"
+    "randomDyes": "무작위 염료",
+    "marketPrice": "마켓 가격",
+    "currentPrice": "현재 가격",
+    "priceUnavailable": "가격 정보 없음",
+    "priceDisclaimer": "Universalis 가격 (오래되었을 수 있음)",
+    "paletteExtraction": "팔레트 추출",
+    "extractedColors": "추출됨",
+    "colorsFromImage": "이미지에서 색상 추출"
   },
   "matchQuality": {
     "perfect": "완벽한 일치",
