@@ -486,5 +486,25 @@
     "listFooter": "{current}/{max} collections",
     "created": "Created",
     "updated": "Updated"
+  },
+  "presets": {
+    "title": "Preset Palettes",
+    "notFound": "Preset Not Found",
+    "noneInCategory": "No presets found in this category.",
+    "noneAvailable": "No presets available.",
+    "couldNotFind": "Could not find a preset named **{name}**.",
+    "available": "Available Presets",
+    "browseDescription": "Browse curated color palettes for your glamours.",
+    "useShowTip": "Use /preset show <name> to view details",
+    "colors": "Colors",
+    "noDyes": "No dyes in this preset.",
+    "tags": "Tags",
+    "categories": {
+      "jobs": "FFXIV Jobs",
+      "grand-companies": "Grand Companies",
+      "seasons": "Seasons",
+      "events": "FFXIV Events",
+      "aesthetics": "Aesthetics"
+    }
   }
 }

@@ -484,5 +484,36 @@
     "listFooter": "{current}/{max} 컬렉션",
     "created": "생성일",
     "updated": "수정일"
+  },
+  "presets": {
+    "title": "프리셋 팔레트",
+    "categories": "카테고리",
+    "listTitle": "사용 가능한 프리셋 팔레트",
+    "showTitle": "프리셋 팔레트: {name}",
+    "randomTitle": "무작위 프리셋 팔레트",
+    "description": "설명",
+    "dyesInPalette": "팔레트의 염료",
+    "category": "카테고리",
+    "tags": "태그",
+    "presetNotFound": "프리셋 \"{name}\"을(를) 찾을 수 없습니다.",
+    "categoryNotFound": "카테고리 \"{name}\"을(를) 찾을 수 없습니다.",
+    "noPresetsInCategory": "이 카테고리에 프리셋이 없습니다.",
+    "useShowCommand": "프리셋을 보려면 `/preset show <이름>` 사용",
+    "availableCategories": "사용 가능한 카테고리",
+    "presetsInCategory": "이 카테고리의 프리셋",
+    "categoryNames": {
+      "jobs": "직업",
+      "grand-companies": "그랜드 컴퍼니",
+      "seasons": "계절",
+      "events": "이벤트",
+      "aesthetics": "미학"
+    },
+    "categoryDescriptions": {
+      "jobs": "FFXIV 전투 및 제작 직업",
+      "grand-companies": "울다하, 리믈사 로민사, 그리다니아",
+      "seasons": "봄, 여름, 가을, 겨울",
+      "events": "FFXIV 인게임 이벤트",
+      "aesthetics": "다양한 테마와 스타일"
+    }
   }
 }

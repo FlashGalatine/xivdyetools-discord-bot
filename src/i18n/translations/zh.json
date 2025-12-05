@@ -484,5 +484,36 @@
     "listFooter": "{current}/{max} 个收藏夹",
     "created": "创建于",
     "updated": "更新于"
+  },
+  "presets": {
+    "title": "预设调色板",
+    "categories": "类别",
+    "listTitle": "可用的预设调色板",
+    "showTitle": "预设调色板: {name}",
+    "randomTitle": "随机预设调色板",
+    "description": "描述",
+    "dyesInPalette": "调色板中的染剂",
+    "category": "类别",
+    "tags": "标签",
+    "presetNotFound": "未找到预设 \"{name}\"。",
+    "categoryNotFound": "未找到类别 \"{name}\"。",
+    "noPresetsInCategory": "此类别中没有预设。",
+    "useShowCommand": "使用 `/preset show <名称>` 查看预设",
+    "availableCategories": "可用类别",
+    "presetsInCategory": "此类别中的预设",
+    "categoryNames": {
+      "jobs": "职业",
+      "grand-companies": "大国防联军",
+      "seasons": "季节",
+      "events": "活动",
+      "aesthetics": "美学"
+    },
+    "categoryDescriptions": {
+      "jobs": "FFXIV 战斗和生产职业",
+      "grand-companies": "乌尔达哈、利姆萨·罗敏萨、格里达尼亚",
+      "seasons": "春、夏、秋、冬",
+      "events": "FFXIV 游戏内活动",
+      "aesthetics": "各种主题和风格"
+    }
   }
 }

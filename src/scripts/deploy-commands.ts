@@ -20,6 +20,7 @@ import { aboutCommand } from '../commands/about.js';
 import { languageCommand } from '../commands/language.js';
 import { favoritesCommand } from '../commands/favorites.js';
 import { collectionCommand } from '../commands/collection.js';
+import { presetCommand } from '../commands/preset.js';
 
 // Collect all commands
 const commands = [
@@ -37,6 +38,7 @@ const commands = [
   languageCommand.data.toJSON(),
   favoritesCommand.data.toJSON(),
   collectionCommand.data.toJSON(),
+  presetCommand.data.toJSON(),
 ];
 
 const rest = new REST().setToken(config.token);

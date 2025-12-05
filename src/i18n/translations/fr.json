@@ -482,5 +482,25 @@
     "listFooter": "{current}/{max} collections",
     "created": "Créé",
     "updated": "Mis à jour"
+  },
+  "presets": {
+    "title": "Palettes prédéfinies",
+    "notFound": "Préréglage non trouvé",
+    "noneInCategory": "Aucun préréglage trouvé dans cette catégorie.",
+    "noneAvailable": "Aucun préréglage disponible.",
+    "couldNotFind": "Impossible de trouver un préréglage nommé **{name}**.",
+    "available": "Préréglages disponibles",
+    "browseDescription": "Parcourez les palettes de couleurs sélectionnées pour vos glamours.",
+    "useShowTip": "Utilisez /preset show <nom> pour voir les détails",
+    "colors": "Couleurs",
+    "noDyes": "Aucune teinture dans ce préréglage.",
+    "tags": "Tags",
+    "categories": {
+      "jobs": "Jobs FFXIV",
+      "grand-companies": "Grandes Compagnies",
+      "seasons": "Saisons",
+      "events": "Événements FFXIV",
+      "aesthetics": "Esthétiques"
+    }
   }
 }

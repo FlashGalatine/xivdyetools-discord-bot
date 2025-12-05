@@ -21,6 +21,7 @@ import { aboutCommand } from './commands/about.js';
 import { languageCommand } from './commands/language.js';
 import { favoritesCommand } from './commands/favorites.js';
 import { collectionCommand } from './commands/collection.js';
+import { presetCommand } from './commands/preset.js';
 import { getRateLimiter, stopRateLimiter } from './services/rate-limiter.js';
 import { getAnalytics } from './services/analytics.js';
 import { closeRedis } from './services/redis.js';
@@ -76,6 +77,7 @@ client.commands.set(aboutCommand.data.name, aboutCommand);
 client.commands.set(languageCommand.data.name, languageCommand);
 client.commands.set(favoritesCommand.data.name, favoritesCommand);
 client.commands.set(collectionCommand.data.name, collectionCommand);
+client.commands.set(presetCommand.data.name, presetCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {

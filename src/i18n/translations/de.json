@@ -482,5 +482,25 @@
     "listFooter": "{current}/{max} Sammlungen",
     "created": "Erstellt",
     "updated": "Aktualisiert"
+  },
+  "presets": {
+    "title": "Voreingestellte Paletten",
+    "notFound": "Voreinstellung nicht gefunden",
+    "noneInCategory": "Keine Voreinstellungen in dieser Kategorie gefunden.",
+    "noneAvailable": "Keine Voreinstellungen verfügbar.",
+    "couldNotFind": "Konnte keine Voreinstellung namens **{name}** finden.",
+    "available": "Verfügbare Voreinstellungen",
+    "browseDescription": "Durchsuche kuratierte Farbpaletten für deine Glamours.",
+    "useShowTip": "Verwende /preset show <Name> für Details",
+    "colors": "Farben",
+    "noDyes": "Keine Farbstoffe in dieser Voreinstellung.",
+    "tags": "Tags",
+    "categories": {
+      "jobs": "FFXIV Jobs",
+      "grand-companies": "Staatliche Gesellschaften",
+      "seasons": "Jahreszeiten",
+      "events": "FFXIV Events",
+      "aesthetics": "Ästhetik"
+    }
   }
 }

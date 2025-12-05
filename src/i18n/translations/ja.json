@@ -482,5 +482,25 @@
     "listFooter": "{current}/{max} コレクション",
     "created": "作成日",
     "updated": "更新日"
+  },
+  "presets": {
+    "title": "プリセットパレット",
+    "notFound": "プリセットが見つかりません",
+    "noneInCategory": "このカテゴリにプリセットがありません。",
+    "noneAvailable": "利用可能なプリセットがありません。",
+    "couldNotFind": "**{name}** という名前のプリセットが見つかりませんでした。",
+    "available": "利用可能なプリセット",
+    "browseDescription": "グラマー用の厳選されたカラーパレットを閲覧。",
+    "useShowTip": "/preset show <名前> で詳細を表示",
+    "colors": "カラー",
+    "noDyes": "このプリセットには染料がありません。",
+    "tags": "タグ",
+    "categories": {
+      "jobs": "FFXIVジョブ",
+      "grand-companies": "グランドカンパニー",
+      "seasons": "季節",
+      "events": "FFXIVイベント",
+      "aesthetics": "美学"
+    }
   }
 }
