@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.13] - 2025-12-05
+
+### Added
+- **Dye Collections & Favorites**: New commands for managing personal dye collections
+  - `/favorites add <dye>` - Add a dye to your favorites (max 20)
+  - `/favorites remove <dye>` - Remove from favorites
+  - `/favorites list` - Show all favorite dyes
+  - `/favorites clear` - Clear all favorites
+  - `/collection create <name> [description]` - Create new collection (max 50)
+  - `/collection delete <name>` - Delete a collection
+  - `/collection add <collection> <dye>` - Add dye to collection (max 20 per collection)
+  - `/collection remove <collection> <dye>` - Remove dye from collection
+  - `/collection show <name>` - Display collection contents
+  - `/collection list` - List all user collections
+  - `/collection rename <old_name> <new_name>` - Rename a collection
+- **CollectionStorage Service** (`src/services/collection-storage.ts`): Redis-backed storage with in-memory fallback
+  - Same limits as web app: 20 favorites, 50 collections, 20 dyes per collection
+  - Permanent storage (no TTL expiration)
+  - Case-insensitive collection name matching
+- **Context-Aware Autocomplete**: Smart autocomplete that shows only relevant options
+  - `/favorites remove` only shows currently favorited dyes
+  - `/collection add/remove/show/delete/rename` only shows user's existing collections
+- **6-Language Localization**: Full translations for favorites and collections in en, ja, de, fr, ko, zh
+
 ## [1.0.12] - 2025-12-04
 
 ### Changed
