@@ -34,7 +34,11 @@ import { WorkerPool } from '../utils/worker-pool.js';
 import { emojiService } from '../services/emoji-service.js';
 import { sendPublicSuccess, sendEphemeralError } from '../utils/response-helper.js';
 import { t } from '../services/i18n-service.js';
-import { renderPaletteGrid, type PaletteGridEntry } from '../renderers/palette-grid.js';
+import {
+  renderPaletteGrid,
+  type PaletteGridEntry,
+  type SourceImageData,
+} from '../renderers/palette-grid.js';
 import type { BotCommand } from '../types/index.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -424,10 +428,20 @@ async function extractDominantColor(
 }
 
 /**
+ * Result of pixel data extraction
+ */
+interface PixelDataResult {
+  /** RGB array for palette service */
+  pixels: RGB[];
+  /** Source image data for rendering sampling indicators */
+  sourceImage: SourceImageData;
+}
+
+/**
  * Extract raw pixel data from image buffer
  * Downsamples to 256x256 for performance
  */
-async function extractPixelData(imageBuffer: Buffer): Promise<RGB[]> {
+async function extractPixelData(imageBuffer: Buffer): Promise<PixelDataResult> {
   try {
     // Downsample and extract raw pixel data
     const { data, info } = await sharp(imageBuffer)
@@ -450,7 +464,15 @@ async function extractPixelData(imageBuffer: Buffer): Promise<RGB[]> {
     }
 
     logger.debug(`Extracted ${pixels.length} pixels from ${info.width}x${info.height} image`);
-    return pixels;
+
+    return {
+      pixels,
+      sourceImage: {
+        pixels: data,
+        width: info.width,
+        height: info.height,
+      },
+    };
   } catch (error) {
     logger.error('Sharp pixel extraction error:', error);
     throw new Error('Failed to extract pixel data from image');
@@ -468,8 +490,8 @@ async function handleMultiColorExtraction(
 ): Promise<void> {
   logger.info(`Extracting ${colorCount} colors from image: ${attachment.name}`);
 
-  // Extract pixel data
-  const pixels = await processWithTimeout(extractPixelData(imageBuffer), 15000);
+  // Extract pixel data (now includes source image data for sampling indicators)
+  const { pixels, sourceImage } = await processWithTimeout(extractPixelData(imageBuffer), 15000);
 
   // Extract and match palette
   const paletteMatches = getPaletteService().extractAndMatchPalette(pixels, dyeService, {
@@ -492,8 +514,8 @@ async function handleMultiColorExtraction(
     dominance: match.dominance,
   }));
 
-  // Render palette grid
-  const gridBuffer = renderPaletteGrid({ colors: gridEntries });
+  // Render palette grid with sampling indicators
+  const gridBuffer = await renderPaletteGrid({ colors: gridEntries, sourceImage });
 
   // Create embed
   const primaryDye = paletteMatches[0].matchedDye;

@@ -31,7 +31,7 @@
 
 - `/harmony` - Generate color harmonies with color wheel visualization
 - `/match <color>` - Find closest dye to a hex color
-- `/match_image` - Upload an image to extract and match colors
+- `/match_image [colors]` - Upload an image to extract and match colors (1-5 colors with visual sampling indicators)
 - `/comparison <dye1> <dye2> [dye3] [dye4]` - Compare multiple dyes
 - `/mixer <start> <end> [steps]` - Create color gradients
 - `/accessibility <dye>` - Simulate colorblindness for a dye

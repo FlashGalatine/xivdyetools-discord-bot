@@ -83,10 +83,21 @@ vi.mock('../utils/worker-pool.js', () => ({
 vi.mock('sharp', () => ({
   default: vi.fn().mockReturnValue({
     resize: vi.fn().mockReturnThis(),
+    removeAlpha: vi.fn().mockReturnThis(),
+    raw: vi.fn().mockReturnThis(),
+    toBuffer: vi.fn().mockResolvedValue({
+      data: Buffer.from([255, 0, 0, 128, 0, 0, 0, 128, 0]), // 3 RGB pixels
+      info: { width: 3, height: 1 },
+    }),
     stats: vi.fn().mockResolvedValue({
       dominant: { r: 255, g: 0, b: 0 },
     }),
   }),
+}));
+
+// Mock palette grid renderer
+vi.mock('../renderers/palette-grid.js', () => ({
+  renderPaletteGrid: vi.fn().mockResolvedValue(Buffer.from('mock-png-data')),
 }));
 
 // Mock xivdyetools-core
@@ -153,6 +164,7 @@ function createMockAttachment(overrides: Partial<Attachment> = {}): Attachment {
 function createMockInteraction(
   options: {
     attachment?: Partial<Attachment> | null;
+    colorCount?: number | null;
   } = {}
 ): ChatInputCommandInteraction {
   const deferReply = vi.fn().mockResolvedValue(undefined);
@@ -170,6 +182,12 @@ function createMockInteraction(
       getAttachment: vi.fn((name: string, _required?: boolean) => {
         if (name === 'image' && options.attachment !== null) {
           return createMockAttachment(options.attachment);
+        }
+        return null;
+      }),
+      getInteger: vi.fn((name: string) => {
+        if (name === 'colors') {
+          return options.colorCount ?? null;
         }
         return null;
       }),

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-12-05
+
+### Added
+- **Multi-Color Palette Extraction**: Extract multiple dominant colors from images
+  - `/match_image colors:[1-5]` - New optional parameter for multi-color extraction
+  - K-means++ clustering algorithm via `PaletteService` from xivdyetools-core
+  - Visual sampling indicators on source image showing where colors were sampled
+  - Palette grid renderer showing extracted colors → matched dyes with dominance percentages
+  - Canvas-rendered output combining source image preview with palette grid
+  - Automatic sorting by color dominance
+
+### Changed
+- **`renderPaletteGrid()`** is now async and returns `Promise<Buffer>`
+- **`extractPixelData()`** now returns both RGB array and source image data for sampling indicators
+
+### Files Modified
+- `src/renderers/palette-grid.ts` - Added `SourceImageData` interface and `findColorPositions()` function
+- `src/commands/match-image.ts` - Added multi-color extraction mode with `colors` parameter
+
+---
+
 ## [1.0.13] - 2025-12-05
 
 ### Added
