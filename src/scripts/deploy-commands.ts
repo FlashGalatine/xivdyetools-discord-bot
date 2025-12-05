@@ -18,6 +18,8 @@ import { statsCommand } from '../commands/stats.js';
 import { manualCommand } from '../commands/manual.js';
 import { aboutCommand } from '../commands/about.js';
 import { languageCommand } from '../commands/language.js';
+import { favoritesCommand } from '../commands/favorites.js';
+import { collectionCommand } from '../commands/collection.js';
 
 // Collect all commands
 const commands = [
@@ -33,6 +35,8 @@ const commands = [
   manualCommand.data.toJSON(),
   aboutCommand.data.toJSON(),
   languageCommand.data.toJSON(),
+  favoritesCommand.data.toJSON(),
+  collectionCommand.data.toJSON(),
 ];
 
 const rest = new REST().setToken(config.token);
