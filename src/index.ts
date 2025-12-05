@@ -19,6 +19,8 @@ import { statsCommand } from './commands/stats.js';
 import { manualCommand } from './commands/manual.js';
 import { aboutCommand } from './commands/about.js';
 import { languageCommand } from './commands/language.js';
+import { favoritesCommand } from './commands/favorites.js';
+import { collectionCommand } from './commands/collection.js';
 import { getRateLimiter, stopRateLimiter } from './services/rate-limiter.js';
 import { getAnalytics } from './services/analytics.js';
 import { closeRedis } from './services/redis.js';
@@ -72,6 +74,8 @@ client.commands.set(statsCommand.data.name, statsCommand);
 client.commands.set(manualCommand.data.name, manualCommand);
 client.commands.set(aboutCommand.data.name, aboutCommand);
 client.commands.set(languageCommand.data.name, languageCommand);
+client.commands.set(favoritesCommand.data.name, favoritesCommand);
+client.commands.set(collectionCommand.data.name, collectionCommand);
 
 // Bot ready event
 client.once(Events.ClientReady, (readyClient) => {
