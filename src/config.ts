@@ -54,6 +54,26 @@ export interface BotConfig {
     cacheTTL: number; // seconds
     timeout: number; // milliseconds
   };
+
+  // Community Presets API
+  communityPresets: {
+    /** API base URL */
+    apiUrl: string;
+    /** Shared secret for API authentication */
+    apiSecret: string;
+    /** Discord user IDs who can moderate presets */
+    moderatorIds: string[];
+    /** Discord role IDs that grant moderator access */
+    moderatorRoleIds: string[];
+    /** Channel ID for moderation notifications */
+    moderationChannelId?: string;
+    /** Channel ID for submission logs */
+    submissionLogChannelId?: string;
+    /** Bot owner Discord ID for DM alerts */
+    ownerDiscordId?: string;
+    /** Whether the feature is enabled */
+    enabled: boolean;
+  };
 }
 
 /**
@@ -278,5 +298,24 @@ export const config: BotConfig = {
   api: {
     cacheTTL: parseInt(process.env.API_CACHE_TTL || '300', 10), // 5 minutes
     timeout: parseInt(process.env.API_TIMEOUT_MS || '5000', 10), // 5 seconds
+  },
+
+  // Community Presets API
+  communityPresets: {
+    apiUrl: process.env.PRESET_API_URL || 'https://presets-api.xivdyetools.workers.dev',
+    apiSecret: process.env.PRESET_API_SECRET || '',
+    moderatorIds: (process.env.MODERATOR_IDS || '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0),
+    moderatorRoleIds: (process.env.MODERATOR_ROLE_IDS || '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0),
+    moderationChannelId: process.env.MODERATION_CHANNEL_ID,
+    submissionLogChannelId: process.env.SUBMISSION_LOG_CHANNEL_ID,
+    ownerDiscordId: process.env.OWNER_DISCORD_ID,
+    // Enable only if API URL and secret are configured
+    enabled: !!(process.env.PRESET_API_URL && process.env.PRESET_API_SECRET),
   },
 };
