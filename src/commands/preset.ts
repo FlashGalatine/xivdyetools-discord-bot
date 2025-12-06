@@ -30,12 +30,13 @@ import { t } from '../services/i18n-service.js';
 import { CommandBase } from './base/CommandBase.js';
 import type { BotCommand } from '../types/index.js';
 import { presetAPIService } from '../services/preset-api-service.js';
+import { config } from '../config.js';
 
 const dyeService = new DyeService(dyeDatabase);
 const presetService = new PresetService(presetData as PresetData);
 
 /**
- * Category choices for slash command (curated only - for listing)
+ * Category choices for slash command (curated + community)
  */
 const categoryChoices = [
   { name: '⚔️ FFXIV Jobs', value: 'jobs' },
@@ -43,12 +44,13 @@ const categoryChoices = [
   { name: '🍂 Seasons', value: 'seasons' },
   { name: '🎉 FFXIV Events', value: 'events' },
   { name: '🎨 Aesthetics', value: 'aesthetics' },
+  { name: '🌐 Community', value: 'community' },
 ];
 
 /**
- * Category choices for submissions (includes community)
+ * Category choices for submissions (same as categoryChoices)
  */
-const submitCategoryChoices = [...categoryChoices, { name: '🌐 Community', value: 'community' }];
+const submitCategoryChoices = categoryChoices;
 
 /**
  * Preset command class extending CommandBase
@@ -269,6 +271,37 @@ class PresetCommand extends CommandBase {
             .setRequired(true)
             .setAutocomplete(true)
         )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('moderate')
+        .setDescription('[Moderators] Manage community preset submissions')
+        .addStringOption((option) =>
+          option
+            .setName('action')
+            .setDescription('Moderation action to perform')
+            .setRequired(true)
+            .addChoices(
+              { name: '📋 View Pending Queue', value: 'pending' },
+              { name: '✅ Approve Preset', value: 'approve' },
+              { name: '❌ Reject Preset', value: 'reject' },
+              { name: '📊 View Statistics', value: 'stats' }
+            )
+        )
+        .addStringOption((option) =>
+          option
+            .setName('preset_id')
+            .setDescription('Preset ID (for approve/reject)')
+            .setRequired(false)
+            .setAutocomplete(true)
+        )
+        .addStringOption((option) =>
+          option
+            .setName('reason')
+            .setDescription('Reason for rejection (required for reject)')
+            .setRequired(false)
+            .setMaxLength(500)
+        )
     ) as SlashCommandBuilder;
 
   /**
@@ -293,6 +326,9 @@ class PresetCommand extends CommandBase {
       case 'vote':
         await this.handleVote(interaction);
         break;
+      case 'moderate':
+        await this.handleModerate(interaction);
+        break;
       default: {
         const errorEmbed = createErrorEmbed(
           t('errors.unknownSubcommand'),
@@ -311,11 +347,17 @@ class PresetCommand extends CommandBase {
 
     logger.info(`Preset list: category=${category || 'all'}`);
 
+    // Handle community category separately
+    if (category === 'community') {
+      await this.handleCommunityList(interaction);
+      return;
+    }
+
     const presets = category
       ? presetService.getPresetsByCategory(category)
       : presetService.getAllPresets();
 
-    if (presets.length === 0) {
+    if (presets.length === 0 && category) {
       const errorEmbed = createErrorEmbed(t('presets.notFound'), t('presets.noneInCategory'));
       await sendEphemeralError(interaction, { embeds: [errorEmbed] });
       return;
@@ -341,7 +383,7 @@ class PresetCommand extends CommandBase {
         inline: false,
       });
     } else {
-      // All categories
+      // All categories (curated)
       const categories = presetService.getCategories();
       embed.setDescription(t('presets.browseDescription'));
 
@@ -359,11 +401,114 @@ class PresetCommand extends CommandBase {
           inline: false,
         });
       }
+
+      // Add community presets section if API is enabled
+      if (presetAPIService.isEnabled()) {
+        try {
+          const communityResponse = await presetAPIService.getPresets({
+            status: 'approved',
+            sort: 'popular',
+            limit: 5,
+          });
+
+          if (communityResponse.presets.length > 0) {
+            const communityNames = communityResponse.presets
+              .map((p) => `${p.name} (${p.vote_count}★)`)
+              .join(', ');
+            const communityMore =
+              communityResponse.total > 5 ? ` +${communityResponse.total - 5} more` : '';
+
+            embed.addFields({
+              name: `🌐 Community (${communityResponse.total})`,
+              value: `${communityNames}${communityMore}`,
+              inline: false,
+            });
+          }
+        } catch (error) {
+          logger.error('Failed to fetch community presets for list:', error);
+          // Silently fail - curated presets still show
+        }
+      }
     }
 
     embed.setFooter({ text: t('presets.useShowTip') });
 
     await sendPublicSuccess(interaction, { embeds: [embed] });
+  }
+
+  /**
+   * Handle /preset list category:community
+   * Shows community-submitted presets with vote counts
+   */
+  private async handleCommunityList(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!presetAPIService.isEnabled()) {
+      const errorEmbed = createErrorEmbed(
+        'Feature Disabled',
+        'Community presets are not enabled on this bot.'
+      );
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      return;
+    }
+
+    try {
+      // Fetch top community presets sorted by popularity
+      const response = await presetAPIService.getPresets({
+        status: 'approved',
+        sort: 'popular',
+        limit: 20,
+      });
+
+      if (response.presets.length === 0) {
+        const embed = new EmbedBuilder()
+          .setColor(0x5865f2)
+          .setTitle('🌐 Community Presets')
+          .setDescription(
+            'No community presets yet!\n\nBe the first to submit one with `/preset submit`.'
+          )
+          .setTimestamp();
+
+        await sendPublicSuccess(interaction, { embeds: [embed] });
+        return;
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle('🌐 Community Presets')
+        .setDescription(
+          `User-submitted color palettes, sorted by popularity.\nTotal: **${response.total}** presets`
+        )
+        .setTimestamp();
+
+      // Build preset list with vote counts and authors
+      const presetList = response.presets
+        .map((p) => {
+          const voteStr = p.vote_count > 0 ? ` (${p.vote_count}★)` : '';
+          const authorStr = p.author_name ? ` by ${p.author_name}` : '';
+          return `• **${p.name}**${voteStr}${authorStr}`;
+        })
+        .join('\n');
+
+      embed.addFields({
+        name: `Top Presets (${response.presets.length}${response.has_more ? '+' : ''})`,
+        value: presetList.substring(0, 1024),
+        inline: false,
+      });
+
+      // Add tips
+      embed.setFooter({
+        text: 'Use /preset vote to support your favorites • /preset submit to share yours',
+      });
+
+      await sendPublicSuccess(interaction, { embeds: [embed] });
+    } catch (error) {
+      logger.error('Failed to fetch community presets:', error);
+
+      const errorEmbed = createErrorEmbed(
+        'Error Loading Presets',
+        'Could not load community presets. Please try again later.'
+      );
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+    }
   }
 
   /**
@@ -623,6 +768,253 @@ class PresetCommand extends CommandBase {
   }
 
   /**
+   * Check if user is a moderator
+   */
+  private isModerator(interaction: ChatInputCommandInteraction): boolean {
+    const userId = interaction.user.id;
+
+    // Check if user ID is in moderator list
+    if (config.communityPresets.moderatorIds.includes(userId)) {
+      return true;
+    }
+
+    // Check if user has a moderator role
+    if (interaction.member && 'roles' in interaction.member) {
+      const memberRoles = interaction.member.roles;
+      if (Array.isArray(memberRoles)) {
+        return config.communityPresets.moderatorRoleIds.some((roleId) =>
+          memberRoles.includes(roleId)
+        );
+      } else if (memberRoles && typeof memberRoles === 'object' && 'cache' in memberRoles) {
+        // GuildMemberRoleManager (Discord.js)
+        const roleCache = memberRoles.cache as Map<string, unknown>;
+        return config.communityPresets.moderatorRoleIds.some((roleId) => roleCache.has(roleId));
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Handle /preset moderate
+   * Moderation actions for community presets
+   */
+  private async handleModerate(interaction: ChatInputCommandInteraction): Promise<void> {
+    // Check if community presets are enabled
+    if (!presetAPIService.isEnabled()) {
+      const errorEmbed = createErrorEmbed(
+        'Feature Disabled',
+        'Community presets are not enabled on this bot.'
+      );
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      return;
+    }
+
+    // Check if user is a moderator
+    if (!this.isModerator(interaction)) {
+      const errorEmbed = createErrorEmbed(
+        'Access Denied',
+        'You do not have permission to use moderation commands.'
+      );
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      return;
+    }
+
+    const action = interaction.options.getString('action', true);
+    const presetId = interaction.options.getString('preset_id');
+    const reason = interaction.options.getString('reason');
+
+    logger.info(
+      `Preset moderate: action=${action}, presetId=${presetId}, user=${interaction.user.id}`
+    );
+
+    try {
+      switch (action) {
+        case 'pending':
+          await this.handleModeratePending(interaction);
+          break;
+        case 'approve':
+          await this.handleModerateApprove(interaction, presetId, reason);
+          break;
+        case 'reject':
+          await this.handleModerateReject(interaction, presetId, reason);
+          break;
+        case 'stats':
+          await this.handleModerateStats(interaction);
+          break;
+        default: {
+          const errorEmbed = createErrorEmbed('Invalid Action', 'Unknown moderation action.');
+          await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+        }
+      }
+    } catch (error) {
+      logger.error('Moderation action failed:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Moderation action failed. Please try again.';
+      const errorEmbed = createErrorEmbed('Error', errorMessage);
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+    }
+  }
+
+  /**
+   * Show pending presets queue
+   */
+  private async handleModeratePending(interaction: ChatInputCommandInteraction): Promise<void> {
+    const pendingPresets = await presetAPIService.getPendingPresets(interaction.user.id);
+
+    if (pendingPresets.length === 0) {
+      const embed = new EmbedBuilder()
+        .setColor(0x57f287)
+        .setTitle('📋 Moderation Queue')
+        .setDescription('No presets pending review! 🎉')
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+      return;
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0xffa500)
+      .setTitle('📋 Moderation Queue')
+      .setDescription(`**${pendingPresets.length}** preset(s) awaiting review`)
+      .setTimestamp();
+
+    // List pending presets
+    const presetList = pendingPresets
+      .slice(0, 10)
+      .map((p, i) => {
+        const authorStr = p.author_name ? ` by ${p.author_name}` : '';
+        const createdAt = new Date(p.created_at).toLocaleDateString();
+        return `${i + 1}. **${p.name}**${authorStr}\n   ID: \`${p.id}\` • ${createdAt}`;
+      })
+      .join('\n\n');
+
+    embed.addFields({
+      name: 'Pending Presets',
+      value: presetList.substring(0, 1024),
+      inline: false,
+    });
+
+    if (pendingPresets.length > 10) {
+      embed.setFooter({ text: `Showing 10 of ${pendingPresets.length} pending presets` });
+    } else {
+      embed.setFooter({
+        text: 'Use /preset moderate action:approve preset_id:<id> to approve',
+      });
+    }
+
+    await interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  /**
+   * Approve a pending preset
+   */
+  private async handleModerateApprove(
+    interaction: ChatInputCommandInteraction,
+    presetId: string | null,
+    reason: string | null
+  ): Promise<void> {
+    if (!presetId) {
+      const errorEmbed = createErrorEmbed(
+        'Missing Preset ID',
+        'Please provide a preset ID to approve.'
+      );
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      return;
+    }
+
+    const approvedPreset = await presetAPIService.approvePreset(
+      presetId,
+      interaction.user.id,
+      reason || undefined
+    );
+
+    const embed = new EmbedBuilder()
+      .setColor(0x57f287)
+      .setTitle('✅ Preset Approved')
+      .setDescription(`**${approvedPreset.name}** has been approved and is now live!`)
+      .addFields(
+        { name: 'Preset ID', value: `\`${approvedPreset.id}\``, inline: true },
+        { name: 'Author', value: approvedPreset.author_name || 'Unknown', inline: true }
+      )
+      .setTimestamp();
+
+    if (reason) {
+      embed.addFields({ name: 'Note', value: reason, inline: false });
+    }
+
+    await interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  /**
+   * Reject a pending preset
+   */
+  private async handleModerateReject(
+    interaction: ChatInputCommandInteraction,
+    presetId: string | null,
+    reason: string | null
+  ): Promise<void> {
+    if (!presetId) {
+      const errorEmbed = createErrorEmbed(
+        'Missing Preset ID',
+        'Please provide a preset ID to reject.'
+      );
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      return;
+    }
+
+    if (!reason) {
+      const errorEmbed = createErrorEmbed(
+        'Missing Reason',
+        'Please provide a reason for rejection.'
+      );
+      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      return;
+    }
+
+    const rejectedPreset = await presetAPIService.rejectPreset(
+      presetId,
+      interaction.user.id,
+      reason
+    );
+
+    const embed = new EmbedBuilder()
+      .setColor(0xed4245) // Red
+      .setTitle('❌ Preset Rejected')
+      .setDescription(`**${rejectedPreset.name}** has been rejected.`)
+      .addFields(
+        { name: 'Preset ID', value: `\`${rejectedPreset.id}\``, inline: true },
+        { name: 'Author', value: rejectedPreset.author_name || 'Unknown', inline: true },
+        { name: 'Reason', value: reason, inline: false }
+      )
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  /**
+   * Show moderation statistics
+   */
+  private async handleModerateStats(interaction: ChatInputCommandInteraction): Promise<void> {
+    const stats = await presetAPIService.getModerationStats(interaction.user.id);
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865f2)
+      .setTitle('📊 Moderation Statistics')
+      .setDescription('Overview of community preset moderation')
+      .addFields(
+        { name: '⏳ Pending', value: String(stats.pending), inline: true },
+        { name: '✅ Approved', value: String(stats.approved), inline: true },
+        { name: '❌ Rejected', value: String(stats.rejected), inline: true },
+        { name: '⚠️ Flagged', value: String(stats.flagged), inline: true },
+        { name: '📈 Actions (7d)', value: String(stats.actions_last_week), inline: true }
+      )
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  /**
    * Send a preset as an embed with swatch image
    */
   private async sendPresetEmbed(
@@ -711,6 +1103,12 @@ class PresetCommand extends CommandBase {
     // Handle community preset autocomplete for vote subcommand
     if (subcommand === 'vote' && focusedOption.name === 'preset') {
       await this.handleCommunityPresetAutocomplete(interaction, focusedOption.value);
+      return;
+    }
+
+    // Handle pending preset autocomplete for moderate subcommand
+    if (subcommand === 'moderate' && focusedOption.name === 'preset_id') {
+      await this.handlePendingPresetAutocomplete(interaction, focusedOption.value);
       return;
     }
 
@@ -830,6 +1228,55 @@ class PresetCommand extends CommandBase {
         }));
 
       await interaction.respond(matches);
+    }
+  }
+
+  /**
+   * Handle pending preset autocomplete for moderate command
+   */
+  private async handlePendingPresetAutocomplete(
+    interaction: AutocompleteInteraction,
+    query: string
+  ): Promise<void> {
+    // Only moderators should get results
+    // Note: We can't fully check roles in autocomplete, so we check user ID only
+    const userId = interaction.user.id;
+    if (!config.communityPresets.moderatorIds.includes(userId)) {
+      await interaction.respond([]);
+      return;
+    }
+
+    if (!presetAPIService.isEnabled()) {
+      await interaction.respond([]);
+      return;
+    }
+
+    try {
+      // Fetch pending presets
+      const pendingPresets = await presetAPIService.getPendingPresets(userId);
+
+      // Filter by query if provided
+      const filtered = query
+        ? pendingPresets.filter(
+            (p) =>
+              p.name.toLowerCase().includes(query.toLowerCase()) ||
+              p.id.toLowerCase().includes(query.toLowerCase())
+          )
+        : pendingPresets;
+
+      const choices = filtered.slice(0, 25).map((preset) => {
+        const authorStr = preset.author_name ? ` by ${preset.author_name}` : '';
+        const displayName = `${preset.name}${authorStr}`;
+        return {
+          name: displayName.substring(0, 100),
+          value: preset.id,
+        };
+      });
+
+      await interaction.respond(choices);
+    } catch (error) {
+      logger.error('Failed to fetch pending presets for autocomplete:', error);
+      await interaction.respond([]);
     }
   }
 }
