@@ -15,6 +15,7 @@
 🌈 **Color Mixing** - Find intermediate dyes for smooth color gradients
 💰 **Live Pricing** - Market board prices via Universalis API
 🌐 **Multi-Language Support** - Full localization for English, Japanese, German, French, Korean, and Chinese
+🗳️ **Community Presets** - Submit, browse, and vote on user-created color palettes with moderation
 
 ## Privacy
 
@@ -35,6 +36,10 @@
 - `/comparison <dye1> <dye2> [dye3] [dye4]` - Compare multiple dyes
 - `/mixer <start> <end> [steps]` - Create color gradients
 - `/accessibility <dye>` - Simulate colorblindness for a dye
+- `/preset list [category]` - Browse curated and community color palettes
+- `/preset show <name>` - Display a preset's colors with swatch visualization
+- `/preset submit` - Submit your own color palette to the community
+- `/preset vote <preset>` - Vote for a community preset
 
 ## Tech Stack
 

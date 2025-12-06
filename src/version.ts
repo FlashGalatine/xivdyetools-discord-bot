@@ -8,4 +8,4 @@
  * Current bot version
  * Automatically synced with package.json version
  */
-export const VERSION = '1.0.13';
+export const VERSION = '1.1.0';

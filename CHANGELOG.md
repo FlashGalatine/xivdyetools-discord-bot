@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-06
+
+### Added
+- **Community Presets System**: Full integration with the new xivdyetools-worker API for user-submitted color palettes
+  - `/preset submit` - Submit your own color palettes to the community (2-5 dyes, name, description, tags)
+  - `/preset vote` - Vote for your favorite community presets (toggle on/off)
+  - `/preset list category:community` - Browse community presets sorted by popularity
+  - `/preset show` - Now supports both curated and community presets with unified autocomplete
+  - `/preset moderate` - Moderator tools for approving/rejecting submissions (pending, approve, reject, stats)
+
+- **Moderation Notifications**: Automated notifications for flagged content
+  - Posts to configured moderation channel with interactive Approve/Reject buttons
+  - Pings moderator role when presets require review
+  - 24-hour button timeout with automatic disable
+  - Moderator permission checking before actions
+
+- **Perspective API Integration**: ML-based content moderation via Google Perspective API
+  - Auto-approves clean content, flags potentially inappropriate submissions
+  - Multi-language profanity detection
+
+- **New Service**: `PresetAPIService` (`src/services/preset-api-service.ts`)
+  - Full API client for community presets worker
+  - Submit, vote, browse, and moderate presets
+  - Authenticated requests with shared secret
+
+### Changed
+- **`/preset show` autocomplete**: Now searches both curated presets (category icons) and community presets (🌐 icon with vote counts)
+- **`/preset show` display**: Community presets show author name, vote count, and voting tip in footer
+
+### Configuration
+- New environment variables for community presets:
+  - `PRESET_API_URL` - Worker API endpoint
+  - `PRESET_API_SECRET` - Shared authentication secret
+  - `MODERATOR_IDS` - Comma-separated Discord user IDs
+  - `MODERATOR_ROLE_IDS` - Comma-separated Discord role IDs
+  - `MODERATION_CHANNEL_ID` - Channel for flagged content notifications
+  - `SUBMISSION_LOG_CHANNEL_ID` - Channel for approved submission logs
+  - `OWNER_DISCORD_ID` - Bot owner for DM alerts
+
+---
+
 ## [1.1.0] - 2025-12-05
 
 ### Added

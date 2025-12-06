@@ -9,6 +9,12 @@ import {
   AutocompleteInteraction,
   EmbedBuilder,
   AttachmentBuilder,
+  TextChannel,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ButtonInteraction,
+  ComponentType,
 } from 'discord.js';
 import {
   DyeService,
@@ -29,7 +35,7 @@ import { logger } from '../utils/logger.js';
 import { t } from '../services/i18n-service.js';
 import { CommandBase } from './base/CommandBase.js';
 import type { BotCommand } from '../types/index.js';
-import { presetAPIService } from '../services/preset-api-service.js';
+import { presetAPIService, type CommunityPreset } from '../services/preset-api-service.js';
 import { config } from '../config.js';
 
 const dyeService = new DyeService(dyeDatabase);
@@ -519,7 +525,7 @@ class PresetCommand extends CommandBase {
 
     logger.info(`Preset show: ${presetName}`);
 
-    // Find preset by ID or name
+    // First, try to find in curated presets
     let preset = presetService.getPreset(presetName);
     if (!preset) {
       // Try searching by name
@@ -527,17 +533,33 @@ class PresetCommand extends CommandBase {
       preset = results[0];
     }
 
-    if (!preset) {
-      const errorEmbed = createErrorEmbed(
-        t('presets.notFound'),
-        t('presets.couldNotFind', { name: presetName })
-      );
-      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+    if (preset) {
+      // Found in curated presets
+      await this.sendPresetEmbed(interaction, preset);
       return;
     }
 
-    // Render and send the preset
-    await this.sendPresetEmbed(interaction, preset);
+    // Not found in curated - check community presets if API is enabled
+    if (presetAPIService.isEnabled()) {
+      try {
+        // Check if it's a community preset ID (UUID format)
+        const communityPreset = await presetAPIService.getPreset(presetName);
+        if (communityPreset) {
+          await this.sendCommunityPresetEmbed(interaction, communityPreset);
+          return;
+        }
+      } catch (error) {
+        // Not found in API either, continue to error
+        logger.debug(`Preset ${presetName} not found in API:`, error);
+      }
+    }
+
+    // Not found anywhere
+    const errorEmbed = createErrorEmbed(
+      t('presets.notFound'),
+      t('presets.couldNotFind', { name: presetName })
+    );
+    await sendEphemeralError(interaction, { embeds: [errorEmbed] });
   }
 
   /**
@@ -639,6 +661,8 @@ class PresetCommand extends CommandBase {
       `Preset submit: name="${presetName}", category=${category}, dyes=${validDyeIds.join(',')}, user=${interaction.user.id}`
     );
 
+    // Note: CommandBase already defers the reply
+
     try {
       // Submit to API
       const response = await presetAPIService.submitPreset(
@@ -666,7 +690,7 @@ class PresetCommand extends CommandBase {
           )
           .setTimestamp();
 
-        await interaction.reply({ embeds: [duplicateEmbed], ephemeral: true });
+        await interaction.editReply({ embeds: [duplicateEmbed] });
         return;
       }
 
@@ -695,7 +719,15 @@ class PresetCommand extends CommandBase {
           });
         }
 
-        await interaction.reply({ embeds: [successEmbed], ephemeral: true });
+        await interaction.editReply({ embeds: [successEmbed] });
+
+        // Post to submission log channel if configured
+        await this.notifySubmissionChannel(
+          interaction,
+          response.preset,
+          response.moderation_status === 'approved',
+          validDyeIds
+        );
       }
     } catch (error) {
       logger.error('Failed to submit preset:', error);
@@ -704,7 +736,7 @@ class PresetCommand extends CommandBase {
         error instanceof Error ? error.message : 'Failed to submit preset. Please try again later.';
 
       const errorEmbed = createErrorEmbed('Submission Failed', errorMessage);
-      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   }
 
@@ -727,6 +759,8 @@ class PresetCommand extends CommandBase {
 
     logger.info(`Preset vote: presetId=${presetId}, user=${interaction.user.id}`);
 
+    // Note: CommandBase already defers the reply
+
     try {
       // Check if user already voted
       const hasVoted = await presetAPIService.hasVoted(presetId, interaction.user.id);
@@ -743,7 +777,7 @@ class PresetCommand extends CommandBase {
           )
           .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.editReply({ embeds: [embed] });
       } else {
         // Add vote
         const response = await presetAPIService.voteForPreset(presetId, interaction.user.id);
@@ -754,7 +788,7 @@ class PresetCommand extends CommandBase {
           .setDescription(`Thank you for voting!\n\nCurrent votes: **${response.new_vote_count}**`)
           .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.editReply({ embeds: [embed] });
       }
     } catch (error) {
       logger.error('Failed to vote:', error);
@@ -763,7 +797,7 @@ class PresetCommand extends CommandBase {
         error instanceof Error ? error.message : 'Failed to process vote. Please try again later.';
 
       const errorEmbed = createErrorEmbed('Vote Failed', errorMessage);
-      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   }
 
@@ -828,6 +862,8 @@ class PresetCommand extends CommandBase {
       `Preset moderate: action=${action}, presetId=${presetId}, user=${interaction.user.id}`
     );
 
+    // Note: CommandBase already defers the reply
+
     try {
       switch (action) {
         case 'pending':
@@ -852,7 +888,7 @@ class PresetCommand extends CommandBase {
       const errorMessage =
         error instanceof Error ? error.message : 'Moderation action failed. Please try again.';
       const errorEmbed = createErrorEmbed('Error', errorMessage);
-      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   }
 
@@ -869,7 +905,7 @@ class PresetCommand extends CommandBase {
         .setDescription('No presets pending review! 🎉')
         .setTimestamp();
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return;
     }
 
@@ -903,7 +939,7 @@ class PresetCommand extends CommandBase {
       });
     }
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
   }
 
   /**
@@ -919,7 +955,7 @@ class PresetCommand extends CommandBase {
         'Missing Preset ID',
         'Please provide a preset ID to approve.'
       );
-      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed] });
       return;
     }
 
@@ -943,7 +979,7 @@ class PresetCommand extends CommandBase {
       embed.addFields({ name: 'Note', value: reason, inline: false });
     }
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
   }
 
   /**
@@ -959,7 +995,7 @@ class PresetCommand extends CommandBase {
         'Missing Preset ID',
         'Please provide a preset ID to reject.'
       );
-      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed] });
       return;
     }
 
@@ -968,7 +1004,7 @@ class PresetCommand extends CommandBase {
         'Missing Reason',
         'Please provide a reason for rejection.'
       );
-      await sendEphemeralError(interaction, { embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed] });
       return;
     }
 
@@ -989,7 +1025,7 @@ class PresetCommand extends CommandBase {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
   }
 
   /**
@@ -1011,7 +1047,208 @@ class PresetCommand extends CommandBase {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
+  }
+
+  /**
+   * Post submission notification to configured channels
+   */
+  private async notifySubmissionChannel(
+    interaction: ChatInputCommandInteraction,
+    preset: { id: string; name: string; description: string; category_id: string },
+    approved: boolean,
+    dyeIds: number[]
+  ): Promise<void> {
+    const submissionChannelId = config.communityPresets.submissionLogChannelId;
+    const moderationChannelId = config.communityPresets.moderationChannelId;
+
+    // Determine which channel to use
+    const channelId = approved ? submissionChannelId : moderationChannelId;
+
+    if (!channelId) {
+      return; // No channel configured
+    }
+
+    try {
+      const channel = await interaction.client.channels.fetch(channelId);
+      if (!channel || !(channel instanceof TextChannel)) {
+        logger.warn(`Notification channel ${channelId} not found or not a text channel`);
+        return;
+      }
+
+      // Resolve dye names
+      const dyeNames = dyeIds
+        .map((id) => {
+          const dye = dyeService.getDyeById(id);
+          return dye ? dye.name : `Unknown (${id})`;
+        })
+        .join(', ');
+
+      const embed = new EmbedBuilder()
+        .setColor(approved ? 0x57f287 : 0xffa500)
+        .setTitle(approved ? '🎨 New Preset Submitted' : '⚠️ Preset Pending Review')
+        .setDescription(`**${preset.name}**\n${preset.description}`)
+        .addFields(
+          { name: 'Category', value: preset.category_id, inline: true },
+          { name: 'Submitted by', value: interaction.user.tag, inline: true },
+          { name: 'Preset ID', value: `\`${preset.id}\``, inline: false },
+          { name: 'Dyes', value: dyeNames, inline: false }
+        )
+        .setTimestamp();
+
+      // For approved presets, just send the embed
+      if (approved) {
+        await channel.send({ embeds: [embed] });
+        logger.info(`Posted submission notification to channel ${channelId}`);
+        return;
+      }
+
+      // For flagged presets, add approve/reject buttons
+      const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`preset_approve_${preset.id}`)
+          .setLabel('Approve')
+          .setStyle(ButtonStyle.Success)
+          .setEmoji('✅'),
+        new ButtonBuilder()
+          .setCustomId(`preset_reject_${preset.id}`)
+          .setLabel('Reject')
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji('❌')
+      );
+
+      // Build role mentions for moderators
+      const roleMentions = config.communityPresets.moderatorRoleIds
+        .filter((id) => id.length > 0)
+        .map((roleId) => `<@&${roleId}>`)
+        .join(' ');
+
+      const message = await channel.send({
+        content: roleMentions || undefined,
+        embeds: [embed],
+        components: [buttons],
+      });
+      logger.info(`Posted moderation notification with buttons to channel ${channelId}`);
+
+      // Set up button collector (24 hour timeout)
+      const collector = message.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      collector.on('collect', (buttonInteraction: ButtonInteraction) => {
+        void this.handleModerationButton(buttonInteraction, preset, message);
+      });
+
+      collector.on('end', () => {
+        // Disable buttons after timeout
+        const disabledButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`preset_approve_${preset.id}`)
+            .setLabel('Approve')
+            .setStyle(ButtonStyle.Success)
+            .setEmoji('✅')
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId(`preset_reject_${preset.id}`)
+            .setLabel('Reject')
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji('❌')
+            .setDisabled(true)
+        );
+        message.edit({ components: [disabledButtons] }).catch(() => {
+          // Message may have been deleted
+        });
+      });
+    } catch (error) {
+      logger.error('Failed to post submission notification:', error);
+      // Don't throw - this is a non-critical operation
+    }
+  }
+
+  /**
+   * Handle approve/reject button clicks
+   */
+  private async handleModerationButton(
+    buttonInteraction: ButtonInteraction,
+    preset: { id: string; name: string; description: string; category_id: string },
+    message: import('discord.js').Message
+  ): Promise<void> {
+    const userId = buttonInteraction.user.id;
+
+    // Check if user is a moderator
+    const isMod =
+      config.communityPresets.moderatorIds.includes(userId) ||
+      (buttonInteraction.member &&
+        'roles' in buttonInteraction.member &&
+        config.communityPresets.moderatorRoleIds.some((roleId) => {
+          const roles = buttonInteraction.member?.roles;
+          if (Array.isArray(roles)) return roles.includes(roleId);
+          if (roles && typeof roles === 'object' && 'cache' in roles) {
+            return (roles.cache as Map<string, unknown>).has(roleId);
+          }
+          return false;
+        }));
+
+    if (!isMod) {
+      await buttonInteraction.reply({
+        content: '❌ You do not have permission to moderate presets.',
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const isApprove = buttonInteraction.customId.startsWith('preset_approve_');
+
+    try {
+      await buttonInteraction.deferReply({ ephemeral: true });
+
+      if (isApprove) {
+        // Approve the preset
+        const approvedPreset = await presetAPIService.approvePreset(preset.id, userId);
+
+        // Update the original message
+        const updatedEmbed = EmbedBuilder.from(message.embeds[0])
+          .setColor(0x57f287)
+          .setTitle('✅ Preset Approved')
+          .setFooter({ text: `Approved by ${buttonInteraction.user.tag}` });
+
+        await message.edit({ embeds: [updatedEmbed], components: [] });
+
+        await buttonInteraction.editReply({
+          content: `✅ **${approvedPreset.name}** has been approved!`,
+        });
+      } else {
+        // Reject the preset
+        const rejectedPreset = await presetAPIService.rejectPreset(
+          preset.id,
+          userId,
+          'Rejected via moderation panel'
+        );
+
+        // Update the original message
+        const updatedEmbed = EmbedBuilder.from(message.embeds[0])
+          .setColor(0xed4245)
+          .setTitle('❌ Preset Rejected')
+          .setFooter({ text: `Rejected by ${buttonInteraction.user.tag}` });
+
+        await message.edit({ embeds: [updatedEmbed], components: [] });
+
+        await buttonInteraction.editReply({
+          content: `❌ **${rejectedPreset.name}** has been rejected.`,
+        });
+      }
+
+      logger.info(
+        `Preset ${preset.id} ${isApprove ? 'approved' : 'rejected'} by ${buttonInteraction.user.tag}`
+      );
+    } catch (error) {
+      logger.error('Failed to process moderation button:', error);
+      await buttonInteraction.editReply({
+        content:
+          '❌ Failed to process moderation action. Please try again or use the slash command.',
+      });
+    }
   }
 
   /**
@@ -1085,6 +1322,95 @@ class PresetCommand extends CommandBase {
   }
 
   /**
+   * Send a community preset as an embed with swatch image
+   */
+  private async sendCommunityPresetEmbed(
+    interaction: ChatInputCommandInteraction,
+    preset: CommunityPreset
+  ): Promise<void> {
+    // Resolve dyes
+    const resolvedDyes = preset.dyes.map((dyeId) => dyeService.getDyeById(dyeId));
+    const validDyes = resolvedDyes.filter((d) => d !== null);
+
+    // Get category meta
+    const categoryMeta = presetService.getCategoryMeta(preset.category_id);
+
+    // Build embed
+    const embed = new EmbedBuilder()
+      .setColor(validDyes.length > 0 ? parseInt(validDyes[0].hex.replace('#', ''), 16) : 0x5865f2)
+      .setTitle(`${categoryMeta?.icon || '🌐'} ${preset.name}`)
+      .setDescription(preset.description)
+      .setTimestamp();
+
+    // Add dye list with emojis
+    const dyeList = validDyes
+      .map((dye) => {
+        const localizedName = LocalizationService.getDyeName(dye.id) || dye.name;
+        return `${emojiService.getDyeEmojiOrSwatch(dye, 3)} **${localizedName}** (${dye.hex.toUpperCase()})`;
+      })
+      .join('\n');
+
+    embed.addFields({
+      name: t('presets.colors'),
+      value: dyeList || t('presets.noDyes'),
+      inline: false,
+    });
+
+    // Add community preset metadata
+    const authorStr = preset.author_name || 'Unknown';
+    const voteStr = preset.vote_count > 0 ? `${preset.vote_count} ★` : 'No votes yet';
+    embed.addFields(
+      { name: 'Author', value: authorStr, inline: true },
+      { name: 'Votes', value: voteStr, inline: true }
+    );
+
+    // Add tags
+    if (preset.tags.length > 0) {
+      embed.addFields({
+        name: t('presets.tags'),
+        value: preset.tags.map((tag) => `\`${tag}\``).join(' '),
+        inline: false,
+      });
+    }
+
+    // Add vote tip in footer
+    embed.setFooter({ text: `Use /preset vote to support this preset • ID: ${preset.id}` });
+
+    // Render swatch image using a compatible format
+    try {
+      const presetForRender = {
+        id: preset.id,
+        name: preset.name,
+        description: preset.description,
+        category: preset.category_id,
+        dyes: preset.dyes,
+        tags: preset.tags,
+      };
+
+      const swatchBuffer = renderPresetSwatch({
+        preset: presetForRender,
+        categoryMeta,
+        dyes: resolvedDyes,
+      });
+
+      const attachment = new AttachmentBuilder(swatchBuffer, {
+        name: `preset_${preset.id}.png`,
+      });
+
+      embed.setImage(`attachment://preset_${preset.id}.png`);
+
+      await sendPublicSuccess(interaction, {
+        embeds: [embed],
+        files: [attachment],
+      });
+    } catch (error) {
+      logger.error('Failed to render community preset swatch:', error);
+      // Send without image
+      await sendPublicSuccess(interaction, { embeds: [embed] });
+    }
+  }
+
+  /**
    * Autocomplete handler for preset names, dyes, and community presets
    */
   async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
@@ -1116,16 +1442,16 @@ class PresetCommand extends CommandBase {
     if (focusedOption.name === 'name') {
       const query = focusedOption.value.toLowerCase();
 
-      // Get all presets and filter
+      // Get curated presets and filter
       const allPresets = presetService.getAllPresets();
-      const matches = allPresets
+      const curatedMatches = allPresets
         .filter(
           (p) =>
             p.name.toLowerCase().includes(query) ||
             p.id.toLowerCase().includes(query) ||
             p.tags.some((tag) => tag.toLowerCase().includes(query))
         )
-        .slice(0, 25)
+        .slice(0, 15) // Leave room for community presets
         .map((p) => {
           const categoryMeta = presetService.getCategoryMeta(p.category);
           return {
@@ -1134,7 +1460,32 @@ class PresetCommand extends CommandBase {
           };
         });
 
-      await interaction.respond(matches);
+      // Also fetch community presets if API is enabled
+      let communityMatches: Array<{ name: string; value: string }> = [];
+      if (presetAPIService.isEnabled()) {
+        try {
+          const response = await presetAPIService.getPresets({
+            search: query || undefined,
+            status: 'approved',
+            limit: 10,
+            sort: query ? undefined : 'popular',
+          });
+
+          communityMatches = response.presets.map((preset) => {
+            const voteCount = preset.vote_count > 0 ? ` (${preset.vote_count}★)` : '';
+            return {
+              name: `🌐 ${preset.name}${voteCount}`,
+              value: preset.id,
+            };
+          });
+        } catch (error) {
+          logger.debug('Failed to fetch community presets for autocomplete:', error);
+        }
+      }
+
+      // Combine and limit to 25 (Discord's limit)
+      const allMatches = [...curatedMatches, ...communityMatches].slice(0, 25);
+      await interaction.respond(allMatches);
     }
   }
 
