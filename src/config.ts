@@ -74,6 +74,14 @@ export interface BotConfig {
     /** Whether the feature is enabled */
     enabled: boolean;
   };
+
+  // Internal Webhook (for web app notifications)
+  internalWebhook: {
+    /** Secret for authenticating incoming webhook calls */
+    secret: string;
+    /** Whether the internal webhook is enabled */
+    enabled: boolean;
+  };
 }
 
 /**
@@ -317,5 +325,12 @@ export const config: BotConfig = {
     ownerDiscordId: process.env.OWNER_DISCORD_ID,
     // Enable only if API URL and secret are configured
     enabled: !!(process.env.PRESET_API_URL && process.env.PRESET_API_SECRET),
+  },
+
+  // Internal Webhook (for web app notifications)
+  internalWebhook: {
+    secret: process.env.INTERNAL_WEBHOOK_SECRET || '',
+    // Enable only if secret is configured
+    enabled: !!process.env.INTERNAL_WEBHOOK_SECRET,
   },
 };

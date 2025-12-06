@@ -6,6 +6,7 @@
 import { Client, GatewayIntentBits, Events, Collection, MessageFlags } from 'discord.js';
 import express from 'express';
 import { config } from './config.js';
+import { createWebhookRoutes } from './server/index.js';
 import { logger } from './utils/logger.js';
 import { harmonyCommand } from './commands/harmony.js';
 import { matchCommand } from './commands/match.js';
@@ -36,9 +37,12 @@ import type { BotClient, BotCommand } from './types/index.js';
 // Initialize error webhook
 initErrorWebhook(config.errorWebhookUrl);
 
-// Create Express server for health checks
+// Create Express server for health checks and internal webhooks
 const app = express();
 const startTime = Date.now();
+
+// Parse JSON bodies for webhook endpoints
+app.use(express.json());
 
 app.get('/health', (req, res) => {
   const uptimeSeconds = Math.floor((Date.now() - startTime) / 1000);
@@ -90,6 +94,13 @@ client.once(Events.ClientReady, (readyClient) => {
 
     // Initialize EmojiService
     await emojiService.initialize(client);
+
+    // Mount internal webhook routes (requires Discord client)
+    if (config.internalWebhook.enabled) {
+      const webhookRoutes = createWebhookRoutes(client);
+      app.use(webhookRoutes);
+      logger.info('Internal webhook routes enabled');
+    }
 
     logger.info(`Loaded ${client.commands.size} command(s)`);
   })();
