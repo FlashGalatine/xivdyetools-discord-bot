@@ -665,6 +665,9 @@ class PresetCommand extends CommandBase {
 
     try {
       // Submit to API
+      // Use globalName (Discord display name) with fallbacks to ensure proper attribution
+      const authorName =
+        interaction.user.globalName || interaction.user.displayName || interaction.user.username;
       const response = await presetAPIService.submitPreset(
         {
           name: presetName,
@@ -674,7 +677,7 @@ class PresetCommand extends CommandBase {
           tags,
         },
         interaction.user.id,
-        interaction.user.username
+        authorName
       );
 
       // Handle duplicate
